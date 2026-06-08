@@ -5,8 +5,22 @@
 // 设计要点：Sim 的多 agent 输出之间“有共识也有分歧”，这样评审会才有真东西可分析。
 
 import { spawn } from 'node:child_process';
+import { existsSync, mkdtempSync, rmSync } from 'node:fs';
+import { homedir, tmpdir } from 'node:os';
+import { delimiter, join } from 'node:path';
 import { makeStep, summarizeTrace } from './trace.mjs';
 import { getFramework, TRACEABILITY_META } from './frameworks.mjs';
+
+export const REVIEW_ROLES = [
+  { id: 'strategist', label: '策略评审', brief: '从目标、取舍和长期影响出发，给出方向性判断。' },
+  { id: 'critic', label: '反方评审', brief: '主动寻找失败模式、反例、风险和被忽略的约束。' },
+  { id: 'operator', label: '执行评审', brief: '把建议落到可操作步骤、验证方式和完成标准。' },
+  { id: 'researcher', label: '证据评审', brief: '区分事实、假设与未知项，指出需要补充的证据。' },
+];
+
+function reviewRole(id) {
+  return REVIEW_ROLES.find((r) => r.id === id) || REVIEW_ROLES[0];
+}
 
 // —— 确定性伪随机（同 task+agent 复现）——
 function rng(seedStr) {
@@ -95,8 +109,8 @@ function composeTrace(task, framework, model, seed) {
 }
 
 // —— Sim adapter —— //
-async function runSim(framework, model, task, agentId) {
-  const seed = `${task}::${agentId}`;
+async function runSim(framework, model, task, agentId, role) {
+  const seed = `${task}::${agentId}::${role || ''}`;
   const steps = composeTrace(task, framework, model, seed);
   // 模拟时延（短，便于演示并行）
   await new Promise((res) => setTimeout(res, 200 + Math.floor(rng(seed)() * 600)));
@@ -121,23 +135,68 @@ function simTraceSource() {
   };
 }
 
-// —— Live adapter（检测到能力时启用，否则抛错让上层降级到 Sim）—— //
-function liveCapabilities() {
+// —— Live adapter（检测到能力时启用；不可用时明确失败，不静默降级）—— //
+function findExecutable(name) {
+  if (typeof process === 'undefined') return null;
+  const paths = (process.env.PATH || '').split(delimiter).filter(Boolean).map((dir) => join(dir, name));
+  if (name === 'codex') paths.push(
+    '/Applications/Codex.app/Contents/Resources/codex',
+    join(homedir(), '.local', 'bin', 'codex'),
+  );
+  for (const path of paths) if (existsSync(path)) return path;
+  return null;
+}
+
+function configuredModels() {
   return {
-    anthropicKey: !!process.env.ANTHROPIC_API_KEY,
-    openaiKey: !!process.env.OPENAI_API_KEY,
+    anthropic: process.env.AKER_ANTHROPIC_MODEL || process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-6',
+    openai: process.env.AKER_OPENAI_MODEL || process.env.OPENAI_MODEL || 'gpt-4.1-mini',
   };
 }
 
-async function runLive(framework, model, task, agentId) {
+function liveCapabilities() {
+  const node = typeof process !== 'undefined' && !!process.versions?.node;
+  return {
+    anthropicKey: node && !!process.env.ANTHROPIC_API_KEY,
+    openaiKey: node && !!process.env.OPENAI_API_KEY,
+    codexPath: node ? findExecutable('codex') : null,
+  };
+}
+
+function reviewerPrompt({ task, framework, model, role }) {
+  const lens = reviewRole(role);
+  return [
+    '你是 Aker 评审团中的一名独立评审。请直接分析用户任务，不要修改文件、调用工具或执行外部操作。',
+    `你的角色：${lens.label}。${lens.brief}`,
+    `运行通道标识：${framework} · ${model}`,
+    '',
+    '请输出一份可被其他评审合并的独立意见，使用以下结构：',
+    '## 结论',
+    '用 2-4 句给出明确判断。',
+    '## 关键建议',
+    '- 3-6 条具体建议，每条只表达一个主张。',
+    '## 风险与未知项',
+    '- 列出重要风险、假设或需要验证的事项。',
+    '## 下一步',
+    '- 给出最值得立刻执行的 1-3 步。',
+    '',
+    `用户任务：\n${task}`,
+  ].join('\n');
+}
+
+async function runLive(framework, model, task, agentId, role) {
   const caps = liveCapabilities();
   const fw = getFramework(framework);
+  const prompt = reviewerPrompt({ task, framework, model, role });
   // 选择真实通道
+  if (framework === 'codex-cli' && caps.codexPath) {
+    return await callCodexCli(caps.codexPath, model, prompt);
+  }
   if ((fw?.vendor === 'Anthropic' || model.startsWith('claude')) && caps.anthropicKey) {
-    return await callAnthropic(model, task);
+    return await callAnthropic(model, prompt);
   }
   if ((fw?.vendor === 'OpenAI' || model.startsWith('gpt') || model.startsWith('o-')) && caps.openaiKey) {
-    return await callOpenAI(model, task);
+    return await callOpenAI(model, prompt);
   }
   throw new Error(`live-unavailable:${framework}/${model}`);
 }
@@ -151,7 +210,7 @@ async function callAnthropic(model, task) {
   });
   const j = await resp.json();
   // C3：401/429/5xx 不能当成功——否则会 return 一个空 output 但标 status:done/mode:live，
-  // 把空串塞进评审聚类污染结果。这里如实抛错，交给 runAgent 的 catch 走降级/标错。
+  // 把空串塞进评审聚类污染结果。这里如实抛错，由编排器标成失败。
   if (!resp.ok) throw new Error(`Anthropic ${resp.status}: ${JSON.stringify(j).slice(0, 200)}`);
   const text = (j.content || []).map((b) => b.text).join('\n');
   const steps = [makeStep(0, 'message', 'Anthropic 响应', { tokens: j.usage?.output_tokens || 0, ms: Date.now() - t0 })];
@@ -173,26 +232,157 @@ async function callOpenAI(model, task) {
   return { status: 'done', mode: 'live', output: text, trace: { steps, totals: summarizeTrace(steps), source: { traceability: 'native', how: 'API usage' } } };
 }
 
-// —— 统一入口 —— //
-export async function runAgent({ framework, model, task, agentId, mode }) {
-  if (mode === 'live') {
-    try {
-      return await runLive(framework, model, task, agentId);
-    } catch (e) {
-      const sim = await runSim(framework, model, task, agentId);
-      sim.note = `live 不可用（${String(e.message)}），已降级到 sim`;
-      return sim;
+export function parseCodexEvents(stdout, elapsedMs = 0) {
+  const events = String(stdout).split(/\r?\n/).filter(Boolean).flatMap((line) => {
+    try { return [JSON.parse(line)]; } catch { return []; }
+  });
+  const steps = [];
+  let output = '';
+  let usage = {};
+  let i = 0;
+  for (const event of events) {
+    if (event.type === 'item.completed') {
+      const item = event.item || {};
+      if (item.type === 'agent_message') {
+        output = item.text || output;
+        steps.push(makeStep(i++, 'message', 'Codex 最终回答', { detail: 'agent_message' }));
+      } else if (item.type === 'command_execution') {
+        steps.push(makeStep(i++, item.exit_code === 0 ? 'tool' : 'error', 'Codex 命令执行', {
+          toolName: 'shell',
+          detail: String(item.command || '').slice(0, 240),
+        }));
+      } else if (item.type === 'file_change') {
+        steps.push(makeStep(i++, 'tool', 'Codex 文件变更', { toolName: 'apply_patch' }));
+      } else if (item.type === 'reasoning') {
+        steps.push(makeStep(i++, 'think', 'Codex 推理阶段'));
+      } else if (item.type) {
+        steps.push(makeStep(i++, 'observe', `Codex 事件：${item.type}`));
+      }
+    } else if (event.type === 'error') {
+      steps.push(makeStep(i++, 'error', 'Codex 执行错误', { detail: String(event.message || '').slice(0, 240) }));
+    } else if (event.type === 'turn.completed') {
+      usage = event.usage || {};
     }
   }
-  return await runSim(framework, model, task, agentId);
+  if (!steps.length) steps.push(makeStep(0, 'message', 'Codex CLI 响应'));
+  const tokens = (usage.input_tokens || 0) + (usage.output_tokens || 0);
+  const last = steps.at(-1);
+  last.tokens = tokens;
+  last.ms = elapsedMs;
+  return { output, steps, usage };
+}
+
+async function callCodexCli(codexPath, model, prompt) {
+  const workdir = mkdtempSync(join(tmpdir(), 'aker-codex-'));
+  const args = [
+    'exec', '--json', '--sandbox', 'read-only', '--skip-git-repo-check',
+    '--ephemeral', '--ignore-rules', '--ignore-user-config', '-C', workdir,
+  ];
+  if (model && model !== 'codex-default') args.push('--model', model);
+  args.push('-');
+  const t0 = Date.now();
+  try {
+    const { stdout, stderr, code } = await spawnCollect(codexPath, args, prompt, 180_000);
+    const parsed = parseCodexEvents(stdout, Date.now() - t0);
+    if (code !== 0 || !parsed.output) {
+      throw new Error(`Codex CLI ${code || '无输出'}: ${stderr.slice(-400) || '未产生最终回答'}`);
+    }
+    return {
+      status: 'done',
+      mode: 'live',
+      output: parsed.output,
+      usage: parsed.usage,
+      trace: {
+        steps: parsed.steps,
+        totals: summarizeTrace(parsed.steps),
+        source: { traceability: 'cli-log', how: 'codex exec --json 真实事件流' },
+      },
+    };
+  } finally {
+    rmSync(workdir, { recursive: true, force: true });
+  }
+}
+
+function spawnCollect(command, args, input, timeoutMs) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(command, args, { stdio: ['pipe', 'pipe', 'pipe'] });
+    let stdout = '', stderr = '';
+    const append = (current, chunk) => (current + chunk).slice(-2_000_000);
+    child.stdout.on('data', (c) => { stdout = append(stdout, c); });
+    child.stderr.on('data', (c) => { stderr = append(stderr, c); });
+    child.on('error', (e) => {
+      clearTimeout(timer);
+      reject(e);
+    });
+    const timer = setTimeout(() => {
+      child.kill('SIGTERM');
+      reject(new Error(`runner timeout after ${timeoutMs}ms`));
+    }, timeoutMs);
+    child.on('close', (code) => {
+      clearTimeout(timer);
+      resolve({ code, stdout, stderr });
+    });
+    child.stdin.end(input);
+  });
+}
+
+export async function synthesizeReview({ task, agents, evidence }) {
+  const caps = liveCapabilities();
+  const models = configuredModels();
+  const agentText = agents.filter((a) => a.status === 'done' && a.output).map((a, i) => (
+    `### 评审 ${i + 1}：${a.label || `${a.framework} · ${a.model}`}\n${a.output.slice(0, 6000)}`
+  )).join('\n\n');
+  const prompt = [
+    '你是 Aker 评审团主席。请综合多名独立评审的真实输出，给出一份可以直接执行的最终答复。',
+    '不要机械投票；明确处理冲突，区分共识、少数重要意见、风险和未知项。',
+    '输出 Markdown，结构必须包含：`## 最终判断`、`## 推荐方案`、`## 风险与验证`、`## 立即行动`。',
+    '',
+    `用户任务：\n${task.slice(0, 4000)}`,
+    '',
+    `规则聚类得到的共识：\n${evidence.consensus.map((x) => `- ${x.text}`).join('\n') || '- 无强共识'}`,
+    '',
+    agentText,
+  ].join('\n');
+  let result;
+  let channel;
+  if (caps.openaiKey) {
+    channel = `OpenAI API · ${models.openai}`;
+    result = await callOpenAI(models.openai, prompt);
+  } else if (caps.anthropicKey) {
+    channel = `Anthropic API · ${models.anthropic}`;
+    result = await callAnthropic(models.anthropic, prompt);
+  } else if (caps.codexPath) {
+    channel = 'Codex CLI';
+    result = await callCodexCli(caps.codexPath, 'codex-default', prompt);
+  } else {
+    throw new Error('没有可用于真实综合的 Live 通道');
+  }
+  return { markdown: result.output, channel, trace: result.trace };
+}
+
+// —— 统一入口 —— //
+export async function runAgent({ framework, model, task, agentId, role, mode }) {
+  if (mode === 'live') {
+    return await runLive(framework, model, task, agentId, role);
+  }
+  return await runSim(framework, model, task, agentId, role);
 }
 
 export function capabilities() {
   const caps = liveCapabilities();
+  const models = configuredModels();
+  const liveAgents = [];
+  if (caps.codexPath) liveAgents.push({ framework: 'codex-cli', model: 'codex-default', label: 'Codex CLI · 当前登录' });
+  if (caps.openaiKey) liveAgents.push({ framework: 'openai-agents', model: models.openai, label: `OpenAI API · ${models.openai}` });
+  if (caps.anthropicKey) liveAgents.push({ framework: 'claude-code', model: models.anthropic, label: `Anthropic API · ${models.anthropic}` });
+  const channels = liveAgents.map((a) => a.label);
   return {
-    live: caps.anthropicKey || caps.openaiKey,
+    live: liveAgents.length > 0,
     anthropic: caps.anthropicKey,
     openai: caps.openaiKey,
-    note: caps.anthropicKey || caps.openaiKey ? '检测到 API key，可用 Live 模式' : '未检测到 key/CLI，运行在 Sim 模式（仍可完整演示评审闭环）',
+    codex: !!caps.codexPath,
+    liveAgents,
+    reviewRoles: REVIEW_ROLES,
+    note: channels.length ? `可用真实通道：${channels.join('、')}` : '未检测到 Codex CLI 或 API key，只能使用 Sim 演示模式',
   };
 }

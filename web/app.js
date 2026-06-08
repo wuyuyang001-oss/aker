@@ -4,14 +4,14 @@ const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const api = (p, opts) => fetch(p, opts).then((r) => r.json());
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-let STATE = { frameworks: [], traceMeta: {}, matrixCols: [], mode: 'sim', lastRun: null };
+let STATE = { frameworks: [], traceMeta: {}, matrixCols: [], liveAgents: [], reviewRoles: [], mode: 'sim', lastRun: null };
 
-// 模型候选（演示用；Live 模式下按 key 真实可用）
-const MODELS = ['claude-opus-4-8', 'claude-sonnet-4-6', 'gpt-x', 'o-series', 'hermes-3', 'gemini-x'];
-const DEFAULT_AGENTS = [
-  { framework: 'claude-code', model: 'claude-opus-4-8' },
-  { framework: 'codex-cli', model: 'gpt-x' },
-  { framework: 'langgraph', model: 'o-series' },
+// Sim 模式展示用候选；Live 模式候选完全由 /api/health 返回，保证选择后真的可运行。
+const SIM_MODELS = ['claude-opus-4-8', 'claude-sonnet-4-6', 'gpt-x', 'o-series', 'hermes-3', 'gemini-x'];
+const DEFAULT_SIM_AGENTS = [
+  { role: 'strategist', framework: 'claude-code', model: 'claude-opus-4-8' },
+  { role: 'critic', framework: 'codex-cli', model: 'gpt-x' },
+  { role: 'operator', framework: 'langgraph', model: 'o-series' },
 ];
 
 // ───────── tabs ─────────
@@ -46,12 +46,25 @@ $$('#tabs button').forEach((b) => {
   const [health, fw] = await Promise.all([api('/api/health'), api('/api/frameworks')]);
   STATE.frameworks = fw.frameworks; STATE.traceMeta = fw.traceabilityMeta; STATE.matrixCols = fw.matrixColumns;
   STATE.live = !!health.live;
+  STATE.liveAgents = health.liveAgents || [];
+  STATE.reviewRoles = health.reviewRoles || [
+    { id: 'strategist', label: '策略评审' }, { id: 'critic', label: '反方评审' }, { id: 'operator', label: '执行评审' },
+  ];
+  STATE.mode = health.live ? 'live' : 'sim';
   $('#modedot').classList.toggle('on', health.live);
-  $('#modetext').textContent = health.live ? 'Live 可用' : 'Sim 模式（无 API key）';
+  $('#modetext').textContent = health.live ? 'Live 可用' : '仅 Sim 演示';
   $('#modepill').title = health.note || '';
-  renderAgentRows(DEFAULT_AGENTS);
+  $('#capabilityText').innerHTML = health.live
+    ? `<b class="ok">已就绪：</b>${esc(health.note)}。默认使用真实评审，运行失败会明确报错，不会降级成模拟结果。`
+    : `<b class="warn-text">尚无真实通道：</b>${esc(health.note)}。可先体验 Sim；要产生真实效果，请安装并登录 Codex CLI，或设置 OPENAI_API_KEY / ANTHROPIC_API_KEY 后重启。`;
+  $$('#modeSeg button').forEach((b) => b.classList.toggle('active', b.dataset.mode === STATE.mode));
+  renderAgentRows(defaultAgentsForMode());
   renderFrameworks();
   bindRunControls();
+  $('#loadExample').addEventListener('click', () => {
+    $('#task').value = '我们计划在两周内上线一个面向现有客户的 AI 周报功能。团队只有 2 名工程师，不能新增付费基础设施。请评估是否值得做，并给出可验证的最小上线方案。';
+    $('#task').focus();
+  });
   // 评审会 / Trace 首屏空态引导（U2）
   $('#committeeOut').innerHTML = '<div class="card empty">选择一个 run 并点击「评审」，查看交集/并集、差异归因与更优解。</div>';
   $('#traceOut').innerHTML = '<div class="card empty">选择一个 run 与两个 agent，点击「对比」，查看过程差异与效果评审。</div>';
@@ -69,29 +82,59 @@ $$('#tabs button').forEach((b) => {
 })();
 
 // ───────── 运行台 ─────────
-function fwOptions(sel) { return STATE.frameworks.map((f) => `<option value="${f.id}" ${f.id === sel ? 'selected' : ''}>${esc(f.name)}</option>`).join(''); }
-function modelOptions(sel) { return MODELS.map((m) => `<option value="${m}" ${m === sel ? 'selected' : ''}>${m}</option>`).join(''); }
+function defaultAgentsForMode() {
+  if (STATE.mode !== 'live' || !STATE.liveAgents.length) return DEFAULT_SIM_AGENTS.map((a) => ({ ...a }));
+  const runner = STATE.liveAgents[0];
+  return ['strategist', 'critic', 'operator'].map((role) => ({ role, framework: runner.framework, model: runner.model }));
+}
+function availableFrameworks() {
+  if (STATE.mode !== 'live') return STATE.frameworks.map((f) => ({ id: f.id, label: f.name }));
+  return [...new Map(STATE.liveAgents.map((a) => [a.framework, { id: a.framework, label: fwName(a.framework) }])).values()];
+}
+function fwOptions(sel) {
+  return availableFrameworks().map((f) => `<option value="${esc(f.id)}" ${f.id === sel ? 'selected' : ''}>${esc(f.label)}</option>`).join('');
+}
+function modelOptions(sel, framework) {
+  const models = STATE.mode === 'live'
+    ? STATE.liveAgents.filter((a) => a.framework === framework).map((a) => ({ id: a.model, label: a.label }))
+    : SIM_MODELS.map((m) => ({ id: m, label: m }));
+  return models.map((m) => `<option value="${esc(m.id)}" ${m.id === sel ? 'selected' : ''}>${esc(m.label)}</option>`).join('');
+}
+function roleOptions(sel) {
+  return STATE.reviewRoles.map((r) => `<option value="${esc(r.id)}" ${r.id === sel ? 'selected' : ''}>${esc(r.label)}</option>`).join('');
+}
 
 function renderAgentRows(agents) {
   $('#agentRows').innerHTML = agents.map((a, i) => `
     <div class="agent-row" data-i="${i}">
+      <select class="role" aria-label="第 ${i + 1} 个评审的角色">${roleOptions(a.role)}</select>
       <select class="fw" aria-label="第 ${i + 1} 个 agent 的框架">${fwOptions(a.framework)}</select>
-      <select class="ml" aria-label="第 ${i + 1} 个 agent 的模型">${modelOptions(a.model)}</select>
+      <select class="ml" aria-label="第 ${i + 1} 个 agent 的模型">${modelOptions(a.model, a.framework)}</select>
       <button class="icon-btn rm" title="移除该 agent" aria-label="移除第 ${i + 1} 个 agent"><span aria-hidden="true">×</span></button>
     </div>`).join('');
+  $$('#agentRows .fw').forEach((select) => select.addEventListener('change', (e) => {
+    const row = e.target.closest('.agent-row');
+    $('.ml', row).innerHTML = modelOptions('', e.target.value);
+  }));
   $$('#agentRows .rm').forEach((btn) => btn.addEventListener('click', (e) => {
     const rows = collectAgents(); const i = +e.target.closest('.agent-row').dataset.i;
-    rows.splice(i, 1); renderAgentRows(rows.length ? rows : DEFAULT_AGENTS.slice(0, 1));
+    rows.splice(i, 1); renderAgentRows(rows.length ? rows : defaultAgentsForMode().slice(0, 1));
   }));
 }
 function collectAgents() {
-  return $$('#agentRows .agent-row').map((r) => ({ framework: $('.fw', r).value, model: $('.ml', r).value }));
+  return $$('#agentRows .agent-row').map((r) => ({ role: $('.role', r).value, framework: $('.fw', r).value, model: $('.ml', r).value }));
 }
 function bindRunControls() {
-  $('#addAgent').addEventListener('click', () => renderAgentRows([...collectAgents(), { framework: 'crewai', model: 'gemini-x' }]));
+  $('#addAgent').addEventListener('click', () => {
+    const rows = collectAgents();
+    const runner = STATE.mode === 'live' ? STATE.liveAgents[0] : { framework: 'crewai', model: 'gemini-x' };
+    const role = STATE.reviewRoles[rows.length % STATE.reviewRoles.length]?.id || 'researcher';
+    renderAgentRows([...rows, { role, framework: runner.framework, model: runner.model }]);
+  });
   $$('#modeSeg button').forEach((b) => b.addEventListener('click', () => {
     if (b.disabled) return; // 无 key 时 Live 不可选（U1）
     $$('#modeSeg button').forEach((x) => x.classList.toggle('active', x === b)); STATE.mode = b.dataset.mode;
+    renderAgentRows(defaultAgentsForMode());
   }));
   $('#runBtn').addEventListener('click', submitRun);
   // Cmd/Ctrl + Enter 提交（X8）
@@ -123,8 +166,12 @@ async function submitRun() {
     $('#results').innerHTML = run.agents.map(agentCard).join('');
     clearInterval(timer);
     const dur = ((Date.now() - t0) / 1000).toFixed(1);
-    const simNote = run.mode === 'sim' ? ' · <b>Sim 模拟数据</b>（非真实模型）' : '';
-    $('#runStatus').innerHTML = `<div class="card"><div class="metrics"><span class="status done" role="img" aria-label="已完成"></span><span>完成 · 用时 <b>${dur}s</b> · run <b>${esc(run.id)}</b>${simNote} · 已存档，可在「评审会 / Trace」中调用</span></div></div>`;
+    const done = run.agents.filter((a) => a.status === 'done').length;
+    const failed = run.agents.length - done;
+    const simNote = run.mode === 'sim' ? ' · <b>Sim 模拟数据</b>（非真实模型）' : ' · <b>真实运行</b>';
+    const next = done >= 2 ? '<button class="btn sm" id="openCommittee">进入评审会，生成最终方案</button>' : '';
+    $('#runStatus').innerHTML = `<div class="card run-complete"><div class="metrics"><span class="status ${failed ? 'error' : 'done'}" role="img" aria-label="已完成"></span><span>完成 <b>${done}</b> 个${failed ? ` · 失败 <b>${failed}</b> 个` : ''} · 用时 <b>${dur}s</b>${simNote} · 已存档</span></div>${next}</div>`;
+    $('#openCommittee')?.addEventListener('click', () => activateTab($('#tab-committee')));
     refreshRunPickers(run.id);
   } catch (e) {
     clearInterval(timer);
@@ -142,18 +189,21 @@ function agentCard(a) {
   const t = a.trace?.totals || {};
   const src = a.trace?.source;
   const isSim = a.mode === 'sim';
-  // H1/H7：sim（含 Live 降级回退）一律强制标记「模拟数据」，指标加 ~ 前缀 + 弱化 + title
-  const modePill = isSim
+  const isError = a.status === 'error';
+  // Sim 一律强制标记「模拟数据」，指标加 ~ 前缀 + 弱化 + title。
+  const modePill = isError
+    ? '<span class="pill failed">LIVE FAILED · 未降级</span>'
+    : isSim
     ? '<span class="pill sim" title="本卡所有指标为模板生成的模拟值，非真实测量">SIMULATED · 模拟数据</span>'
     : '<span class="pill" title="真实调用模型">live</span>';
   const mcls = isSim ? 'metric-sim' : '';
   const mtitle = isSim ? ' title="模拟值，非真实测量"' : '';
   const pfx = isSim ? '~' : '';
-  // H7：降级 note 从一行小字升级为卡片级告警横幅
+  // 兼容旧 run 中的 note，显示为卡片级告警横幅。
   const banner = a.note ? `<div class="card-banner warn" role="note">${esc(a.note)}</div>` : '';
   return `<div class="agent-card${isSim ? ' is-sim' : ''}">
     ${banner}
-    <div class="head">${statusDot(a.status)}<span class="fw-tag">${esc(fwName(a.framework))}</span><span class="model">${esc(a.model)}</span>${modePill}</div>
+    <div class="head">${statusDot(a.status)}<span class="role-tag">${esc(roleName(a.role))}</span><span class="fw-tag">${esc(fwName(a.framework))}</span><span class="model">${esc(a.model)}</span>${modePill}</div>
     <div class="out">${esc(a.output || a.error || '')}</div>
     <div class="metrics ${mcls}"${mtitle}>
       <span>步骤 <b>${pfx}${t.steps || 0}</b></span>
@@ -165,6 +215,7 @@ function agentCard(a) {
   </div>`;
 }
 function fwName(id) { return STATE.frameworks.find((f) => f.id === id)?.name || id; }
+function roleName(id) { return STATE.reviewRoles.find((r) => r.id === id)?.label || id || '独立评审'; }
 
 // ───────── run pickers (评审会 / trace 共用) ─────────
 async function refreshRunPickers(selectId) {
@@ -187,7 +238,7 @@ async function doReview() {
   const mode = $('#reviewMode button.active').dataset.mode;
   if (!runId) return;
   $('#committeeOut').innerHTML = '<div class="card empty">评审中…</div>';
-  // 取回完整 run，判断是否含模拟 / 降级 agent —— 用于「基于模拟 trace」告警（H4/H5）
+  // 取回完整 run，判断是否含模拟 agent —— 用于「基于模拟 trace」告警。
   const [{ run }, { review, error }] = await Promise.all([
     api(`/api/runs/${encodeURIComponent(runId)}`),
     api('/api/review', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ runId, mode }) }),
@@ -222,13 +273,19 @@ function renderReview(r, mode, isSim) {
 
   // U3：更优解 Markdown 存入全局，供「复制」按钮取用
   STATE.betterMd = r.betterSolution.markdown;
+  const synth = r.betterSolution.synthesis;
+  const synthHint = synth?.mode === 'live'
+    ? `由真实评审团主席综合 · ${esc(synth.channel)}`
+    : synth?.mode === 'error'
+      ? `真实综合失败：${esc(synth.error)}；当前显示规则式综合`
+      : '规则式综合；Live run 会调用真实评审团主席';
 
   $('#committeeOut').innerHTML = `
     ${simBanner}
     <div class="two-col">
       <div class="card">
         <h2 class="section">${esc(listTitle)}</h2>
-        <p class="section-hint">${mode === 'intersection' ? '多数 agent 一致认可的要点，可信度最高' : '去重后的全部要点，含仅单一 agent 提出的'}</p>
+        <p class="section-hint">${mode === 'intersection' ? '多数 agent 都提到的要点；仍需警惕共同偏见' : '去重后的全部要点，含仅单一 agent 提出的'}</p>
         ${listHtml}
       </div>
       <div class="card">
@@ -246,7 +303,7 @@ function renderReview(r, mode, isSim) {
       </div>
       <div class="card">
         <div class="section-head"><h2 class="section">更优解</h2><button class="btn sm copy" id="copyBetter">复制 Markdown</button></div>
-        <p class="section-hint">评审会综合共识 + 高可信度独有洞见</p>
+        <p class="section-hint">${synthHint}</p>
         <div class="markdown">${renderMarkdown(r.betterSolution.markdown)}</div>
       </div>
     </div>`;
@@ -427,17 +484,29 @@ function renderFrameworks() {
 
 // ───────── tiny markdown + code highlight ─────────
 function renderMarkdown(md) {
-  const lines = md.split('\n'); let html = '', inUl = false;
+  const lines = md.split('\n'); let html = '', list = null;
   const inline = (s) => esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/_(.+?)_/g, '<i style="color:var(--muted)">$1</i>').replace(/`(.+?)`/g, '<code>$1</code>');
-  for (const ln of lines) {
-    if (/^### /.test(ln)) { if (inUl) { html += '</ul>'; inUl = false; } html += `<h3>${inline(ln.slice(4))}</h3>`; }
-    else if (/^## /.test(ln)) { if (inUl) { html += '</ul>'; inUl = false; } html += `<h2>${inline(ln.slice(3))}</h2>`; }
-    else if (/^> /.test(ln)) { if (inUl) { html += '</ul>'; inUl = false; } html += `<blockquote>${inline(ln.slice(2))}</blockquote>`; }
-    else if (/^- /.test(ln)) { if (!inUl) { html += '<ul>'; inUl = true; } html += `<li>${inline(ln.slice(2))}</li>`; }
-    else if (ln.trim() === '') { if (inUl) { html += '</ul>'; inUl = false; } }
-    else { if (inUl) { html += '</ul>'; inUl = false; } html += `<p>${inline(ln)}</p>`; }
+  const closeList = () => { if (list) { html += `</${list}>`; list = null; } };
+  const cells = (s) => s.trim().replace(/^\||\|$/g, '').split('|').map((x) => x.trim());
+  for (let i = 0; i < lines.length; i++) {
+    const ln = lines[i];
+    if (/^\|.*\|$/.test(ln) && /^\|?[\s:|-]+\|?$/.test(lines[i + 1] || '') && cells(lines[i + 1]).every((x) => /^:?-{3,}:?$/.test(x))) {
+      closeList();
+      const head = cells(ln);
+      const rows = [];
+      i += 2;
+      while (i < lines.length && /^\|.*\|$/.test(lines[i])) { rows.push(cells(lines[i])); i++; }
+      i--;
+      html += `<div class="md-table-wrap"><table><thead><tr>${head.map((x) => `<th>${inline(x)}</th>`).join('')}</tr></thead><tbody>${rows.map((row) => `<tr>${row.map((x) => `<td>${inline(x)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+    } else if (/^### /.test(ln)) { closeList(); html += `<h3>${inline(ln.slice(4))}</h3>`; }
+    else if (/^## /.test(ln)) { closeList(); html += `<h2>${inline(ln.slice(3))}</h2>`; }
+    else if (/^> /.test(ln)) { closeList(); html += `<blockquote>${inline(ln.slice(2))}</blockquote>`; }
+    else if (/^- /.test(ln)) { if (list !== 'ul') { closeList(); html += '<ul>'; list = 'ul'; } html += `<li>${inline(ln.slice(2))}</li>`; }
+    else if (/^\d+\.\s/.test(ln)) { if (list !== 'ol') { closeList(); html += '<ol>'; list = 'ol'; } html += `<li>${inline(ln.replace(/^\d+\.\s+/, ''))}</li>`; }
+    else if (ln.trim() === '') { closeList(); }
+    else { closeList(); html += `<p>${inline(ln)}</p>`; }
   }
-  if (inUl) html += '</ul>';
+  closeList();
   return html;
 }
 function highlightCode(code) {

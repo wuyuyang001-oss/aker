@@ -6,10 +6,10 @@ export async function buildFixtures() {
     task: '实现一个带缓存的并发安全计数器',
     mode: 'sim',
     agents: [
-      { framework: 'claude-code', model: 'claude-opus-4-8' },
-      { framework: 'codex-cli', model: 'gpt-x' },
-      { framework: 'langgraph', model: 'o-series' },
-      { framework: 'hermes', model: 'hermes-3' },
+      { role: 'strategist', framework: 'claude-code', model: 'claude-opus-4-8' },
+      { role: 'critic', framework: 'codex-cli', model: 'gpt-x' },
+      { role: 'operator', framework: 'langgraph', model: 'o-series' },
+      { role: 'researcher', framework: 'hermes', model: 'hermes-3' },
     ],
   });
   run.id = 'run_demo'; // 固定 id 便于直链

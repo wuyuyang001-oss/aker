@@ -48,5 +48,5 @@ export function diffTraces(a, b) {
 }
 
 export function agentLabel(a) {
-  return `${a.framework} · ${a.model}`;
+  return `${a.role ? `${a.role} · ` : ''}${a.framework} · ${a.model}`;
 }

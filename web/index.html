@@ -38,7 +38,21 @@
     <main class="content" id="main" aria-label="主内容">
     <!-- 运行台 -->
     <section class="panel active" id="panel-run" role="tabpanel" aria-labelledby="tab-run" tabindex="0">
-      <div class="page-head"><h2 class="page-title">并行运行台</h2><p class="page-sub">同一个任务，派发给多个 (框架 × 模型) 组合并行执行，收集各自输出与 trace。</p></div>
+      <div class="page-head"><h2 class="page-title">并行运行台</h2><p class="page-sub">让不同角色独立评审同一个问题，再合并成一份可执行方案。</p></div>
+      <div class="onboarding" id="welcome">
+        <div>
+          <div class="eyebrow">首次使用 · 3 步完成</div>
+          <h2>从一个真实问题，得到一份经过反方审查的行动方案</h2>
+          <p id="capabilityText">正在检测可用运行通道…</p>
+        </div>
+        <ol class="steps">
+          <li><b>写任务</b><span>描述目标、约束和完成标准</span></li>
+          <li><b>并行评审</b><span>策略、反方、执行角色独立回答</span></li>
+          <li><b>生成最终方案</b><span>进入评审会，综合共识与冲突</span></li>
+        </ol>
+        <button class="btn ghost sm" id="loadExample">填入一个示例问题</button>
+      </div>
+      <div style="height:16px"></div>
       <div class="card">
         <div class="runbar">
           <div class="field">
@@ -46,7 +60,7 @@
             <textarea class="task" id="task" placeholder="描述一个要让多个 agent 并行解决的任务，例如：实现一个带缓存的并发安全计数器" maxlength="2000">实现一个带缓存的并发安全计数器</textarea>
           </div>
           <div class="field">
-            <label id="agentRowsLabel">参与的 agent（框架 × 模型）</label>
+            <label id="agentRowsLabel">参与的独立评审（角色 × 运行通道）</label>
             <div class="agent-rows" id="agentRows" aria-labelledby="agentRowsLabel"></div>
           </div>
           <div class="row-actions">

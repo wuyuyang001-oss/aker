@@ -31,8 +31,9 @@ console.log('committee 聚类回归测试');
 
 // 1) splitPoints 签名与基本切分不变（硬性要求：签名稳定）
 test('splitPoints 把多行/多句文本切成要点，过滤过短片段', () => {
-  const pts = splitPoints('1. 先明确边界条件。\n2. 解耦核心逻辑与 I/O。\n短');
+  const pts = splitPoints('## 关键建议\n1. 先明确边界条件。\n2. 解耦核心逻辑与 I/O。\n短');
   assert.ok(pts.length >= 2, `期望 >=2 个要点，实得 ${pts.length}`);
+  assert.ok(!pts.includes('## 关键建议'), 'Markdown 章节标题不应作为可聚类要点');
   // 列表前缀被剥掉
   assert.ok(!pts[0].startsWith('1.'), '应剥掉列表序号前缀');
   // 过短片段（< 4 字）被过滤
