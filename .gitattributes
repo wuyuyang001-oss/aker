@@ -1,0 +1,5 @@
+# Generated single-file bundles (output of build-standalone.mjs).
+# Exclude from GitHub language stats and collapse in diffs so the repo's
+# real Node/JS source (src/*.mjs) is what's reflected — not the 67KB bundles.
+docs/index.html linguist-generated=true
+web/aker.html   linguist-generated=true
