@@ -12,6 +12,7 @@ export async function runParallel({ task, agents, mode = 'sim' }) {
     agentId: a.agentId || `${a.framework}#${i + 1}`,
     framework: a.framework,
     model: a.model,
+    role: a.role || 'strategist',
   }));
 
   const settled = await Promise.allSettled(

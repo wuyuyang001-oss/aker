@@ -7,8 +7,16 @@
 - ⚖️ **设计取舍** —— 现状是有意为之，说明取舍理由，本轮不改行为。
 - 🗺️ **暂不做（路线图）** —— 承认问题成立但属较大工程，给出理由与未来方向。
 
-> 一句话定位（先说在前面）：**Aker 当前是「演示评审管线形态的脚手架」，不是生产级评测工具。**
-> Sim 模式下被评审的 agent 输出与 trace 都是确定性模板 + 伪随机生成的**占位数据**；真实的只有跑在这些占位数据上的聚类 / 交并集 / 归因算法。要得到对真实模型有意义的结论，必须用 Live 模式（且 Live 的逐步 trace 仍在路线图上）。下面所有诚实性条目都围绕「让这件事在界面上无法被忽视」展开。
+> 一句话定位（先说在前面）：**Aker 的 Sim 模式只是演示评审管线；Live 模式才用于真实结论。**
+> Sim 模式下被评审的 agent 输出与 trace 都是确定性模板 + 伪随机生成的**占位数据**；真实的只有跑在这些占位数据上的聚类 / 交并集 / 归因算法。要得到对真实模型有意义的结论，必须用 Live 模式。v0.2 已接通 Codex CLI 的真实 JSONL 事件流；其他框架级逐步 trace 仍在路线图上。下面所有诚实性条目都围绕「让这件事在界面上无法被忽视」展开。
+
+## v0.2 状态更新（2026-06-08）
+
+- ✅ 已接通 Codex CLI：自动检测本机登录态，通过 `codex exec --json` 获取真实回答、事件和 token。
+- ✅ Live 失败不再静默降级到 Sim；失败会明确显示，避免模拟结果混入真实评审。
+- ✅ 多个真实评审完成后，会调用真实 Live 通道生成一次“评审团主席综合”，产出可执行最终方案。
+- ✅ 首页新增首次使用路径、真实通道状态和评审角色，`npm test` / `npm run check` 可直接验收。
+- ⚠️ Codex CLI 已有真实 JSONL trace；Anthropic/OpenAI 直连仍只有最终响应 + usage。语义聚类、逐条证据归因仍是路线图。
 
 ---
 
@@ -67,10 +75,10 @@
 **回应（✅ committee + 🗺️）**：把这些常数提为 `committee.mjs` 顶部命名 `CONFIG`（带注释说明取值理由与「仅启发式 / Sim 演示用」声明），并在 README 标注「Sim 可信度由框架工具表驱动，非真实质量」。
 **🗺️ 路线图**：centroid 增量膨胀带来的**顺序依赖与阈值敏感度**是真实的算法稳健性问题（同一组要点换输入顺序可能聚出不同簇）。修法是改用固定锚点 / 不可变 centroid 或一次性层次聚类 + 阈值敏感度自检，属算法重构，记为路线图。
 
-### A3 — 代码与 UI 承诺的 Live LLM 综合 `adapters.liveSynthesize` 根本不存在 · high · ✅ 已修复（文案）+ 🗺️
+### A3 — 代码与 UI 承诺的 Live LLM 综合 `adapters.liveSynthesize` 根本不存在 · high · ✅ v0.2 已实现
 **批评**：`committee.mjs:5` 与 `:196` 文案承诺 Live 下 `synthesizeBetter` 被 LLM 综合替换（`adapters.liveSynthesize`），但全仓库无该 export，review 永远走规则版，即使配 key 也无 LLM 二次综合。产品输出印着不存在的能力。
 **回应（✅ committee + 🗺️）**：已确认 `liveSynthesize` 不存在。本轮删除 / 改写 `committee.mjs:5` 注释与 `:196` 对用户的承诺文案，改为「当前为规则式综合（启发式，仅演示）；Live LLM 综合为 roadmap」。
-**🗺️ 路线图**：真正实现 `liveSynthesize`（把结构化证据喂给一个 LLM 做二次综合、解决事实冲突）属较大功能，记为路线图。
+**v0.2 更新**：已实现 `synthesizeReview`。本地 server 对包含至少两个真实评审的 Live run 调用可用 Live 通道做二次综合，并缓存结果，避免重复消耗。
 
 ### A4 — 差异归因把「模型 / 步骤不同」当归因，实为配置常量复述 · high · 🗺️ 路线图（本轮：文案降级）
 **批评**：`attribute()` 的模型差异 / 工具差异 / 推理深度差异只复述 run 配置（`models.length>1` 无条件输出 high），与具体哪条要点分歧无因果联系；divergence 参数只用于计数，没有单条要点到 trace step 的归因。
@@ -98,10 +106,10 @@
 **回应（⚖️ 有意取舍，无害）**：交集（共识）与并集（全集）本就是**同一聚类的两种视图**：后端一次性算出全部簇，`consensus` 与 `union` 同时返回，前端切换 mode 只是选择展示哪一份，零冗余、零重复计算。`review()` 把 mode 原样回写仅用于标注当前视图。本轮不改行为，仅在 committee 注释里点明「mode 仅用于标注返回视图，避免误读为服务端有不同计算路径」。
 > 注意：硬性要求 `review()` 签名不变，本条不动签名。
 
-### A8 — Live trace 仅单条 message step，真实模式下 trace 评审退化为零 · high · ✅ 已修复（README 诚实化）+ 🗺️
+### A8 — Live trace 仅单条 message step，真实模式下 trace 评审退化为零 · high · ✅ Codex CLI 已实现 + 🗺️ 其他通道
 **批评**：`callAnthropic` / `callOpenAI` 只塞一条 `makeStep` message，无 think / tool / observe，Live 下工具差异 / 推理深度归因恒空，反而 Sim 因造假 trace「更像在评审过程」。README 表格把可得性吹得很全，代码一个都没接。
 **回应（✅ docs_tests + 🗺️）**：本轮 README 的 trace 可得性表已加注「上表是可行性分级，不是已实现状态；当前 Live 实现仅消费最终响应 + usage，逐步 trace 为路线图」，不让表格暗示已实现。
-**🗺️ 路线图 —— 接真实多步 trace**：按可得性分档逐个接通：
+**v0.2 更新**：Codex CLI 已通过 `codex exec --json` 接通真实事件流、错误和 usage。其余通道按可得性分档逐个接通：
 - 原生结构化：读 Claude Agent SDK 的 trace 对象 / Codex 的 `~/.codex/sessions` jsonl transcript，归一成多步 step；
 - OTel：接 OpenTelemetry exporter，把 span 转 step；
 - CLI 日志：解析 `--json` 事件流。
@@ -213,10 +221,9 @@
 
 ## 路线图汇总（按优先级）
 
-1. **接一种框架的真实多步 trace（A8）** —— 解锁逐条归因（A4）与过程质量指标（A5），是产品独有价值（P4）的前置。首选 Claude Agent SDK transcript。
+1. **扩展真实多步 trace（A8）** —— Codex CLI 已接通；下一步是 Claude Agent SDK transcript 与 OTel。
 2. **语义 embedding 聚类（A1）** —— 替代字面 Jaccard，消除中文同义改写误报；`test/committee.cluster.test.mjs` 已埋好翻转点。
 3. **真语料 Sim demo（P1）** —— 用真实导出语料替换模板字符串，让 Sim 不再是自证循环。
-4. **Live LLM 二次综合 `liveSynthesize`（A3）** —— 对结构化证据做自然语言综合、解决事实冲突。
-5. **聚类稳健性（A2）** —— 固定锚点 centroid、阈值敏感度自检，消除顺序依赖。
-6. **独立性加权 consensus（A6）** —— 按 vendor 去相关，防同源共同偏见。
-7. **导出 / permalink（U3）、SSE 流式运行（U4）、Electron 端口重试（S3）** —— 体验与健壮性增强。
+4. **聚类稳健性（A2）** —— 固定锚点 centroid、阈值敏感度自检，消除顺序依赖。
+5. **独立性加权 consensus（A6）** —— 按 vendor 去相关，防同源共同偏见。
+6. **导出 / permalink（U3）、SSE 流式运行（U4）、Electron 端口重试（S3）** —— 体验与健壮性增强。

@@ -2,8 +2,8 @@
 // 输入：一个 run 的多个 agent 输出（+各自 trace）
 // 输出：交集(共识) / 并集(全集) / 差异归因 / 更优解
 // 关键：所有分析都是“真实计算”出来的，不依赖 LLM 也能跑（Sim 模式）。
-// 综合更优解（synthesizeBetter）当前为【规则式启发综合，仅演示】——
-// 即便配置了 API key，本次也不做 LLM 二次综合（adapters.liveSynthesize 尚未实现，属 roadmap）。
+// synthesizeBetter 生成规则式基础综合；server.mjs 会在 Live run 首次评审时
+// 调用 adapters.synthesizeReview，以真实评审团主席结果替换 betterSolution.markdown。
 
 import { summarizeTrace } from './trace.mjs';
 
@@ -30,7 +30,7 @@ const CONFIG = {
 //   - 「针对「…」的方案」开头的标题行
 //   - 含「方案（by …」「by X·Y」署名样式
 //   - 含「风格：/风格:」标注
-const TITLE_NOISE = /^针对「.*」的方案|方案（by\s|（by\s|风格[:：]/;
+const TITLE_NOISE = /^#{1,6}\s|^针对「.*」的方案|方案（by\s|（by\s|风格[:：]/;
 export function splitPoints(text = '') {
   return text
     .split(/\n+|(?<=[。！？.!?])\s+/g)
@@ -185,7 +185,7 @@ function attribute(agents, divergence) {
   return reasons;
 }
 
-// —— 更优解综合（当前为规则式启发综合，仅演示；Live LLM 综合为 roadmap）——
+// —— 更优解基础综合（Sim / standalone 使用；Live server 会做真实二次综合）——
 function synthesizeBetter(agents, consensus, union, attribution) {
   const traces = agents.map((a) => summarizeTrace(a.trace?.steps || []));
   // 给每个 agent 一个“过程可信度”分（启发式：有工具、步骤适中、无错误）
@@ -225,7 +225,7 @@ function synthesizeBetter(agents, consensus, union, attribution) {
   lines.push('### 评审会判断');
   attribution.forEach((r) => lines.push(`- **${r.kind}**（权重 ${r.weight}）：${r.detail}`));
   lines.push('');
-  lines.push('> 当前为规则式启发综合（仅演示）。Live LLM 二次综合（adapters.liveSynthesize，对以上结构化证据综合并解决事实冲突）为 roadmap，尚未实现。');
+  lines.push('> 当前显示规则式启发综合。通过本地 server 运行 Live 时，评审会会调用真实评审团主席替换本段内容。');
 
   return {
     credibility: cred,

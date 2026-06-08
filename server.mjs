@@ -8,7 +8,7 @@ import { FRAMEWORKS, MATRIX_COLUMNS, TRACEABILITY_META } from './src/frameworks.
 import { runParallel } from './src/orchestrator.mjs';
 import { review } from './src/committee.mjs';
 import { diffTraces } from './src/trace.mjs';
-import { capabilities } from './src/adapters.mjs';
+import { capabilities, synthesizeReview } from './src/adapters.mjs';
 import { saveRun, getRun, listRuns, seedIfEmpty } from './src/store.mjs';
 import { buildFixtures } from './fixtures/seed.mjs';
 
@@ -81,7 +81,29 @@ const server = createServer(async (req, res) => {
       const { runId, mode } = await body(req);
       const run = getRun(runId);
       if (!run) return json(res, 404, { error: 'run 不存在' });
-      return json(res, 200, { review: review(run, mode || 'intersection') });
+      const result = review(run, mode || 'intersection');
+      const completed = run.agents.filter((a) => a.status === 'done' && a.mode === 'live' && a.output);
+      if (completed.length >= 2) {
+        if (!run.synthesis) {
+          try {
+            run.synthesis = await synthesizeReview({ task: run.task, agents: completed, evidence: result });
+            saveRun(run);
+          } catch (e) {
+            run.synthesis = { error: String(e?.message || e) };
+          }
+        }
+        if (run.synthesis.markdown) {
+          result.betterSolution = {
+            ...result.betterSolution,
+            ruleMarkdown: result.betterSolution.markdown,
+            markdown: run.synthesis.markdown,
+            synthesis: { mode: 'live', channel: run.synthesis.channel },
+          };
+        } else if (run.synthesis.error) {
+          result.betterSolution.synthesis = { mode: 'error', error: run.synthesis.error };
+        }
+      }
+      return json(res, 200, { review: result });
     }
 
     if (p === '/api/trace/diff' && req.method === 'GET') {

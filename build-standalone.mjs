@@ -67,17 +67,17 @@ function saveRun(run) { const db = __load(); const i = db.runs.findIndex(r => r.
 function getRun(id) { return __load().runs.find(r => r.id === id) || null; }
 function listRuns() { return __load().runs.map(({ id, task, createdAt, mode, agents }) => ({ id, task, createdAt, mode, agentCount: agents.length })); }
 
-// ── 首次访问灌入示例 run（真实编排器跑出，非假数据）──
+// ── 首次访问灌入 Sim 示例 run（模板数据，仅用于演示流程）──
 let __seeded = false;
 async function ensureSeeded() {
   if (__seeded) return;
   __seeded = true;
   if (__load().runs.length) return;
   const run = await runParallel({ task: '实现一个带缓存的并发安全计数器', mode: 'sim', agents: [
-    { framework: 'claude-code', model: 'claude-opus-4-8' },
-    { framework: 'codex-cli', model: 'gpt-x' },
-    { framework: 'langgraph', model: 'o-series' },
-    { framework: 'hermes', model: 'hermes-3' },
+    { role: 'strategist', framework: 'claude-code', model: 'claude-opus-4-8' },
+    { role: 'critic', framework: 'codex-cli', model: 'gpt-x' },
+    { role: 'operator', framework: 'langgraph', model: 'o-series' },
+    { role: 'researcher', framework: 'hermes', model: 'hermes-3' },
   ]});
   run.id = 'run_demo'; run.createdAt = '2026-06-08T00:00:00.000Z';
   saveRun(run);
@@ -171,7 +171,8 @@ mkdirSync(join(__dirname, 'dist'), { recursive: true });
 const distPath = join(__dirname, 'dist', 'aker.html');
 writeFileSync(distPath, html);
 copyFileSync(distPath, join(__dirname, 'web', 'aker.html'));   // 供 QA 静态访问
-step('write', `dist/aker.html (${html.length}b) + web/aker.html`);
+copyFileSync(distPath, join(__dirname, 'docs', 'index.html'));  // GitHub Pages
+step('write', `dist/aker.html (${html.length}b) + web/aker.html + docs/index.html`);
 
 // 6) 自检：不应再有 http://localhost 依赖、相对 import 残留
 if (/from\s+['"]\.\/src/.test(html)) throw new Error('产物仍引用 ./src 模块');
