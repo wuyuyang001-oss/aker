@@ -1,5 +1,5 @@
 // store.mjs — 极简持久化（JSON 文件），保存所有 run，供回放/评审。
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync, renameSync, copyFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
@@ -12,11 +12,25 @@ let cache = null;
 function load() {
   if (cache) return cache;
   if (existsSync(DB)) {
-    try { cache = JSON.parse(readFileSync(DB, 'utf8')); } catch { cache = { runs: [] }; }
+    try {
+      cache = JSON.parse(readFileSync(DB, 'utf8'));
+    } catch (e) {
+      // ST1：解析失败不再静默当空库（会让历史 run 无声消失）。
+      // 先把坏文件备份成 .bak 并打错误日志，再退回空库，给人留追查 / 手工恢复的机会。
+      try { copyFileSync(DB, DB + '.bak'); } catch { /* 备份失败也别阻塞启动 */ }
+      console.error(`[store] 解析 ${DB} 失败：${e.message}；已备份为 ${DB}.bak，本次以空库启动。`);
+      cache = { runs: [] };
+    }
   } else cache = { runs: [] };
   return cache;
 }
-function persist() { mkdirSync(DB_DIR, { recursive: true }); writeFileSync(DB, JSON.stringify(cache, null, 2)); }
+function persist() {
+  mkdirSync(DB_DIR, { recursive: true });
+  // ST1：原子写——先写临时文件再 rename（同分区 rename 原子），避免崩溃留下截断的半个 JSON。
+  const tmp = DB + '.tmp';
+  writeFileSync(tmp, JSON.stringify(cache, null, 2));
+  renameSync(tmp, DB);
+}
 
 export function saveRun(run) {
   const db = load();

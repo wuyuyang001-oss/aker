@@ -3,12 +3,17 @@
 > Run multiple agents (different frameworks x different models) in parallel, then a **review committee** computes the intersection/union of their outputs, attributes differences, and synthesizes a better answer — plus **trace-based** effectiveness review across models and agents.
 
 **▶ Live demo (no install):** https://wuyuyang001-oss.github.io/aker/
+(⚠️ The hosted demo is **always Sim mode** — a browser can't hold an API key, so the Live button is disabled and **no real model is ever called**. It's for exploring the UI and the algorithm pipeline only. To call real models, run `server.mjs` locally with a key.)
 **⬇ Download desktop build (macOS Apple Silicon):** grab `Aker-mac-arm64.zip` from [Releases](https://github.com/wuyuyang001-oss/aker/releases)
 
 Zero runtime dependencies (Node's built-in `http`), two modes:
 
-- **Sim mode** (default, no API key): runs the real orchestrator to produce differentiated outputs + normalized traces, fully demonstrating the review loop. All intersection/union/attribution results are **real computations**, not mock data.
-- **Live mode** (auto-enabled when `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` or a `claude` / `codex` CLI is detected): adapters switch to real model calls, gracefully degrading back to Sim when unavailable.
+- **Sim mode** (default, no API key): uses **deterministic templates** to generate differentiated **placeholder outputs** and **simulated traces** (tokens / latency / steps are illustrative values, **not real measurements**). The clustering / intersection / union / attribution then runs as a **real algorithm over that placeholder data** — i.e. "real algorithm on templated data," meant to demonstrate the *shape* of the review loop. It does **not** represent any real model's consensus or divergence. For meaningful conclusions, use Live mode.
+- **Live mode** (auto-enabled when `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` is set): adapters switch to real model calls, gracefully degrading back to Sim when unavailable (a degraded agent is flagged as simulated in the UI).
+
+> **Two known Sim limitations** (see [`docs/CRITICISMS.md`](docs/CRITICISMS.md) for the full list):
+> 1. In Sim, each agent's first few points are written verbatim by the same template, so the "consensus" is partly re-parsing that shared template — a self-fulfilling loop, not a real finding.
+> 2. Clustering uses **lexical similarity** (Jaccard over CJK chars + bigrams), **not semantic** clustering. Under Live, synonymous-but-differently-worded points get scored as divergence, so consensus can read artificially low. Semantic embedding clustering is on the roadmap.
 
 ## Quick start
 
@@ -59,6 +64,8 @@ Yes, but **availability comes in four tiers** (see the trace-availability column
 | OTel / callbacks | LangGraph, CrewAI, AutoGen, ADK, smolagents | Attach an OpenTelemetry exporter or a framework callback / event listener | Node/agent level, with latency and tokens |
 | CLI logs | Codex CLI, Aider | Parse the `--json` event stream, or stdout / `~/.codex/sessions`, `.aider.chat.history` | Step level, requires parsing |
 | Final response only | Hermes (bare model + convention) | The framework records nothing; the adapter must **wrap a layer** to record each round of messages | Only the layer we wrap |
+
+> ⚠️ **The table above is a *feasibility map*, not *implemented status*.** The current Live adapters (`callAnthropic` / `callOpenAI`) consume only the **final response + usage** and emit a **single message step** — they do not yet read jsonl transcripts, OTel spans, or CLI event streams. So under Live, step-by-step trace and per-tool attribution are currently empty; the "native / OTel / CLI" rows are **roadmap**, not present behavior. Wiring multi-step trace via the Agent SDK / OTel is tracked in [`docs/CRITICISMS.md`](docs/CRITICISMS.md).
 
 **What this means for Aker:** the adapter layer normalizes these heterogeneous traces into the step structure in `src/trace.mjs` (think / tool / observe / message …), so the downstream effectiveness review (process diff, difference attribution) is decoupled from any specific framework. When no CLI is installed and no key is configured, it defaults to Sim; install `claude` / `codex` or configure a key and the Live adapter feeds real traces into the same review pipeline.
 

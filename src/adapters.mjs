@@ -104,14 +104,21 @@ async function runSim(framework, model, task, agentId) {
     status: 'done',
     mode: 'sim',
     output: composeOutput(task, framework, model),
-    trace: { steps, totals: summarizeTrace(steps), source: traceSource(framework) },
+    // 诚实性（H2）：Sim 模式没有真实采集任何 trace——没有 jsonl/transcript/OTel span，
+    // step 全是 composeTrace 用模板拼出来的。因此这里固定标 'sim'，**不**复用框架图鉴里
+    // 该框架在真实环境下能达到的 traceability 等级（native/otel/cli-log），避免在 UI 上
+    // 冒充「本次实际拿到的 trace 等级」。框架自身的可得性分级只在「框架图鉴」里展示。
+    trace: { steps, totals: summarizeTrace(steps), source: simTraceSource() },
   };
 }
 
-function traceSource(framework) {
-  const fw = getFramework(framework);
-  const meta = fw && TRACEABILITY_META[fw.traceability];
-  return { traceability: fw?.traceability || 'api-only', how: meta?.hint || '' };
+// Sim 模式固定的 trace 来源标记：与框架真实 traceability 解耦。
+function simTraceSource() {
+  return {
+    traceability: 'sim',
+    how: TRACEABILITY_META.sim.hint,
+    simulated: true,
+  };
 }
 
 // —— Live adapter（检测到能力时启用，否则抛错让上层降级到 Sim）—— //
@@ -143,6 +150,9 @@ async function callAnthropic(model, task) {
     body: JSON.stringify({ model, max_tokens: 1024, messages: [{ role: 'user', content: task }] }),
   });
   const j = await resp.json();
+  // C3：401/429/5xx 不能当成功——否则会 return 一个空 output 但标 status:done/mode:live，
+  // 把空串塞进评审聚类污染结果。这里如实抛错，交给 runAgent 的 catch 走降级/标错。
+  if (!resp.ok) throw new Error(`Anthropic ${resp.status}: ${JSON.stringify(j).slice(0, 200)}`);
   const text = (j.content || []).map((b) => b.text).join('\n');
   const steps = [makeStep(0, 'message', 'Anthropic 响应', { tokens: j.usage?.output_tokens || 0, ms: Date.now() - t0 })];
   return { status: 'done', mode: 'live', output: text, trace: { steps, totals: summarizeTrace(steps), source: { traceability: 'native', how: 'API usage + (可升级为 Agent SDK transcript)' } } };
@@ -156,6 +166,8 @@ async function callOpenAI(model, task) {
     body: JSON.stringify({ model, messages: [{ role: 'user', content: task }] }),
   });
   const j = await resp.json();
+  // C3：同 Anthropic——非 2xx 必须抛错，不能把 error JSON 当成空输出标成功。
+  if (!resp.ok) throw new Error(`OpenAI ${resp.status}: ${JSON.stringify(j).slice(0, 200)}`);
   const text = j.choices?.[0]?.message?.content || '';
   const steps = [makeStep(0, 'message', 'OpenAI 响应', { tokens: j.usage?.completion_tokens || 0, ms: Date.now() - t0 })];
   return { status: 'done', mode: 'live', output: text, trace: { steps, totals: summarizeTrace(steps), source: { traceability: 'native', how: 'API usage' } } };

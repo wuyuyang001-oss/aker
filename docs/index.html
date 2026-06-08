@@ -12,14 +12,15 @@
   --surface-2: #faf9f5;
   --ink: #20201d;
   --muted: #6f6a60;
-  --faint: #9b958a;
-  --accent: #d97757;
-  --accent-ink: #b85c3e;
+  --faint: #6f6a60;
+  --accent: #c25d3f;
+  --accent-ink: #a04e32;
+  --amber-ink: #8a5d12;
   --border: #e7e3d9;
   --border-strong: #d8d3c6;
   --green: #4f9d69;
   --cyan: #2f8aa3;
-  --amber: #c98a2b;
+  --amber: #9a6a1a;
   --red: #c75d4f;
   --shadow: 0 1px 2px rgba(40,35,25,.04), 0 6px 20px rgba(40,35,25,.06);
   --radius: 14px;
@@ -76,7 +77,7 @@ h2.section { font-size: 16px; margin: 0 0 4px; letter-spacing: -.01em; }
 .runbar { display: grid; gap: 14px; }
 .field label { display: block; font-size: 12.5px; color: var(--muted); margin-bottom: 6px; font-weight: 600; }
 textarea.task { width: 100%; min-height: 70px; resize: vertical; padding: 12px 14px; border: 1px solid var(--border-strong); border-radius: 10px; font: inherit; background: var(--surface-2); }
-textarea.task:focus { outline: none; border-color: var(--accent); background: #fff; }
+textarea.task:focus { border-color: var(--accent); background: #fff; }
 .agent-rows { display: grid; gap: 8px; }
 .agent-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; align-items: center; }
 select, .agent-row input { padding: 9px 11px; border: 1px solid var(--border-strong); border-radius: 9px; font: inherit; background: var(--surface-2); color: var(--ink); }
@@ -149,7 +150,7 @@ select, .agent-row input { padding: 9px 11px; border: 1px solid var(--border-str
 .fw-card .vendor { font-size: 11.5px; color: var(--faint); }
 .kv { display: grid; grid-template-columns: 72px 1fr; gap: 4px 10px; font-size: 12px; }
 .kv .k { color: var(--muted); }
-.trace-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 7px; color: #fff; }
+.trace-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 7px; color: #1c1a16; }
 .pill-list { display: flex; gap: 5px; flex-wrap: wrap; }
 .pill { font-size: 11px; padding: 2px 8px; border-radius: 6px; background: var(--surface-2); border: 1px solid var(--border); color: var(--muted); }
 pre.code { background: #2b2722; color: #e9e3d6; padding: 12px 14px; border-radius: 10px; overflow-x: auto; font-size: 12px; line-height: 1.55; margin: 4px 0 0; }
@@ -164,10 +165,58 @@ details.help summary { cursor: pointer; font-weight: 600; font-size: 13px; paddi
 .empty { color: var(--faint); font-size: 13px; padding: 30px; text-align: center; }
 .foot { color: var(--faint); font-size: 12px; margin-top: 28px; text-align: center; }
 
+/* ── 诚实性标记：模拟数据徽章 / 告警横幅 ── */
+.pill.sim { background: var(--amber); color: #fff; border: none; font-weight: 700; letter-spacing: .01em; }
+.metric-sim { color: var(--faint); }
+.metric-sim b { color: var(--muted); font-weight: 600; }
+.card.warn { background: #fbf2e2; border: 1px solid #e8cf9a; border-left: 4px solid var(--amber); color: #6b4a10; }
+.card.warn b { color: #5a3d0c; }
+.card-banner { margin: -14px -14px 12px; padding: 9px 14px; border-radius: 12px 12px 0 0; font-size: 12px; font-weight: 600; }
+.card-banner.warn { background: var(--amber); color: #fff; }
+.agent-card.is-sim { border-color: #e8cf9a; }
+
+/* 复制按钮（与 .btn.sm 同尺寸的 ghost 变体） */
+.btn.copy { background: var(--surface); color: var(--accent-ink); border: 1px solid var(--border-strong); box-shadow: none; }
+.btn.copy:hover { border-color: var(--accent); }
+.section-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+
+/* run 计时指示 */
+.spin { display: inline-block; width: 11px; height: 11px; border: 2px solid var(--border-strong); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; vertical-align: -1px; margin-right: 4px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* 屏幕阅读器专用 + skip link */
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.skip-link { position: absolute; left: 8px; top: -48px; z-index: 100; background: var(--accent); color: #fff; padding: 8px 14px; border-radius: 8px; transition: top .15s; text-decoration: none; }
+.skip-link:focus { top: 8px; }
+
+/* ── 无障碍：可见焦点环（替代被移除的 outline:none） ── */
+a:focus-visible, button:focus-visible, select:focus-visible, textarea:focus-visible, summary:focus-visible, [tabindex]:focus-visible {
+  outline: 2px solid var(--accent-ink); outline-offset: 2px; border-radius: 6px;
+}
+.side-nav button.active:focus-visible, .seg button.active:focus-visible, .btn:focus-visible {
+  outline: 2px solid #2b2722; outline-offset: 2px;
+}
+
+/* ── 窄屏响应式 ── */
+@media (max-width: 680px) {
+  .shell { grid-template-columns: 1fr; height: auto; overflow: visible; }
+  .sidebar { flex-direction: row; flex-wrap: wrap; align-items: center; border-right: none; border-bottom: 1px solid var(--border); padding: 12px; }
+  .macpad { display: none; }
+  .brand { padding: 4px 8px; }
+  .side-nav { flex-direction: row; flex-wrap: wrap; margin-top: 0; width: auto; }
+  .side-nav button { width: auto; }
+  .side-foot { margin-top: 0; flex-direction: row; align-items: center; }
+  .content { height: auto; }
+  .agent-row { grid-template-columns: 1fr; }
+  .deltas { flex-direction: column; }
+  .delta { width: 100%; }
+}
+
 </style>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='9' fill='%23d97757'/><text x='16' y='23' font-size='20' fill='white' text-anchor='middle' font-family='sans-serif' font-weight='700'>A</text></svg>" />
 </head>
 <body>
+  <a href="#main" class="skip-link">跳到主内容</a>
   <div class="shell">
     <!-- 侧边栏 -->
     <aside class="sidebar">
@@ -180,37 +229,37 @@ details.help summary { cursor: pointer; font-weight: 600; font-size: 13px; paddi
         </div>
       </div>
 
-      <nav class="side-nav" id="tabs">
-        <button data-tab="run" class="active"><span class="ni">▶</span><span>运行台</span></button>
-        <button data-tab="committee"><span class="ni">⚖</span><span>评审会</span></button>
-        <button data-tab="trace"><span class="ni">◫</span><span>Trace 对比</span></button>
-        <button data-tab="frameworks"><span class="ni">▤</span><span>框架图鉴</span></button>
+      <nav class="side-nav" id="tabs" role="tablist" aria-label="主导航">
+        <button data-tab="run" class="active" role="tab" id="tab-run" aria-controls="panel-run" aria-selected="true"><span class="ni" aria-hidden="true">▶</span><span>运行台</span></button>
+        <button data-tab="committee" role="tab" id="tab-committee" aria-controls="panel-committee" aria-selected="false" tabindex="-1"><span class="ni" aria-hidden="true">⚖</span><span>评审会</span></button>
+        <button data-tab="trace" role="tab" id="tab-trace" aria-controls="panel-trace" aria-selected="false" tabindex="-1"><span class="ni" aria-hidden="true">◫</span><span>Trace 对比</span></button>
+        <button data-tab="frameworks" role="tab" id="tab-frameworks" aria-controls="panel-frameworks" aria-selected="false" tabindex="-1"><span class="ni" aria-hidden="true">▤</span><span>框架图鉴</span></button>
       </nav>
 
       <div class="side-foot">
-        <div class="modepill" id="modepill"><span class="dot" id="modedot"></span><span id="modetext">检测中…</span></div>
+        <div class="modepill" id="modepill"><span class="dot" id="modedot" aria-hidden="true"></span><span id="modetext">检测中…</span></div>
         <div class="side-tag">适配器架构 · Sim/Live 双模式</div>
       </div>
     </aside>
 
     <!-- 内容区 -->
-    <main class="content">
+    <main class="content" id="main" aria-label="主内容">
     <!-- 运行台 -->
-    <section class="panel active" id="panel-run">
+    <section class="panel active" id="panel-run" role="tabpanel" aria-labelledby="tab-run" tabindex="0">
       <div class="page-head"><h2 class="page-title">并行运行台</h2><p class="page-sub">同一个任务，派发给多个 (框架 × 模型) 组合并行执行，收集各自输出与 trace。</p></div>
       <div class="card">
         <div class="runbar">
           <div class="field">
-            <label>任务</label>
-            <textarea class="task" id="task">实现一个带缓存的并发安全计数器</textarea>
+            <label for="task">任务</label>
+            <textarea class="task" id="task" placeholder="描述一个要让多个 agent 并行解决的任务，例如：实现一个带缓存的并发安全计数器" maxlength="2000">实现一个带缓存的并发安全计数器</textarea>
           </div>
           <div class="field">
-            <label>参与的 agent（框架 × 模型）</label>
-            <div class="agent-rows" id="agentRows"></div>
+            <label id="agentRowsLabel">参与的 agent（框架 × 模型）</label>
+            <div class="agent-rows" id="agentRows" aria-labelledby="agentRowsLabel"></div>
           </div>
           <div class="row-actions">
             <button class="btn ghost sm" id="addAgent">+ 加一个 agent</button>
-            <div class="seg" id="modeSeg">
+            <div class="seg" id="modeSeg" role="group" aria-label="运行模式">
               <button data-mode="sim" class="active">Sim 模式</button>
               <button data-mode="live">Live 模式</button>
             </div>
@@ -219,17 +268,17 @@ details.help summary { cursor: pointer; font-weight: 600; font-size: 13px; paddi
         </div>
       </div>
       <div style="height:16px"></div>
-      <div id="runStatus"></div>
+      <div id="runStatus" aria-live="polite" aria-atomic="true"></div>
       <div class="grid cols" id="results"></div>
     </section>
 
     <!-- 评审会 -->
-    <section class="panel" id="panel-committee">
+    <section class="panel" id="panel-committee" role="tabpanel" aria-labelledby="tab-committee" tabindex="0">
       <div class="page-head"><h2 class="page-title">评审会</h2><p class="page-sub">对多个 agent 输出取交集/并集，做差异归因，给出更优解。</p></div>
       <div class="card">
         <div class="toolbar">
-          <select id="reviewRun"></select>
-          <div class="seg" id="reviewMode">
+          <select id="reviewRun" aria-label="选择要评审的 run"></select>
+          <div class="seg" id="reviewMode" role="group" aria-label="评审取值方式">
             <button data-mode="intersection" class="active">交集 · 共识</button>
             <button data-mode="union">并集 · 全集</button>
           </div>
@@ -237,27 +286,27 @@ details.help summary { cursor: pointer; font-weight: 600; font-size: 13px; paddi
         </div>
       </div>
       <div style="height:16px"></div>
-      <div id="committeeOut"></div>
+      <div id="committeeOut" aria-live="polite" aria-atomic="true"></div>
     </section>
 
     <!-- Trace 对比 -->
-    <section class="panel" id="panel-trace">
+    <section class="panel" id="panel-trace" role="tabpanel" aria-labelledby="tab-trace" tabindex="0">
       <div class="page-head"><h2 class="page-title">Trace 对比 · 效果评审</h2><p class="page-sub">不看结果看过程：对比两个 agent 的执行步骤、工具、token、耗时。</p></div>
       <div class="card">
         <div class="toolbar">
-          <select id="traceRun"></select>
-          <select id="traceA"></select>
-          <span style="color:var(--muted)">vs</span>
-          <select id="traceB"></select>
+          <select id="traceRun" aria-label="选择要对比的 run"></select>
+          <select id="traceA" aria-label="对比的 A 方 agent"></select>
+          <span style="color:var(--muted)" aria-hidden="true">vs</span>
+          <select id="traceB" aria-label="对比的 B 方 agent"></select>
           <button class="btn sm" id="traceBtn">对比</button>
         </div>
       </div>
       <div style="height:16px"></div>
-      <div id="traceOut"></div>
+      <div id="traceOut" aria-live="polite" aria-atomic="true"></div>
     </section>
 
     <!-- 框架图鉴 -->
-    <section class="panel" id="panel-frameworks">
+    <section class="panel" id="panel-frameworks" role="tabpanel" aria-labelledby="tab-frameworks" tabindex="0">
       <div class="page-head"><h2 class="page-title">Agent 框架图鉴</h2><p class="page-sub">不同 agent 框架的范式、多 agent 支持、工具调用与 <b>trace 可得性</b>对比 —— trace 可得性直接决定 Aker 能否对它做效果评审。</p></div>
       <div class="card">
         <div class="scroll-x"><table class="matrix" id="matrix"></table></div>
@@ -268,7 +317,7 @@ details.help summary { cursor: pointer; font-weight: 600; font-size: 13px; paddi
     </main>
   </div>
   <script>
-const __ENV = (typeof window !== 'undefined' && window.AKER_ENV) || {};
+const __ENV = {};
 // frameworks.mjs — agent 框架图鉴
 // 每个条目除了基础信息，重点标注【trace 可得性】，因为这直接决定 aker 能否做效果评审。
 // traceability 取值：'native'(原生结构化 trace) | 'otel'(走 OpenTelemetry/callback) | 'cli-log'(只能解析 stdout/日志) | 'api-only'(只有最终响应)
@@ -493,6 +542,9 @@ const TRACEABILITY_META = {
   otel:      { label: 'OTel/回调',  score: 3, color: '#0891b2', hint: '通过 OpenTelemetry 或 callback 收集' },
   'cli-log': { label: 'CLI 日志',   score: 2, color: '#d97706', hint: '解析 --json 事件流或 stdout/日志文件' },
   'api-only':{ label: '仅最终响应', score: 1, color: '#dc2626', hint: '只有最终输出，需自包一层记录中间步骤' },
+  // sim 档：这一档不是某个框架的真实 trace 等级，而是「本次 run 是 Sim 模式、step 由模板拼装、未真实采集」的诚实标记。
+  // 告警色（土黄）+ score 0，让前端一眼看出「这不是真 trace」。
+  sim:       { label: '模拟 trace',  score: 0, color: '#a16207', hint: '模板生成，非真实采集——Sim 模式未真正调用模型，step 由 composeTrace 拼装' },
 };
 
 function getFramework(id) {
@@ -558,15 +610,40 @@ function agentLabel(a) {
 // 输入：一个 run 的多个 agent 输出（+各自 trace）
 // 输出：交集(共识) / 并集(全集) / 差异归因 / 更优解
 // 关键：所有分析都是“真实计算”出来的，不依赖 LLM 也能跑（Sim 模式）。
-// Live 模式下，synthesizeBetter() 会被替换成真实 LLM 综合（见 adapters.liveSynthesize）。
+// 综合更优解（synthesizeBetter）当前为【规则式启发综合，仅演示】——
+// 即便配置了 API key，本次也不做 LLM 二次综合（adapters.liveSynthesize 尚未实现，属 roadmap）。
 
+
+// —— 评审会可调常数（CONFIG）——
+// ⚠️ 重要：以下阈值/权重均为【启发式经验值，仅供 Sim 演示】，未经任何标定或验证，
+//    不代表真实质量评估。Sim 模式下 trace（工具数/步数）由框架工具表 + rng 生成，
+//    因此“可信度”实质由框架配置预定，并非事实依据。详见 README「Sim 可信度说明」。
+const CONFIG = {
+  // 要点聚类的字面 jaccard 相似度阈值：>= 此值视为同一主张簇。
+  // 0.34 为经验取值（CJK bigram + latin 词袋下，过低会乱并、过高会过散）。
+  SIM_THRESHOLD: 0.34,
+  // 进入“共识”所需的最少 agent 覆盖数下限（再与多数票 ceil(n/2) 取较大者）。
+  MIN_CONSENSUS: 2,
+  // “推理深度差异”归因触发门槛：最大步数 - 最小步数 >= 此值才报告。
+  DEPTH_GAP: 2,
+  // 过程可信度（cred）启发式打分权重（仅 Sim 演示，非真实质量）：
+  //   cred = tools*toolW + min(steps, stepCap) - errors*errPenalty
+  CRED: { toolW: 2, stepCap: 6, errPenalty: 3 },
+};
 
 // —— 文本切片：把一段输出拆成“论点/要点”单元 ——
+// P2 修复：剔除“方案标题/元信息行”，避免三家相似标题被聚成头号伪共识。
+//   命中以下任一模式即视为标题/元信息，不进入可聚类正文：
+//   - 「针对「…」的方案」开头的标题行
+//   - 含「方案（by …」「by X·Y」署名样式
+//   - 含「风格：/风格:」标注
+const TITLE_NOISE = /^针对「.*」的方案|方案（by\s|（by\s|风格[:：]/;
 function splitPoints(text = '') {
   return text
     .split(/\n+|(?<=[。！？.!?])\s+/g)
     .map((s) => s.replace(/^[\s\-*•\d.、)）]+/, '').trim())
-    .filter((s) => s.length >= 4);
+    .filter((s) => s.length >= 4)
+    .filter((s) => !TITLE_NOISE.test(s));
 }
 
 // —— 归一化分词：latin 单词 + CJK 字符，用于相似度 ——
@@ -586,8 +663,6 @@ function jaccard(a, b) {
   return inter / (a.size + b.size - inter);
 }
 
-const SIM_THRESHOLD = 0.34;
-
 // 把所有 agent 的要点聚类：相似的归为同一个“主张簇”
 function clusterPoints(agents) {
   const items = [];
@@ -603,7 +678,7 @@ function clusterPoints(agents) {
       const sim = jaccard(it.sh, c.centroid);
       if (sim > bestSim) { bestSim = sim; best = c; }
     }
-    if (best && bestSim >= SIM_THRESHOLD) {
+    if (best && bestSim >= CONFIG.SIM_THRESHOLD) {
       best.members.push(it);
       for (const x of it.sh) best.centroid.add(x);
       best.agents.add(it.ai);
@@ -625,9 +700,9 @@ function review(run, mode = 'intersection') {
   const clusters = clusterPoints(agents);
   const majority = Math.ceil(n / 2);
 
-  // 共识(交集)：被多数 agent 覆盖的簇
+  // 共识(交集)：被多数 agent 覆盖的簇（覆盖数 >= max(MIN_CONSENSUS, 多数票)）
   const consensus = clusters
-    .filter((c) => c.agents.size >= Math.max(2, majority))
+    .filter((c) => c.agents.size >= Math.max(CONFIG.MIN_CONSENSUS, majority))
     .map((c) => ({
       text: repText(c),
       coverage: c.agents.size,
@@ -696,7 +771,7 @@ function attribute(agents, divergence) {
   // 3) 步骤深度差异（trace）
   const steps = traces.map((x) => x.t.steps);
   const maxS = Math.max(...steps), minS = Math.min(...steps);
-  if (maxS - minS >= 2) {
+  if (maxS - minS >= CONFIG.DEPTH_GAP) {
     const deep = traces.find((x) => x.t.steps === maxS);
     reasons.push({
       kind: '推理深度差异',
@@ -717,14 +792,16 @@ function attribute(agents, divergence) {
   return reasons;
 }
 
-// —— 更优解综合（Sim 模式：基于规则的可解释综合）——
+// —— 更优解综合（当前为规则式启发综合，仅演示；Live LLM 综合为 roadmap）——
 function synthesizeBetter(agents, consensus, union, attribution) {
   const traces = agents.map((a) => summarizeTrace(a.trace?.steps || []));
-  // 给每个 agent 一个“过程可信度”分（基于 trace：有工具、步骤适中、无错误）
+  // 给每个 agent 一个“过程可信度”分（启发式：有工具、步骤适中、无错误）
+  // ⚠️ Sim 下 trace 由框架工具表 + rng 生成、errors 恒 0，该分数无事实依据。
+  const { toolW, stepCap, errPenalty } = CONFIG.CRED;
   const cred = {};
   agents.forEach((a, i) => {
     const t = traces[i];
-    cred[a.agentId] = (t.tools.length * 2) + Math.min(t.steps, 6) - t.errors * 3;
+    cred[a.agentId] = (t.tools.length * toolW) + Math.min(t.steps, stepCap) - t.errors * errPenalty;
   });
 
   // 采纳的独有要点：来自可信度高于中位数的 agent
@@ -734,21 +811,28 @@ function synthesizeBetter(agents, consensus, union, attribution) {
     .filter((u) => u.unique && (cred[u.agents[0]] ?? 0) >= med)
     .map((u) => ({ text: u.text, from: u.agents[0] }));
 
+  // 是否含 Sim agent：决定要不要在文案里醒目标注“可信度基于模拟 trace”。
+  const isSim = agents.some((a) => (a.mode || 'sim') === 'sim');
+  const credNote = isSim ? '（Sim：可信度基于模拟 trace，无事实依据）' : '';
+
   const lines = [];
   lines.push('## 综合最优解（aker 评审会）');
   lines.push('');
-  lines.push('### 已确立的共识（多数 agent 一致，可信度最高）');
+  if (isSim) lines.push('> ⚠️ Sim 模式：以下“可信度/采纳依据”均基于**模拟 trace**（工具数/步数由框架表生成），不代表真实质量。');
+  lines.push('');
+  lines.push('### 已确立的共识（多数 agent 覆盖）');
+  lines.push('> 注：“多数 agent 覆盖”≠ 绝对正确——同源模型可能共同偏见，相关性一起错。');
   if (consensus.length) consensus.forEach((c) => lines.push(`- ${c.text}  _(${c.coverage} 个 agent 覆盖)_`));
   else lines.push('- （本次无强共识——说明任务发散或 agent 配置差异大，建议增加一致性约束或换更同质的模型组）');
   lines.push('');
-  lines.push('### 选择性纳入的独有洞见（过程可信度更高的一方提出）');
-  if (adoptedUnique.length) adoptedUnique.forEach((u) => lines.push(`- ${u.text}  _(来自 ${u.from}，其 trace 有工具/验证支撑)_`));
+  lines.push(`### 选择性纳入的独有洞见（过程可信度更高的一方提出）${credNote}`);
+  if (adoptedUnique.length) adoptedUnique.forEach((u) => lines.push(`- ${u.text}  _(来自 ${u.from}，其 trace 有工具/验证支撑${isSim ? '；Sim 模拟' : ''})_`));
   else lines.push('- （无满足采纳门槛的独有要点）');
   lines.push('');
   lines.push('### 评审会判断');
   attribution.forEach((r) => lines.push(`- **${r.kind}**（权重 ${r.weight}）：${r.detail}`));
   lines.push('');
-  lines.push('> Live 模式接入真实模型后，这一段会替换为 LLM 对以上结构化证据的二次综合（措辞更自然，并能解决事实冲突）。');
+  lines.push('> 当前为规则式启发综合（仅演示）。Live LLM 二次综合（adapters.liveSynthesize，对以上结构化证据综合并解决事实冲突）为 roadmap，尚未实现。');
 
   return {
     credibility: cred,
@@ -861,14 +945,21 @@ async function runSim(framework, model, task, agentId) {
     status: 'done',
     mode: 'sim',
     output: composeOutput(task, framework, model),
-    trace: { steps, totals: summarizeTrace(steps), source: traceSource(framework) },
+    // 诚实性（H2）：Sim 模式没有真实采集任何 trace——没有 jsonl/transcript/OTel span，
+    // step 全是 composeTrace 用模板拼出来的。因此这里固定标 'sim'，**不**复用框架图鉴里
+    // 该框架在真实环境下能达到的 traceability 等级（native/otel/cli-log），避免在 UI 上
+    // 冒充「本次实际拿到的 trace 等级」。框架自身的可得性分级只在「框架图鉴」里展示。
+    trace: { steps, totals: summarizeTrace(steps), source: simTraceSource() },
   };
 }
 
-function traceSource(framework) {
-  const fw = getFramework(framework);
-  const meta = fw && TRACEABILITY_META[fw.traceability];
-  return { traceability: fw?.traceability || 'api-only', how: meta?.hint || '' };
+// Sim 模式固定的 trace 来源标记：与框架真实 traceability 解耦。
+function simTraceSource() {
+  return {
+    traceability: 'sim',
+    how: TRACEABILITY_META.sim.hint,
+    simulated: true,
+  };
 }
 
 // —— Live adapter（检测到能力时启用，否则抛错让上层降级到 Sim）—— //
@@ -892,31 +983,9 @@ async function runLive(framework, model, task, agentId) {
   throw new Error(`live-unavailable:${framework}/${model}`);
 }
 
-async function callAnthropic(model, task) {
-  const t0 = Date.now();
-  const resp = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json', 'x-api-key': __ENV.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
-    body: JSON.stringify({ model, max_tokens: 1024, messages: [{ role: 'user', content: task }] }),
-  });
-  const j = await resp.json();
-  const text = (j.content || []).map((b) => b.text).join('\n');
-  const steps = [makeStep(0, 'message', 'Anthropic 响应', { tokens: j.usage?.output_tokens || 0, ms: Date.now() - t0 })];
-  return { status: 'done', mode: 'live', output: text, trace: { steps, totals: summarizeTrace(steps), source: { traceability: 'native', how: 'API usage + (可升级为 Agent SDK transcript)' } } };
-}
+async function callAnthropic() { throw new Error('Live 模式不支持浏览器内直连（避免 API key 泄露），请改用本地 server.mjs 后端代理'); }
 
-async function callOpenAI(model, task) {
-  const t0 = Date.now();
-  const resp = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json', authorization: `Bearer ${__ENV.OPENAI_API_KEY}` },
-    body: JSON.stringify({ model, messages: [{ role: 'user', content: task }] }),
-  });
-  const j = await resp.json();
-  const text = j.choices?.[0]?.message?.content || '';
-  const steps = [makeStep(0, 'message', 'OpenAI 响应', { tokens: j.usage?.completion_tokens || 0, ms: Date.now() - t0 })];
-  return { status: 'done', mode: 'live', output: text, trace: { steps, totals: summarizeTrace(steps), source: { traceability: 'native', how: 'API usage' } } };
-}
+async function callOpenAI() { throw new Error('Live 模式不支持浏览器内直连（避免 API key 泄露），请改用本地 server.mjs 后端代理'); }
 
 // —— 统一入口 —— //
 async function runAgent({ framework, model, task, agentId, mode }) {
@@ -1057,7 +1126,7 @@ window.fetch = async (input, init = {}) => {
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const api = (p, opts) => fetch(p, opts).then((r) => r.json());
-const esc = (s) => String(s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 let STATE = { frameworks: [], traceMeta: {}, matrixCols: [], mode: 'sim', lastRun: null };
 
@@ -1070,23 +1139,57 @@ const DEFAULT_AGENTS = [
 ];
 
 // ───────── tabs ─────────
-$$('#tabs button').forEach((b) => b.addEventListener('click', () => {
-  $$('#tabs button').forEach((x) => x.classList.toggle('active', x === b));
+function activateTab(b) {
+  $$('#tabs button').forEach((x) => {
+    const on = x === b;
+    x.classList.toggle('active', on);
+    x.setAttribute('aria-selected', on ? 'true' : 'false');
+    x.tabIndex = on ? 0 : -1;
+  });
   $$('.panel').forEach((p) => p.classList.toggle('active', p.id === `panel-${b.dataset.tab}`));
-  if (b.dataset.tab === 'committee' || b.dataset.tab === 'trace') refreshRunPickers();
-}));
+  if (b.dataset.tab === 'committee') { refreshRunPickers().then(() => { if ($('#reviewRun').value) doReview(); }); }
+  else if (b.dataset.tab === 'trace') { refreshRunPickers(); }
+}
+$$('#tabs button').forEach((b) => {
+  b.addEventListener('click', () => activateTab(b));
+  // 键盘左右方向键在 tablist 内移动焦点（roving tabindex）
+  b.addEventListener('keydown', (e) => {
+    const tabs = $$('#tabs button');
+    const i = tabs.indexOf(b);
+    let ni = -1;
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') ni = (i + 1) % tabs.length;
+    else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') ni = (i - 1 + tabs.length) % tabs.length;
+    else if (e.key === 'Home') ni = 0;
+    else if (e.key === 'End') ni = tabs.length - 1;
+    if (ni >= 0) { e.preventDefault(); activateTab(tabs[ni]); tabs[ni].focus(); }
+  });
+});
 
 // ───────── init ─────────
 (async function init() {
   const [health, fw] = await Promise.all([api('/api/health'), api('/api/frameworks')]);
   STATE.frameworks = fw.frameworks; STATE.traceMeta = fw.traceabilityMeta; STATE.matrixCols = fw.matrixColumns;
+  STATE.live = !!health.live;
   $('#modedot').classList.toggle('on', health.live);
-  $('#modetext').textContent = health.live ? 'Live 可用' : 'Sim 模式';
-  $('#modepill').title = health.note;
+  $('#modetext').textContent = health.live ? 'Live 可用' : 'Sim 模式（无 API key）';
+  $('#modepill').title = health.note || '';
   renderAgentRows(DEFAULT_AGENTS);
   renderFrameworks();
   bindRunControls();
-  refreshRunPickers();
+  // 评审会 / Trace 首屏空态引导（U2）
+  $('#committeeOut').innerHTML = '<div class="card empty">选择一个 run 并点击「评审」，查看交集/并集、差异归因与更优解。</div>';
+  $('#traceOut').innerHTML = '<div class="card empty">选择一个 run 与两个 agent，点击「对比」，查看过程差异与效果评审。</div>';
+  // 无 key 时锁定 Sim：禁用 Live 按钮（U1 / H6 —— Pages 在线版永远走这里）
+  if (!health.live) {
+    const lb = $('#modeSeg [data-mode="live"]');
+    if (lb) {
+      lb.disabled = true;
+      lb.setAttribute('aria-disabled', 'true');
+      lb.title = '未检测到 ANTHROPIC_API_KEY / OPENAI_API_KEY，无法 Live（仅 Sim 模拟）';
+    }
+    STATE.mode = 'sim';
+  }
+  await refreshRunPickers();
 })();
 
 // ───────── 运行台 ─────────
@@ -1096,9 +1199,9 @@ function modelOptions(sel) { return MODELS.map((m) => `<option value="${m}" ${m 
 function renderAgentRows(agents) {
   $('#agentRows').innerHTML = agents.map((a, i) => `
     <div class="agent-row" data-i="${i}">
-      <select class="fw">${fwOptions(a.framework)}</select>
-      <select class="ml">${modelOptions(a.model)}</select>
-      <button class="icon-btn rm" title="移除">×</button>
+      <select class="fw" aria-label="第 ${i + 1} 个 agent 的框架">${fwOptions(a.framework)}</select>
+      <select class="ml" aria-label="第 ${i + 1} 个 agent 的模型">${modelOptions(a.model)}</select>
+      <button class="icon-btn rm" title="移除该 agent" aria-label="移除第 ${i + 1} 个 agent"><span aria-hidden="true">×</span></button>
     </div>`).join('');
   $$('#agentRows .rm').forEach((btn) => btn.addEventListener('click', (e) => {
     const rows = collectAgents(); const i = +e.target.closest('.agent-row').dataset.i;
@@ -1111,47 +1214,77 @@ function collectAgents() {
 function bindRunControls() {
   $('#addAgent').addEventListener('click', () => renderAgentRows([...collectAgents(), { framework: 'crewai', model: 'gemini-x' }]));
   $$('#modeSeg button').forEach((b) => b.addEventListener('click', () => {
+    if (b.disabled) return; // 无 key 时 Live 不可选（U1）
     $$('#modeSeg button').forEach((x) => x.classList.toggle('active', x === b)); STATE.mode = b.dataset.mode;
   }));
   $('#runBtn').addEventListener('click', submitRun);
+  // Cmd/Ctrl + Enter 提交（X8）
+  $('#task').addEventListener('keydown', (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); submitRun(); }
+  });
 }
 
 async function submitRun() {
   const task = $('#task').value.trim();
   const agents = collectAgents();
   if (!task || !agents.length) return;
-  const btn = $('#runBtn'); btn.disabled = true; btn.textContent = '运行中…';
-  $('#runStatus').innerHTML = `<div class="card"><div class="metrics"><span>并行派发 <b>${agents.length}</b> 个 agent · 模式 <b>${STATE.mode}</b></span></div></div>`;
+  const btn = $('#runBtn'); btn.disabled = true; btn.textContent = '运行中…'; btn.setAttribute('aria-busy', 'true');
   // 先渲染 running 占位卡
   $('#results').innerHTML = agents.map((a, i) => agentCardShell(a, i)).join('');
+  // 等待期计时指示（U4：真正逐个流式落地需后端 SSE，记入 CRITICISMS.md）
+  const t0 = Date.now();
+  const hint = STATE.mode === 'live' ? ' · Live 模式下单个 agent 可能需要数十秒' : '';
+  const tick = () => {
+    const s = ((Date.now() - t0) / 1000).toFixed(1);
+    $('#runStatus').innerHTML = `<div class="card"><div class="metrics"><span class="spin" aria-hidden="true"></span><span>并行运行中 <b>${s}s</b> · 派发 <b>${agents.length}</b> 个 agent · 模式 <b>${esc(STATE.mode)}</b>${hint}</span></div></div>`;
+  };
+  tick();
+  const timer = setInterval(tick, 100);
   try {
     const { run, error } = await api('/api/run', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ task, agents, mode: STATE.mode }) });
     if (error) throw new Error(error);
     STATE.lastRun = run;
     $('#results').innerHTML = run.agents.map(agentCard).join('');
-    $('#runStatus').innerHTML = `<div class="card"><div class="metrics"><span class="status done"></span><span>完成 · run <b>${run.id}</b> · 已存档，可在「评审会 / Trace」中调用</span></div></div>`;
+    clearInterval(timer);
+    const dur = ((Date.now() - t0) / 1000).toFixed(1);
+    const simNote = run.mode === 'sim' ? ' · <b>Sim 模拟数据</b>（非真实模型）' : '';
+    $('#runStatus').innerHTML = `<div class="card"><div class="metrics"><span class="status done" role="img" aria-label="已完成"></span><span>完成 · 用时 <b>${dur}s</b> · run <b>${esc(run.id)}</b>${simNote} · 已存档，可在「评审会 / Trace」中调用</span></div></div>`;
     refreshRunPickers(run.id);
   } catch (e) {
-    $('#runStatus').innerHTML = `<div class="card"><span style="color:var(--red)">运行失败：${esc(e.message)}</span></div>`;
-  } finally { btn.disabled = false; btn.textContent = '▶ 并行运行'; }
+    clearInterval(timer);
+    $('#runStatus').innerHTML = `<div class="card warn" role="alert"><span style="color:var(--red)">运行失败：${esc(e.message)}</span></div>`;
+  } finally { clearInterval(timer); btn.disabled = false; btn.textContent = '▶ 并行运行'; btn.removeAttribute('aria-busy'); }
 }
 
+const STATUS_LABEL = { running: '执行中', done: '已完成', error: '失败' };
+function statusDot(s) { return `<span class="status ${esc(s)}" role="img" aria-label="${esc(STATUS_LABEL[s] || s)}"></span>`; }
+
 function agentCardShell(a, i) {
-  return `<div class="agent-card"><div class="head"><span class="status running"></span><span class="fw-tag">${esc(fwName(a.framework))}</span><span class="model">${esc(a.model)}</span></div><div class="out" style="color:var(--faint)">执行中…</div></div>`;
+  return `<div class="agent-card"><div class="head">${statusDot('running')}<span class="fw-tag">${esc(fwName(a.framework))}</span><span class="model">${esc(a.model)}</span></div><div class="out" style="color:var(--faint)">执行中…</div></div>`;
 }
 function agentCard(a) {
   const t = a.trace?.totals || {};
   const src = a.trace?.source;
-  return `<div class="agent-card">
-    <div class="head"><span class="status ${a.status}"></span><span class="fw-tag">${esc(fwName(a.framework))}</span><span class="model">${esc(a.model)}</span>${a.mode === 'live' ? '<span class="pill">live</span>' : ''}</div>
-    ${a.note ? `<div class="cov" style="color:var(--amber)">${esc(a.note)}</div>` : ''}
+  const isSim = a.mode === 'sim';
+  // H1/H7：sim（含 Live 降级回退）一律强制标记「模拟数据」，指标加 ~ 前缀 + 弱化 + title
+  const modePill = isSim
+    ? '<span class="pill sim" title="本卡所有指标为模板生成的模拟值，非真实测量">SIMULATED · 模拟数据</span>'
+    : '<span class="pill" title="真实调用模型">live</span>';
+  const mcls = isSim ? 'metric-sim' : '';
+  const mtitle = isSim ? ' title="模拟值，非真实测量"' : '';
+  const pfx = isSim ? '~' : '';
+  // H7：降级 note 从一行小字升级为卡片级告警横幅
+  const banner = a.note ? `<div class="card-banner warn" role="note">${esc(a.note)}</div>` : '';
+  return `<div class="agent-card${isSim ? ' is-sim' : ''}">
+    ${banner}
+    <div class="head">${statusDot(a.status)}<span class="fw-tag">${esc(fwName(a.framework))}</span><span class="model">${esc(a.model)}</span>${modePill}</div>
     <div class="out">${esc(a.output || a.error || '')}</div>
-    <div class="metrics">
-      <span>步骤 <b>${t.steps || 0}</b></span>
-      <span>工具 <b>${t.toolCalls || 0}</b></span>
-      <span>token <b>${t.tokens || 0}</b></span>
-      <span>耗时 <b>${t.wallMs || 0}</b>ms</span>
-      ${src ? `<span title="${esc(src.how)}">trace: <b>${esc(STATE.traceMeta[src.traceability]?.label || src.traceability)}</b></span>` : ''}
+    <div class="metrics ${mcls}"${mtitle}>
+      <span>步骤 <b>${pfx}${t.steps || 0}</b></span>
+      <span>工具 <b>${pfx}${t.toolCalls || 0}</b></span>
+      <span>token <b>${pfx}${t.tokens || 0}</b></span>
+      <span>耗时 <b>${pfx}${t.wallMs || 0}</b>ms</span>
+      ${src ? `<span title="${esc(src.how)}${isSim ? '（模拟 trace）' : ''}">trace: <b>${esc(STATE.traceMeta[src.traceability]?.label || src.traceability)}${isSim ? '（模拟）' : ''}</b></span>` : ''}
     </div>
   </div>`;
 }
@@ -1160,9 +1293,12 @@ function fwName(id) { return STATE.frameworks.find((f) => f.id === id)?.name || 
 // ───────── run pickers (评审会 / trace 共用) ─────────
 async function refreshRunPickers(selectId) {
   const { runs } = await api('/api/runs');
-  const opts = runs.map((r) => `<option value="${r.id}">${esc(r.task.slice(0, 28))} · ${r.agentCount}agent</option>`).join('');
+  const opts = runs.map((r) => {
+    const tag = r.mode === 'sim' ? ' · [Sim]' : ' · [Live]';
+    return `<option value="${esc(r.id)}">${esc(r.task.slice(0, 28))} · ${r.agentCount}agent${tag}</option>`;
+  }).join('');
   for (const sel of ['#reviewRun', '#traceRun']) { const el = $(sel); if (el) { el.innerHTML = opts; if (selectId) el.value = selectId; } }
-  onTraceRunChange();
+  await onTraceRunChange();
 }
 
 // ───────── 评审会 ─────────
@@ -1175,11 +1311,16 @@ async function doReview() {
   const mode = $('#reviewMode button.active').dataset.mode;
   if (!runId) return;
   $('#committeeOut').innerHTML = '<div class="card empty">评审中…</div>';
-  const { review, error } = await api('/api/review', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ runId, mode }) });
-  if (error) { $('#committeeOut').innerHTML = `<div class="card empty">${esc(error)}</div>`; return; }
-  renderReview(review, mode);
+  // 取回完整 run，判断是否含模拟 / 降级 agent —— 用于「基于模拟 trace」告警（H4/H5）
+  const [{ run }, { review, error }] = await Promise.all([
+    api(`/api/runs/${encodeURIComponent(runId)}`),
+    api('/api/review', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ runId, mode }) }),
+  ]);
+  if (error) { $('#committeeOut').innerHTML = `<div class="card empty" role="alert">${esc(error)}</div>`; return; }
+  const simmy = !run || run.mode === 'sim' || (run.agents || []).some((a) => a.mode === 'sim');
+  renderReview(review, mode, simmy);
 }
-function renderReview(r, mode) {
+function renderReview(r, mode, isSim) {
   const list = mode === 'intersection' ? r.consensus : r.union;
   const listTitle = mode === 'intersection' ? `共识 / 交集 (${r.consensus.length})` : `全集 / 并集 (${r.union.length})`;
   const listHtml = list.length ? list.map((c) => `
@@ -1189,18 +1330,34 @@ function renderReview(r, mode) {
   const divHtml = r.divergence.length ? r.divergence.map((d) => `<div class="div-item">${esc(d.text)} <span class="cov">· 来自 ${esc(d.by)}</span></div>`).join('') : '<div class="empty">无显著分歧</div>';
 
   const attrHtml = r.attribution.map((a) => `
-    <div class="attr ${a.weight}"><span class="k">${esc(a.kind)}</span><span class="w">${a.weight}</span><div style="color:var(--muted);margin-top:3px">${esc(a.detail)}</div></div>`).join('');
+    <div class="attr ${esc(a.weight)}"><span class="k">${esc(a.kind)}</span><span class="w">${esc(a.weight)}</span><div style="color:var(--muted);margin-top:3px">${esc(a.detail)}</div></div>`).join('');
+
+  // H4：基于模拟 trace 的免责告警
+  const simBanner = isSim
+    ? `<div class="card warn" role="note"><b>本次评审基于模拟 trace。</b>步骤/工具/token 等数字由模板生成，归因仅演示算法形态，<b>不代表真实模型行为</b>。接入 API key 后切换 Live 才会基于真实执行 trace 评审。</div><div style="height:16px"></div>`
+    : '';
+  // H5：sim 下分歧来自固定模板差异化句式，不存在「幻觉」，故切换中性文案
+  const divHint = isSim
+    ? '仅单一 agent 提出 —— Sim 模式下这些来自模板的固定差异化句式（既非洞见也非幻觉）'
+    : '仅单一 agent 提出 —— 可能是独到洞见，也可能是无依据发挥';
+  const attrHint = isSim
+    ? '结合 trace 解释「为什么会不同」（注意：基于模拟 trace，仅示意算法形态）'
+    : '结合 trace 解释「为什么会不同」';
+
+  // U3：更优解 Markdown 存入全局，供「复制」按钮取用
+  STATE.betterMd = r.betterSolution.markdown;
 
   $('#committeeOut').innerHTML = `
-    <div class="grid" style="grid-template-columns:1fr 1fr;gap:16px">
+    ${simBanner}
+    <div class="two-col">
       <div class="card">
-        <h2 class="section">${listTitle}</h2>
+        <h2 class="section">${esc(listTitle)}</h2>
         <p class="section-hint">${mode === 'intersection' ? '多数 agent 一致认可的要点，可信度最高' : '去重后的全部要点，含仅单一 agent 提出的'}</p>
         ${listHtml}
       </div>
       <div class="card">
         <h2 class="section">分歧点 (${r.divergence.length})</h2>
-        <p class="section-hint">仅单一 agent 提出 —— 可能是独到洞见，也可能是无依据发挥</p>
+        <p class="section-hint">${divHint}</p>
         ${divHtml}
       </div>
     </div>
@@ -1208,48 +1365,90 @@ function renderReview(r, mode) {
     <div class="two-col">
       <div class="card">
         <h2 class="section">差异归因</h2>
-        <p class="section-hint">结合 trace 解释「为什么会不同」</p>
+        <p class="section-hint">${attrHint}</p>
         ${attrHtml}
       </div>
       <div class="card">
-        <h2 class="section">更优解</h2>
+        <div class="section-head"><h2 class="section">更优解</h2><button class="btn sm copy" id="copyBetter">复制 Markdown</button></div>
         <p class="section-hint">评审会综合共识 + 高可信度独有洞见</p>
         <div class="markdown">${renderMarkdown(r.betterSolution.markdown)}</div>
       </div>
     </div>`;
+  const cb = $('#copyBetter');
+  if (cb) cb.addEventListener('click', () => copyToClipboard(STATE.betterMd, cb));
+}
+
+// U3：零依赖复制（带按钮反馈）
+function copyToClipboard(text, btn) {
+  const done = () => { const old = btn.textContent; btn.textContent = '已复制 ✓'; setTimeout(() => { btn.textContent = old; }, 1400); };
+  if (navigator.clipboard?.writeText) {
+    navigator.clipboard.writeText(text).then(done).catch(() => fallbackCopy(text, done));
+  } else fallbackCopy(text, done);
+}
+function fallbackCopy(text, done) {
+  const ta = document.createElement('textarea');
+  ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); done(); } catch {}
+  document.body.removeChild(ta);
 }
 
 // ───────── Trace 对比 ─────────
 $('#traceRun').addEventListener('change', onTraceRunChange);
+$('#traceA').addEventListener('change', validateTracePair);
+$('#traceB').addEventListener('change', validateTracePair);
 $('#traceBtn').addEventListener('click', doTraceDiff);
 async function onTraceRunChange() {
   const runId = $('#traceRun')?.value; if (!runId) return;
   const { run } = await api(`/api/runs/${encodeURIComponent(runId)}`);
   if (!run) return;
-  const opts = run.agents.map((a) => `<option value="${a.agentId}">${esc(a.label)}</option>`).join('');
+  // U5：option 文案补 framework × model，便于辨认
+  const opts = run.agents.map((a) => `<option value="${esc(a.agentId)}">${esc(a.label || (fwName(a.framework) + ' · ' + a.model))} · ${esc(fwName(a.framework))}×${esc(a.model)}</option>`).join('');
   $('#traceA').innerHTML = opts; $('#traceB').innerHTML = opts;
   if (run.agents[1]) $('#traceB').value = run.agents[1].agentId;
   STATE.traceRun = run;
+  // U5：单 agent run 无法对比 → 禁用按钮并就地提示
+  const single = run.agents.length < 2;
+  if (single) {
+    $('#traceOut').innerHTML = '<div class="card empty">该 run 只有 1 个 agent，Trace 对比需要 ≥ 2 个 agent。请回运行台加一个 agent 重跑。</div>';
+  }
+  validateTracePair();
+}
+function validateTracePair() {
+  const run = STATE.traceRun;
+  const btn = $('#traceBtn');
+  const a = $('#traceA').value, b = $('#traceB').value;
+  const bad = !run || run.agents.length < 2 || !a || a === b;
+  btn.disabled = bad;
+  btn.title = (run && run.agents.length < 2) ? '需要 ≥ 2 个 agent' : (a && a === b ? '请选择两个不同的 agent' : '');
 }
 async function doTraceDiff() {
   const runId = $('#traceRun').value, a = $('#traceA').value, b = $('#traceB').value;
-  if (a === b) { $('#traceOut').innerHTML = '<div class="card empty">请选择两个不同的 agent</div>'; return; }
+  if (a === b) { $('#traceOut').innerHTML = '<div class="card empty" role="alert">请选择两个不同的 agent</div>'; return; }
   const { diff, error } = await api(`/api/trace/diff?runId=${encodeURIComponent(runId)}&a=${encodeURIComponent(a)}&b=${encodeURIComponent(b)}`);
-  if (error) { $('#traceOut').innerHTML = `<div class="card empty">${esc(error)}</div>`; return; }
+  if (error) { $('#traceOut').innerHTML = `<div class="card empty" role="alert">${esc(error)}</div>`; return; }
   const run = STATE.traceRun;
   const agA = run.agents.find((x) => x.agentId === a), agB = run.agents.find((x) => x.agentId === b);
-  renderTrace(diff, agA, agB);
+  const isSim = run.mode === 'sim' || [agA, agB].some((x) => x?.mode === 'sim');
+  renderTrace(diff, agA, agB, isSim);
 }
 function deltaBox(label, v, unit = '', invert = false) {
   const cls = v === 0 ? '' : (v > 0 ? (invert ? 'neg' : 'pos') : (invert ? 'pos' : 'neg'));
   const sign = v > 0 ? '+' : '';
   return `<div class="delta"><span class="cov">${label} 差 (A−B)</span><b class="${cls}">${sign}${v}${unit}</b></div>`;
 }
-function renderTrace(diff, agA, agB) {
+function renderTrace(diff, agA, agB, isSim) {
   const tools = diff.tools;
+  const simBanner = isSim
+    ? `<div class="card warn" role="note"><b>以下 trace 为模拟数据。</b>步骤、工具、token、耗时均由模板生成，对比仅演示「效果评审」的算法形态，<b>不代表真实模型行为</b>。</div><div style="height:16px"></div>`
+    : '';
+  // U3：把 trace 结论拼成可复制文本
+  const copyText = buildTraceMarkdown(diff, isSim);
+  STATE.traceMd = copyText;
   $('#traceOut').innerHTML = `
+    ${simBanner}
     <div class="card">
-      <h2 class="section">过程差异 · ${esc(diff.a.label)} vs ${esc(diff.b.label)}</h2>
+      <div class="section-head"><h2 class="section">过程差异 · ${esc(diff.a.label)} vs ${esc(diff.b.label)}</h2><button class="btn sm copy" id="copyTrace">复制结论</button></div>
       <div class="deltas">
         ${deltaBox('步骤', diff.deltas.steps)}
         ${deltaBox('工具调用', diff.deltas.toolCalls)}
@@ -1257,17 +1456,39 @@ function renderTrace(diff, agA, agB) {
         ${deltaBox('耗时', diff.deltas.wallMs, 'ms')}
       </div>
       <div class="metrics">
-        <span>共用工具：<b>${tools.shared.join('、') || '无'}</b></span>
-        <span style="color:var(--cyan)">仅 A：<b>${tools.onlyA.join('、') || '无'}</b></span>
-        <span style="color:var(--amber)">仅 B：<b>${tools.onlyB.join('、') || '无'}</b></span>
+        <span>共用工具：<b>${esc(tools.shared.join('、') || '无')}</b></span>
+        <span style="color:var(--cyan)">仅 A：<b>${esc(tools.onlyA.join('、') || '无')}</b></span>
+        <span style="color:var(--amber)">仅 B：<b>${esc(tools.onlyB.join('、') || '无')}</b></span>
       </div>
-      <p class="section-hint" style="margin-top:10px">💡 效果评审提示：${traceInsight(diff)}</p>
+      <p class="section-hint" style="margin-top:10px"><span aria-hidden="true">💡</span> 效果评审提示：${esc(traceInsight(diff))}</p>
     </div>
     <div style="height:16px"></div>
     <div class="trace-cmp">
       ${traceColumn(agA)}
       ${traceColumn(agB)}
     </div>`;
+  const ct = $('#copyTrace');
+  if (ct) ct.addEventListener('click', () => copyToClipboard(STATE.traceMd, ct));
+}
+function buildTraceMarkdown(diff, isSim) {
+  const L = [];
+  L.push(`# Trace 对比：${diff.a.label} vs ${diff.b.label}`);
+  if (isSim) L.push('> ⚠️ 模拟数据，非真实模型行为。');
+  L.push('');
+  L.push('## 过程差异 (A − B)');
+  L.push(`- 步骤：${diff.deltas.steps}`);
+  L.push(`- 工具调用：${diff.deltas.toolCalls}`);
+  L.push(`- token：${diff.deltas.tokens}`);
+  L.push(`- 耗时：${diff.deltas.wallMs}ms`);
+  L.push('');
+  L.push('## 工具集');
+  L.push(`- 共用：${diff.tools.shared.join('、') || '无'}`);
+  L.push(`- 仅 A：${diff.tools.onlyA.join('、') || '无'}`);
+  L.push(`- 仅 B：${diff.tools.onlyB.join('、') || '无'}`);
+  L.push('');
+  L.push('## 效果评审提示');
+  L.push(traceInsight(diff));
+  return L.join('\n');
 }
 function traceInsight(diff) {
   const out = [];
@@ -1283,20 +1504,21 @@ function traceColumn(a) {
     <div class="head" style="display:flex;gap:8px;align-items:center;margin-bottom:4px"><span class="fw-tag">${esc(fwName(a.framework))}</span><span class="model">${esc(a.model)}</span></div>
     ${src ? `<span class="trace-badge" style="background:${STATE.traceMeta[src.traceability]?.color}">trace: ${esc(STATE.traceMeta[src.traceability]?.label)}</span><div class="cov" style="margin-top:4px">${esc(src.how)}</div>` : ''}
     <ul class="tl">${steps.map((s) => `
-      <li><span class="ico ${s.type}">${stepIcon(s.type)}</span>
+      <li><span class="ico ${esc(s.type)}" role="img" aria-label="${esc(STEP_LABEL[s.type] || s.type)}"><span aria-hidden="true">${stepIcon(s.type)}</span></span>
         <span class="lab">${esc(s.label)}${s.detail ? `<div class="cov">${esc(s.detail)}</div>` : ''}</span>
-        <span class="meta">${s.tokens ? s.tokens + 't' : ''} ${s.ms ? s.ms + 'ms' : ''}</span></li>`).join('')}</ul>
+        <span class="meta">${s.tokens ? esc(s.tokens + 't') : ''} ${s.ms ? esc(s.ms + 'ms') : ''}</span></li>`).join('')}</ul>
   </div>`;
 }
+const STEP_LABEL = { think: '思考', tool: '工具调用', observe: '观察', message: '消息', error: '错误', handoff: '交接' };
 function stepIcon(t) { return { think: '🧠', tool: '🔧', observe: '👁', message: '✦', error: '!', handoff: '↔' }[t] || '·'; }
 
 // ───────── 框架图鉴 ─────────
 function renderFrameworks() {
   // 矩阵
   const cols = STATE.matrixCols;
-  const head = `<thead><tr><th>框架</th>${cols.map((c) => `<th>${esc(c.label)}</th>`).join('')}</tr></thead>`;
+  const head = `<thead><tr><th scope="col">框架</th>${cols.map((c) => `<th scope="col">${esc(c.label)}</th>`).join('')}</tr></thead>`;
   const rows = STATE.frameworks.map((f) => `<tr>
-    <td><b>${esc(f.name)}</b><div class="vendor">${esc(f.vendor)}</div></td>
+    <th scope="row" style="font-weight:inherit"><b>${esc(f.name)}</b><div class="vendor">${esc(f.vendor)}</div></th>
     ${cols.map((c) => {
       if (c.key === 'traceability') { const m = STATE.traceMeta[f.traceability]; return `<td><span class="trace-badge" style="background:${m.color}">${esc(m.label)}</span></td>`; }
       return `<td>${esc(f[c.key])}</td>`;

@@ -222,6 +222,9 @@ export const TRACEABILITY_META = {
   otel:      { label: 'OTel/回调',  score: 3, color: '#0891b2', hint: '通过 OpenTelemetry 或 callback 收集' },
   'cli-log': { label: 'CLI 日志',   score: 2, color: '#d97706', hint: '解析 --json 事件流或 stdout/日志文件' },
   'api-only':{ label: '仅最终响应', score: 1, color: '#dc2626', hint: '只有最终输出，需自包一层记录中间步骤' },
+  // sim 档：这一档不是某个框架的真实 trace 等级，而是「本次 run 是 Sim 模式、step 由模板拼装、未真实采集」的诚实标记。
+  // 告警色（土黄）+ score 0，让前端一眼看出「这不是真 trace」。
+  sim:       { label: '模拟 trace',  score: 0, color: '#a16207', hint: '模板生成，非真实采集——Sim 模式未真正调用模型，step 由 composeTrace 拼装' },
 };
 
 export function getFramework(id) {

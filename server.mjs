@@ -15,11 +15,28 @@ import { buildFixtures } from './fixtures/seed.mjs';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const WEB = join(__dirname, 'web');
 const PORT = process.env.PORT || 5178;
+// S2：默认只绑回环地址（与 Electron 本机模型一致），不暴露到同网段。
+// 需对外监听时显式设 HOST=0.0.0.0。
+const HOST = process.env.HOST || '127.0.0.1';
 
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8', '.svg': 'image/svg+xml' };
 
 function json(res, code, obj) { res.writeHead(code, { 'content-type': 'application/json; charset=utf-8' }); res.end(JSON.stringify(obj)); }
-async function body(req) { const chunks = []; for await (const c of req) chunks.push(c); return chunks.length ? JSON.parse(Buffer.concat(chunks).toString('utf8')) : {}; }
+// S2：请求体读全进内存前先卡 1MB 上限，超限即停止累积并抛 413，防内存型 DoS。
+const MAX_BODY = 1e6; // 1MB
+async function body(req) {
+  const chunks = [];
+  let total = 0;
+  for await (const c of req) {
+    total += c.length;
+    // 超限：立刻抛出（带 statusCode=413），不再 push——内存不会继续增长。
+    // 注意不在这里 req.destroy()：那样会先于 413 响应撕掉 socket，客户端只看到连接被重置。
+    // 由上层 catch 先回 413、再 req.destroy() 截断剩余上传。
+    if (total > MAX_BODY) { const e = new Error('payload too large (>1MB)'); e.statusCode = 413; throw e; }
+    chunks.push(c);
+  }
+  return chunks.length ? JSON.parse(Buffer.concat(chunks).toString('utf8')) : {};
+}
 
 async function serveStatic(req, res, pathname) {
   let rel = pathname === '/' ? '/index.html' : pathname;
@@ -80,7 +97,11 @@ const server = createServer(async (req, res) => {
 
     return serveStatic(req, res, p);
   } catch (e) {
-    json(res, 500, { error: String(e?.message || e) });
+    // S2：body() 超限抛出的错误带 statusCode=413，如实回 413 而非 500。
+    const code = e?.statusCode || 500;
+    if (!res.headersSent) json(res, code, { error: String(e?.message || e) });
+    // 413：响应已发出后截断仍在上传的剩余字节，避免对端继续灌数据占内存。
+    if (code === 413) req.destroy();
   }
 });
 
@@ -88,7 +109,17 @@ const server = createServer(async (req, res) => {
 const fixtures = await buildFixtures();
 seedIfEmpty(fixtures);
 
-server.listen(PORT, () => {
-  console.log(`\n  aker ▸ http://localhost:${PORT}`);
+// S3：端口被占用等错误以前会抛未捕获异常直接退出，Electron 端只看到空白窗口、无从定位。
+// 这里显式监听 error，对 EADDRINUSE 打印明确信息后以非 0 退出，便于上层（脚本/Electron）感知。
+server.on('error', (e) => {
+  if (e.code === 'EADDRINUSE') {
+    console.error(`\n  ✖ 端口 ${PORT} 已被占用（HOST=${HOST}）。请关闭占用进程，或用 PORT=<其它端口> 重启。\n`);
+    process.exit(1);
+  }
+  throw e;
+});
+
+server.listen(PORT, HOST, () => {
+  console.log(`\n  aker ▸ http://${HOST}:${PORT}`);
   console.log(`  ${capabilities().note}\n`);
 });

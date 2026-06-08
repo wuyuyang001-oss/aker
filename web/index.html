@@ -8,6 +8,7 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='9' fill='%23d97757'/><text x='16' y='23' font-size='20' fill='white' text-anchor='middle' font-family='sans-serif' font-weight='700'>A</text></svg>" />
 </head>
 <body>
+  <a href="#main" class="skip-link">跳到主内容</a>
   <div class="shell">
     <!-- 侧边栏 -->
     <aside class="sidebar">
@@ -20,37 +21,37 @@
         </div>
       </div>
 
-      <nav class="side-nav" id="tabs">
-        <button data-tab="run" class="active"><span class="ni">▶</span><span>运行台</span></button>
-        <button data-tab="committee"><span class="ni">⚖</span><span>评审会</span></button>
-        <button data-tab="trace"><span class="ni">◫</span><span>Trace 对比</span></button>
-        <button data-tab="frameworks"><span class="ni">▤</span><span>框架图鉴</span></button>
+      <nav class="side-nav" id="tabs" role="tablist" aria-label="主导航">
+        <button data-tab="run" class="active" role="tab" id="tab-run" aria-controls="panel-run" aria-selected="true"><span class="ni" aria-hidden="true">▶</span><span>运行台</span></button>
+        <button data-tab="committee" role="tab" id="tab-committee" aria-controls="panel-committee" aria-selected="false" tabindex="-1"><span class="ni" aria-hidden="true">⚖</span><span>评审会</span></button>
+        <button data-tab="trace" role="tab" id="tab-trace" aria-controls="panel-trace" aria-selected="false" tabindex="-1"><span class="ni" aria-hidden="true">◫</span><span>Trace 对比</span></button>
+        <button data-tab="frameworks" role="tab" id="tab-frameworks" aria-controls="panel-frameworks" aria-selected="false" tabindex="-1"><span class="ni" aria-hidden="true">▤</span><span>框架图鉴</span></button>
       </nav>
 
       <div class="side-foot">
-        <div class="modepill" id="modepill"><span class="dot" id="modedot"></span><span id="modetext">检测中…</span></div>
+        <div class="modepill" id="modepill"><span class="dot" id="modedot" aria-hidden="true"></span><span id="modetext">检测中…</span></div>
         <div class="side-tag">适配器架构 · Sim/Live 双模式</div>
       </div>
     </aside>
 
     <!-- 内容区 -->
-    <main class="content">
+    <main class="content" id="main" aria-label="主内容">
     <!-- 运行台 -->
-    <section class="panel active" id="panel-run">
+    <section class="panel active" id="panel-run" role="tabpanel" aria-labelledby="tab-run" tabindex="0">
       <div class="page-head"><h2 class="page-title">并行运行台</h2><p class="page-sub">同一个任务，派发给多个 (框架 × 模型) 组合并行执行，收集各自输出与 trace。</p></div>
       <div class="card">
         <div class="runbar">
           <div class="field">
-            <label>任务</label>
-            <textarea class="task" id="task">实现一个带缓存的并发安全计数器</textarea>
+            <label for="task">任务</label>
+            <textarea class="task" id="task" placeholder="描述一个要让多个 agent 并行解决的任务，例如：实现一个带缓存的并发安全计数器" maxlength="2000">实现一个带缓存的并发安全计数器</textarea>
           </div>
           <div class="field">
-            <label>参与的 agent（框架 × 模型）</label>
-            <div class="agent-rows" id="agentRows"></div>
+            <label id="agentRowsLabel">参与的 agent（框架 × 模型）</label>
+            <div class="agent-rows" id="agentRows" aria-labelledby="agentRowsLabel"></div>
           </div>
           <div class="row-actions">
             <button class="btn ghost sm" id="addAgent">+ 加一个 agent</button>
-            <div class="seg" id="modeSeg">
+            <div class="seg" id="modeSeg" role="group" aria-label="运行模式">
               <button data-mode="sim" class="active">Sim 模式</button>
               <button data-mode="live">Live 模式</button>
             </div>
@@ -59,17 +60,17 @@
         </div>
       </div>
       <div style="height:16px"></div>
-      <div id="runStatus"></div>
+      <div id="runStatus" aria-live="polite" aria-atomic="true"></div>
       <div class="grid cols" id="results"></div>
     </section>
 
     <!-- 评审会 -->
-    <section class="panel" id="panel-committee">
+    <section class="panel" id="panel-committee" role="tabpanel" aria-labelledby="tab-committee" tabindex="0">
       <div class="page-head"><h2 class="page-title">评审会</h2><p class="page-sub">对多个 agent 输出取交集/并集，做差异归因，给出更优解。</p></div>
       <div class="card">
         <div class="toolbar">
-          <select id="reviewRun"></select>
-          <div class="seg" id="reviewMode">
+          <select id="reviewRun" aria-label="选择要评审的 run"></select>
+          <div class="seg" id="reviewMode" role="group" aria-label="评审取值方式">
             <button data-mode="intersection" class="active">交集 · 共识</button>
             <button data-mode="union">并集 · 全集</button>
           </div>
@@ -77,27 +78,27 @@
         </div>
       </div>
       <div style="height:16px"></div>
-      <div id="committeeOut"></div>
+      <div id="committeeOut" aria-live="polite" aria-atomic="true"></div>
     </section>
 
     <!-- Trace 对比 -->
-    <section class="panel" id="panel-trace">
+    <section class="panel" id="panel-trace" role="tabpanel" aria-labelledby="tab-trace" tabindex="0">
       <div class="page-head"><h2 class="page-title">Trace 对比 · 效果评审</h2><p class="page-sub">不看结果看过程：对比两个 agent 的执行步骤、工具、token、耗时。</p></div>
       <div class="card">
         <div class="toolbar">
-          <select id="traceRun"></select>
-          <select id="traceA"></select>
-          <span style="color:var(--muted)">vs</span>
-          <select id="traceB"></select>
+          <select id="traceRun" aria-label="选择要对比的 run"></select>
+          <select id="traceA" aria-label="对比的 A 方 agent"></select>
+          <span style="color:var(--muted)" aria-hidden="true">vs</span>
+          <select id="traceB" aria-label="对比的 B 方 agent"></select>
           <button class="btn sm" id="traceBtn">对比</button>
         </div>
       </div>
       <div style="height:16px"></div>
-      <div id="traceOut"></div>
+      <div id="traceOut" aria-live="polite" aria-atomic="true"></div>
     </section>
 
     <!-- 框架图鉴 -->
-    <section class="panel" id="panel-frameworks">
+    <section class="panel" id="panel-frameworks" role="tabpanel" aria-labelledby="tab-frameworks" tabindex="0">
       <div class="page-head"><h2 class="page-title">Agent 框架图鉴</h2><p class="page-sub">不同 agent 框架的范式、多 agent 支持、工具调用与 <b>trace 可得性</b>对比 —— trace 可得性直接决定 Aker 能否对它做效果评审。</p></div>
       <div class="card">
         <div class="scroll-x"><table class="matrix" id="matrix"></table></div>

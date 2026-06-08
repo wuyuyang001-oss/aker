@@ -31,7 +31,14 @@ function prep(name, { envSafe = false } = {}) {
   let s = R(`src/${name}`);
   s = stripHeaderImports(s);
   s = stripExports(s);
-  if (envSafe) s = s.replace(/process\.env/g, '__ENV');   // 浏览器安全
+  if (envSafe) {
+    s = s.replace(/process\.env/g, '__ENV');   // 浏览器安全
+    // S1：浏览器版禁止直连模型 API（否则 key 会进前端 + CORS 死代码）。把两个 Live 调用函数体换成抛错存根。
+    const stub = (name) => `async function ${name}() { throw new Error('Live 模式不支持浏览器内直连（避免 API key 泄露），请改用本地 server.mjs 后端代理'); }\n`;
+    s = s.replace(/async function callAnthropic\([\s\S]*?\n}\n/, stub('callAnthropic'));
+    s = s.replace(/async function callOpenAI\([\s\S]*?\n}\n/, stub('callOpenAI'));
+    if (/api\.anthropic\.com|api\.openai\.com/.test(s)) throw new Error('S1: 浏览器版仍残留模型 API 直连');
+  }
   // 断言：剥离后不应残留 src 相对 import / 真 export
   if (/^\s*import\s.*from\s+['"]\.\//m.test(s)) throw new Error(`${name}: 仍残留相对 import`);
   if (/^export\s/m.test(s)) throw new Error(`${name}: 仍残留 export`);
@@ -127,8 +134,9 @@ window.fetch = async (input, init = {}) => {
 };
 `;
 
-// 3) 浏览器安全的 __ENV（standalone 无 key → Sim；若将来注入 window.AKER_ENV 可启 Live）
-const envShim = `const __ENV = (typeof window !== 'undefined' && window.AKER_ENV) || {};`;
+// 3) 浏览器安全的 __ENV：standalone 恒为 Sim。不从 window 注入 key（移除 S1 的 key 泄露/注入向量）；
+//    真 Live 必须经本地 server.mjs 后端代理，浏览器单文件版永不直连模型 API。
+const envShim = `const __ENV = {};`;
 
 const app = R('web/app.js');
 const styles = R('web/styles.css');
