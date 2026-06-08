@@ -1,0 +1,1351 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Aker</title>
+  <style>
+/* aker — claude design 风格：暖米底色 + 黏土橙强调 + 高可读排版 */
+:root {
+  --bg: #f4f2ec;
+  --surface: #ffffff;
+  --surface-2: #faf9f5;
+  --ink: #20201d;
+  --muted: #6f6a60;
+  --faint: #9b958a;
+  --accent: #d97757;
+  --accent-ink: #b85c3e;
+  --border: #e7e3d9;
+  --border-strong: #d8d3c6;
+  --green: #4f9d69;
+  --cyan: #2f8aa3;
+  --amber: #c98a2b;
+  --red: #c75d4f;
+  --shadow: 0 1px 2px rgba(40,35,25,.04), 0 6px 20px rgba(40,35,25,.06);
+  --radius: 14px;
+  --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
+  --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--ink); font-family: var(--sans); font-size: 14px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+a { color: var(--accent-ink); }
+button { font-family: inherit; cursor: pointer; }
+code, pre { font-family: var(--mono); }
+
+/* ── shell：侧边栏 + 内容区 ── */
+.shell { display: grid; grid-template-columns: 232px 1fr; height: 100vh; overflow: hidden; }
+.sidebar { background: var(--surface-2); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 18px 14px; gap: 6px; -webkit-app-region: drag; }
+.sidebar button, .sidebar .modepill { -webkit-app-region: no-drag; }
+.brand { display: flex; align-items: center; gap: 11px; padding: 8px 8px 16px; }
+.brand .mark { width: 34px; height: 34px; border-radius: 10px; background: var(--accent); display: grid; place-items: center; color: #fff; font-weight: 700; font-size: 19px; box-shadow: var(--shadow); }
+.brand h1 { font-size: 20px; margin: 0; letter-spacing: -.02em; }
+.brand .sub { color: var(--muted); font-size: 11.5px; }
+.macpad { height: 22px; } /* mac 红绿灯留白 */
+
+.side-nav { display: flex; flex-direction: column; gap: 3px; margin-top: 4px; }
+.side-nav button { display: flex; align-items: center; gap: 11px; width: 100%; text-align: left; background: none; border: none; padding: 10px 12px; font-size: 14px; color: var(--muted); border-radius: 9px; transition: background .12s, color .12s; }
+.side-nav button .ni { width: 20px; text-align: center; font-size: 14px; opacity: .8; }
+.side-nav button:hover { background: rgba(217,119,87,.08); color: var(--ink); }
+.side-nav button.active { background: var(--accent); color: #fff; font-weight: 600; box-shadow: var(--shadow); }
+.side-nav button.active .ni { opacity: 1; }
+
+.side-foot { margin-top: auto; display: flex; flex-direction: column; gap: 8px; padding: 8px; }
+.modepill { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; color: var(--muted); background: var(--surface); border: 1px solid var(--border); padding: 6px 11px; border-radius: 999px; align-self: flex-start; }
+.side-tag { color: var(--faint); font-size: 11px; padding: 0 3px; }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--faint); }
+.dot.on { background: var(--green); }
+
+.content { overflow-y: auto; padding: 30px 32px 60px; }
+.content > .panel { max-width: 1080px; }
+.page-head { margin-bottom: 18px; }
+.page-title { font-size: 21px; margin: 0 0 4px; letter-spacing: -.02em; }
+.page-sub { color: var(--muted); font-size: 13.5px; margin: 0; }
+.toolbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.toolbar select { min-width: 180px; }
+
+/* ── cards ── */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px; }
+.panel { display: none; }
+.panel.active { display: block; animation: fade .25s ease; }
+@keyframes fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+h2.section { font-size: 16px; margin: 0 0 4px; letter-spacing: -.01em; }
+.section-hint { color: var(--muted); font-size: 13px; margin: 0 0 16px; }
+
+/* ── run form ── */
+.runbar { display: grid; gap: 14px; }
+.field label { display: block; font-size: 12.5px; color: var(--muted); margin-bottom: 6px; font-weight: 600; }
+textarea.task { width: 100%; min-height: 70px; resize: vertical; padding: 12px 14px; border: 1px solid var(--border-strong); border-radius: 10px; font: inherit; background: var(--surface-2); }
+textarea.task:focus { outline: none; border-color: var(--accent); background: #fff; }
+.agent-rows { display: grid; gap: 8px; }
+.agent-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; align-items: center; }
+select, .agent-row input { padding: 9px 11px; border: 1px solid var(--border-strong); border-radius: 9px; font: inherit; background: var(--surface-2); color: var(--ink); }
+.icon-btn { border: 1px solid var(--border-strong); background: var(--surface); border-radius: 9px; width: 36px; height: 36px; font-size: 16px; color: var(--muted); }
+.icon-btn:hover { border-color: var(--red); color: var(--red); }
+.row-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.btn { background: var(--accent); color: #fff; border: none; padding: 10px 18px; border-radius: 10px; font-weight: 600; font-size: 14px; box-shadow: var(--shadow); }
+.btn:hover { background: var(--accent-ink); }
+.btn:disabled { opacity: .55; cursor: default; }
+.btn.ghost { background: var(--surface); color: var(--ink); border: 1px solid var(--border-strong); box-shadow: none; }
+.btn.ghost:hover { border-color: var(--accent); color: var(--accent-ink); }
+.btn.sm { padding: 6px 12px; font-size: 13px; }
+.seg { display: inline-flex; border: 1px solid var(--border-strong); border-radius: 9px; overflow: hidden; }
+.seg button { background: var(--surface); border: none; padding: 8px 14px; font-size: 13px; color: var(--muted); }
+.seg button.active { background: var(--accent); color: #fff; }
+
+/* ── result cards ── */
+.grid { display: grid; gap: 14px; }
+.grid.cols { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+.agent-card { border: 1px solid var(--border); border-radius: 12px; padding: 14px; background: var(--surface); }
+.agent-card .head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.fw-tag { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 6px; background: #f0ece1; color: var(--accent-ink); }
+.agent-card .model { font-size: 12px; color: var(--muted); font-family: var(--mono); }
+.agent-card .out { font-size: 13px; white-space: pre-wrap; color: #38352f; max-height: 240px; overflow: auto; border-top: 1px solid var(--border); padding-top: 10px; margin-top: 4px; }
+.metrics { display: flex; gap: 12px; flex-wrap: wrap; font-size: 11.5px; color: var(--muted); margin-top: 10px; }
+.metrics b { color: var(--ink); font-variant-numeric: tabular-nums; }
+.status { width: 8px; height: 8px; border-radius: 50%; }
+.status.running { background: var(--amber); animation: pulse 1s infinite; }
+.status.done { background: var(--green); }
+.status.error { background: var(--red); }
+@keyframes pulse { 50% { opacity: .35; } }
+
+/* ── committee ── */
+.consensus-item, .div-item { padding: 9px 12px; border-radius: 9px; margin-bottom: 7px; font-size: 13px; border: 1px solid var(--border); }
+.consensus-item { background: #f1f7f2; border-color: #d8ebdd; }
+.div-item { background: #fbf4ef; border-color: #f0ddcf; }
+.cov { font-size: 11px; color: var(--muted); }
+.attr { border-left: 3px solid var(--border-strong); padding: 4px 0 4px 12px; margin-bottom: 12px; }
+.attr.high { border-color: var(--red); }
+.attr.medium { border-color: var(--amber); }
+.attr.low { border-color: var(--cyan); }
+.attr .k { font-weight: 700; font-size: 13px; }
+.attr .w { font-size: 10.5px; padding: 1px 7px; border-radius: 5px; background: #f0ece1; color: var(--muted); margin-left: 6px; }
+.markdown { font-size: 13.5px; }
+.markdown h2 { font-size: 15px; margin: 4px 0 8px; }
+.markdown h3 { font-size: 13.5px; margin: 14px 0 6px; color: var(--accent-ink); }
+.markdown ul { margin: 4px 0; padding-left: 20px; }
+.markdown blockquote { border-left: 3px solid var(--accent); margin: 10px 0; padding: 4px 12px; color: var(--muted); background: var(--surface-2); border-radius: 0 8px 8px 0; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 820px) { .two-col, .trace-cmp { grid-template-columns: 1fr; } }
+
+/* ── trace ── */
+.trace-cmp { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.tl { list-style: none; padding: 0; margin: 10px 0 0; }
+.tl li { display: grid; grid-template-columns: 22px 1fr auto; gap: 8px; align-items: start; padding: 6px 0; border-bottom: 1px dashed var(--border); font-size: 12.5px; }
+.tl .ico { width: 20px; height: 20px; border-radius: 6px; display: grid; place-items: center; font-size: 11px; color: #fff; }
+.ico.think { background: #8a7fb0; } .ico.tool { background: var(--cyan); } .ico.observe { background: #6f9e7a; } .ico.message { background: var(--accent); } .ico.error { background: var(--red); } .ico.handoff { background: var(--amber); }
+.tl .lab { color: var(--ink); }
+.tl .meta { color: var(--faint); font-family: var(--mono); font-size: 11px; white-space: nowrap; }
+.deltas { display: flex; gap: 10px; flex-wrap: wrap; margin: 10px 0; }
+.delta { background: var(--surface-2); border: 1px solid var(--border); border-radius: 9px; padding: 8px 12px; font-size: 12px; }
+.delta b { font-size: 16px; font-variant-numeric: tabular-nums; display: block; }
+.delta .pos { color: var(--green); } .delta .neg { color: var(--red); }
+
+/* ── frameworks ── */
+.fw-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 14px; }
+.fw-card { border: 1px solid var(--border); border-radius: 12px; padding: 16px; background: var(--surface); display: flex; flex-direction: column; gap: 8px; }
+.fw-card .title { display: flex; align-items: baseline; gap: 8px; }
+.fw-card .title b { font-size: 15px; }
+.fw-card .vendor { font-size: 11.5px; color: var(--faint); }
+.kv { display: grid; grid-template-columns: 72px 1fr; gap: 4px 10px; font-size: 12px; }
+.kv .k { color: var(--muted); }
+.trace-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 7px; color: #fff; }
+.pill-list { display: flex; gap: 5px; flex-wrap: wrap; }
+.pill { font-size: 11px; padding: 2px 8px; border-radius: 6px; background: var(--surface-2); border: 1px solid var(--border); color: var(--muted); }
+pre.code { background: #2b2722; color: #e9e3d6; padding: 12px 14px; border-radius: 10px; overflow-x: auto; font-size: 12px; line-height: 1.55; margin: 4px 0 0; }
+pre.code .cm { color: #8f8775; }
+.matrix { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-top: 8px; }
+.matrix th, .matrix td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+.matrix th { color: var(--muted); font-weight: 600; background: var(--surface-2); }
+.matrix tr:hover td { background: var(--surface-2); }
+.scroll-x { overflow-x: auto; }
+details.help { margin-top: 10px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 4px 14px; }
+details.help summary { cursor: pointer; font-weight: 600; font-size: 13px; padding: 8px 0; color: var(--accent-ink); }
+.empty { color: var(--faint); font-size: 13px; padding: 30px; text-align: center; }
+.foot { color: var(--faint); font-size: 12px; margin-top: 28px; text-align: center; }
+
+</style>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='9' fill='%23d97757'/><text x='16' y='23' font-size='20' fill='white' text-anchor='middle' font-family='sans-serif' font-weight='700'>A</text></svg>" />
+</head>
+<body>
+  <div class="shell">
+    <!-- 侧边栏 -->
+    <aside class="sidebar">
+      <div class="macpad"></div>
+      <div class="brand">
+        <div class="mark">A</div>
+        <div class="brand-text">
+          <h1>Aker</h1>
+          <div class="sub">多 agent 并行评审</div>
+        </div>
+      </div>
+
+      <nav class="side-nav" id="tabs">
+        <button data-tab="run" class="active"><span class="ni">▶</span><span>运行台</span></button>
+        <button data-tab="committee"><span class="ni">⚖</span><span>评审会</span></button>
+        <button data-tab="trace"><span class="ni">◫</span><span>Trace 对比</span></button>
+        <button data-tab="frameworks"><span class="ni">▤</span><span>框架图鉴</span></button>
+      </nav>
+
+      <div class="side-foot">
+        <div class="modepill" id="modepill"><span class="dot" id="modedot"></span><span id="modetext">检测中…</span></div>
+        <div class="side-tag">适配器架构 · Sim/Live 双模式</div>
+      </div>
+    </aside>
+
+    <!-- 内容区 -->
+    <main class="content">
+    <!-- 运行台 -->
+    <section class="panel active" id="panel-run">
+      <div class="page-head"><h2 class="page-title">并行运行台</h2><p class="page-sub">同一个任务，派发给多个 (框架 × 模型) 组合并行执行，收集各自输出与 trace。</p></div>
+      <div class="card">
+        <div class="runbar">
+          <div class="field">
+            <label>任务</label>
+            <textarea class="task" id="task">实现一个带缓存的并发安全计数器</textarea>
+          </div>
+          <div class="field">
+            <label>参与的 agent（框架 × 模型）</label>
+            <div class="agent-rows" id="agentRows"></div>
+          </div>
+          <div class="row-actions">
+            <button class="btn ghost sm" id="addAgent">+ 加一个 agent</button>
+            <div class="seg" id="modeSeg">
+              <button data-mode="sim" class="active">Sim 模式</button>
+              <button data-mode="live">Live 模式</button>
+            </div>
+            <button class="btn" id="runBtn" style="margin-left:auto">▶ 并行运行</button>
+          </div>
+        </div>
+      </div>
+      <div style="height:16px"></div>
+      <div id="runStatus"></div>
+      <div class="grid cols" id="results"></div>
+    </section>
+
+    <!-- 评审会 -->
+    <section class="panel" id="panel-committee">
+      <div class="page-head"><h2 class="page-title">评审会</h2><p class="page-sub">对多个 agent 输出取交集/并集，做差异归因，给出更优解。</p></div>
+      <div class="card">
+        <div class="toolbar">
+          <select id="reviewRun"></select>
+          <div class="seg" id="reviewMode">
+            <button data-mode="intersection" class="active">交集 · 共识</button>
+            <button data-mode="union">并集 · 全集</button>
+          </div>
+          <button class="btn sm" id="reviewBtn">评审</button>
+        </div>
+      </div>
+      <div style="height:16px"></div>
+      <div id="committeeOut"></div>
+    </section>
+
+    <!-- Trace 对比 -->
+    <section class="panel" id="panel-trace">
+      <div class="page-head"><h2 class="page-title">Trace 对比 · 效果评审</h2><p class="page-sub">不看结果看过程：对比两个 agent 的执行步骤、工具、token、耗时。</p></div>
+      <div class="card">
+        <div class="toolbar">
+          <select id="traceRun"></select>
+          <select id="traceA"></select>
+          <span style="color:var(--muted)">vs</span>
+          <select id="traceB"></select>
+          <button class="btn sm" id="traceBtn">对比</button>
+        </div>
+      </div>
+      <div style="height:16px"></div>
+      <div id="traceOut"></div>
+    </section>
+
+    <!-- 框架图鉴 -->
+    <section class="panel" id="panel-frameworks">
+      <div class="page-head"><h2 class="page-title">Agent 框架图鉴</h2><p class="page-sub">不同 agent 框架的范式、多 agent 支持、工具调用与 <b>trace 可得性</b>对比 —— trace 可得性直接决定 Aker 能否对它做效果评审。</p></div>
+      <div class="card">
+        <div class="scroll-x"><table class="matrix" id="matrix"></table></div>
+      </div>
+      <div style="height:16px"></div>
+      <div class="fw-grid" id="fwGrid"></div>
+    </section>
+    </main>
+  </div>
+  <script>
+const __ENV = (typeof window !== 'undefined' && window.AKER_ENV) || {};
+// frameworks.mjs — agent 框架图鉴
+// 每个条目除了基础信息，重点标注【trace 可得性】，因为这直接决定 aker 能否做效果评审。
+// traceability 取值：'native'(原生结构化 trace) | 'otel'(走 OpenTelemetry/callback) | 'cli-log'(只能解析 stdout/日志) | 'api-only'(只有最终响应)
+
+const FRAMEWORKS = [
+  {
+    id: 'claude-code',
+    name: 'Claude Code / Agent SDK',
+    vendor: 'Anthropic',
+    kind: 'CLI + SDK',
+    paradigm: 'ReAct + 工具循环（harness 托管）',
+    language: ['TypeScript', 'Python'],
+    multiAgent: '子 agent（Task/Agent 工具）可派生并行',
+    state: 'session transcript（jsonl）+ 上下文压缩',
+    toolCalling: '原生 tool_use / tool_result 块',
+    traceability: 'native',
+    traceNote: '每个 session 落 .jsonl transcript：逐条 user/assistant/tool_use/tool_result，含 token 用量。aker 可直接读 ~/.claude/projects/**/**.jsonl 做回放。',
+    strengths: ['工具循环与上下文管理开箱即用', '权限/hook 机制完善', 'transcript 天然就是 trace'],
+    weaknesses: ['强绑定 Claude 模型', 'harness 行为不完全可控'],
+    code: `// Claude Agent SDK（TS）
+import { query } from "@anthropic-ai/claude-agent-sdk";
+
+for await (const msg of query({
+  prompt: "重构这个函数并加测试",
+  options: { model: "claude-opus-4-8", allowedTools: ["Read","Edit","Bash"] }
+})) {
+  // msg.type: 'assistant' | 'tool_use' | 'tool_result' | 'result'
+  console.log(msg);   // 这一条条就是 trace
+}`,
+  },
+  {
+    id: 'codex-cli',
+    name: 'Codex CLI',
+    vendor: 'OpenAI',
+    kind: 'CLI',
+    paradigm: 'ReAct 工具循环（终端内编码 agent）',
+    language: ['Rust 内核 / TS'],
+    multiAgent: '单 agent 为主，可脚本并发多进程',
+    state: '本地 session rollout 文件',
+    toolCalling: 'OpenAI tool calls（apply_patch / shell）',
+    traceability: 'cli-log',
+    traceNote: 'codex exec --json 可输出结构化事件流；否则解析 stdout。session rollout 存于 ~/.codex/sessions。',
+    strengths: ['终端原生、改代码强', 'sandbox 执行', '--json 事件流可解析'],
+    weaknesses: ['生态以 OpenAI 模型为中心', '多 agent 编排需自己包'],
+    code: `# Codex CLI —— 非交互执行 + 结构化事件
+codex exec --json "给 utils.py 补充单元测试" \\
+  | jq -c 'select(.type=="item.completed")'
+# 每行一个 JSON 事件 → aker 解析为 trace step`,
+  },
+  {
+    id: 'hermes',
+    name: 'Hermes (function-calling)',
+    vendor: 'Nous Research',
+    kind: '模型 + 调用约定',
+    paradigm: '<tool_call> XML/JSON 标签约定的函数调用 agent',
+    language: ['任意（看推理栈）'],
+    multiAgent: '需外部编排（无内置）',
+    state: '自管 messages 数组',
+    toolCalling: 'Hermes 风格 <tool_call>{json}</tool_call> 标签',
+    traceability: 'api-only',
+    traceNote: 'Hermes 本身只是模型+提示约定，trace 取决于你的推理服务器（vLLM/TGI）是否记录。aker 通过包一层 adapter 记录每轮 messages 形成 trace。',
+    strengths: ['开源权重、可私有化', '函数调用格式清晰', '不锁厂商'],
+    weaknesses: ['要自己搭推理与编排', '无原生 observability'],
+    code: `# Hermes 函数调用约定（模型输出）
+<tool_call>
+{"name": "search_web", "arguments": {"q": "aker agent eval"}}
+</tool_call>
+# 你的 runtime 解析标签 → 执行 → 把结果塞回 messages → 再推理`,
+  },
+  {
+    id: 'langgraph',
+    name: 'LangGraph',
+    vendor: 'LangChain',
+    kind: 'Python/JS 框架',
+    paradigm: '有向图状态机（node/edge），支持环与人审',
+    language: ['Python', 'JavaScript'],
+    multiAgent: '一等公民：supervisor / 多节点子图',
+    state: '显式 State + checkpointer（可持久/可回放）',
+    toolCalling: 'LangChain tools 绑定',
+    traceability: 'otel',
+    traceNote: 'LangSmith 原生记录每个 node 的输入输出/耗时/token；也可导出 OpenTelemetry。aker 可接 LangSmith API 或 callback 拉 trace。',
+    strengths: ['复杂控制流（分支/循环/中断）', '可持久化 + 时间旅行回放', '观测生态成熟（LangSmith）'],
+    weaknesses: ['概念偏重、学习曲线', '调试图状态需要工具'],
+    code: `# LangGraph —— 图 + checkpointer（可回放即 trace）
+from langgraph.graph import StateGraph, START, END
+g = StateGraph(State)
+g.add_node("plan", plan); g.add_node("act", act)
+g.add_edge(START, "plan"); g.add_conditional_edges("act", route)
+app = g.compile(checkpointer=memory)   # 每步存档 → 可回放`,
+  },
+  {
+    id: 'crewai',
+    name: 'CrewAI',
+    vendor: 'CrewAI Inc.',
+    kind: 'Python 框架',
+    paradigm: '角色制（role/goal/backstory）+ 任务编排',
+    language: ['Python'],
+    multiAgent: '核心卖点：多角色 Crew 协作（顺序/层级）',
+    state: '任务上下文传递',
+    toolCalling: 'CrewAI / LangChain tools',
+    traceability: 'otel',
+    traceNote: '内置 event listener + 可接 AgentOps/OpenTelemetry，记录每个 agent/task 的执行。aker 通过事件钩子收 trace。',
+    strengths: ['多角色协作直观', '上手快、模板多', '适合"专家分工"类任务'],
+    weaknesses: ['复杂分支控制弱于图', '隐式行为偏多'],
+    code: `# CrewAI —— 角色分工
+from crewai import Agent, Task, Crew
+researcher = Agent(role="研究员", goal="收集资料", tools=[search])
+writer     = Agent(role="撰稿", goal="成稿")
+crew = Crew(agents=[researcher, writer], tasks=[t1, t2])
+crew.kickoff()   # 事件监听器可抓每步 → trace`,
+  },
+  {
+    id: 'autogen',
+    name: 'AutoGen / AG2',
+    vendor: 'Microsoft → AG2 社区',
+    kind: 'Python 框架',
+    paradigm: '多 agent 对话（GroupChat / 可终止会话）',
+    language: ['Python', '.NET'],
+    multiAgent: '核心：会话式多 agent，自动轮转发言',
+    state: '消息历史 + GroupChatManager',
+    toolCalling: '函数注册 + 自动调用',
+    traceability: 'otel',
+    traceNote: '0.4+ 内置 OpenTelemetry 追踪 runtime 消息；也可记录 GroupChat 全量对话。aker 接 OTel exporter 或直接存对话。',
+    strengths: ['多 agent 对话范式强', '代码执行 agent 成熟', '可观测性内建'],
+    weaknesses: ['会话易发散/绕圈', '成本控制需留意'],
+    code: `# AutoGen —— 群聊式多 agent
+from autogen import AssistantAgent, GroupChat, GroupChatManager
+chat = GroupChat(agents=[planner, coder, critic], max_round=12)
+mgr  = GroupChatManager(groupchat=chat, llm_config=cfg)
+user.initiate_chat(mgr, message="实现并自审这个需求")`,
+  },
+  {
+    id: 'openai-agents',
+    name: 'OpenAI Agents SDK',
+    vendor: 'OpenAI',
+    kind: 'Python/JS SDK',
+    paradigm: 'Agent + handoffs + guardrails（轻量编排）',
+    language: ['Python', 'TypeScript'],
+    multiAgent: 'handoff 机制在 agent 间转交',
+    state: 'Runner 管理 + sessions',
+    toolCalling: '原生 function tools / hosted tools',
+    traceability: 'native',
+    traceNote: '内置 Tracing：每次 run 产生 trace + spans（LLM/tool/handoff），可在 OpenAI 平台看或导出。aker 直接消费其 trace 对象。',
+    strengths: ['轻量、官方维护', '原生 tracing 一等公民', 'handoff/guardrail 实用'],
+    weaknesses: ['偏 OpenAI 生态', '复杂控制流不如图'],
+    code: `# OpenAI Agents SDK —— 原生 tracing
+from agents import Agent, Runner
+triage = Agent(name="triage", handoffs=[billing, tech])
+result = Runner.run_sync(triage, "我账单不对")
+# result 自带 trace（spans: llm/tool/handoff）`,
+  },
+  {
+    id: 'google-adk',
+    name: 'Google ADK',
+    vendor: 'Google',
+    kind: 'Python/Java 框架',
+    paradigm: '分层 agent（LlmAgent / Workflow agent）',
+    language: ['Python', 'Java'],
+    multiAgent: 'Sequential/Parallel/Loop 工作流 agent',
+    state: 'Session + State service',
+    toolCalling: '原生 + OpenAPI/MCP 工具',
+    traceability: 'otel',
+    traceNote: '内置 OpenTelemetry，与 Cloud Trace / Vertex 集成；本地也有 trace UI。aker 接 OTel。',
+    strengths: ['企业级、与 GCP 深度整合', '并行/循环工作流原生', '评估套件自带'],
+    weaknesses: ['偏 Google 生态', '相对新'],
+    code: `# Google ADK —— 并行工作流 agent
+from google.adk.agents import ParallelAgent, LlmAgent
+fan = ParallelAgent(sub_agents=[a1, a2, a3])  # 并行扇出
+# runner 产生 OTel spans → 导出做评审`,
+  },
+  {
+    id: 'smolagents',
+    name: 'smolagents',
+    vendor: 'Hugging Face',
+    kind: 'Python 框架（极简）',
+    paradigm: 'Code-Agent（让模型写 Python 代码当动作）',
+    language: ['Python'],
+    multiAgent: '可嵌套 managed agents',
+    state: '执行环境变量',
+    toolCalling: '代码即工具调用（也支持 JSON tool）',
+    traceability: 'otel',
+    traceNote: '可接 OpenTelemetry / Langfuse；每步生成的代码与执行结果都可记录。',
+    strengths: ['极简、代码动作很强', '模型无关', '步骤透明（看生成的代码）'],
+    weaknesses: ['代码执行需 sandbox', '复杂编排需自己加'],
+    code: `# smolagents —— 代码即动作
+from smolagents import CodeAgent, InferenceClientModel
+agent = CodeAgent(tools=[search], model=InferenceClientModel())
+agent.run("查 aker 的并行评审怎么做")
+# 每步=一段可见的 Python 代码 → 天然可审`,
+  },
+  {
+    id: 'aider',
+    name: 'Aider',
+    vendor: 'OSS (Paul Gauthier)',
+    kind: 'CLI（结对编程）',
+    paradigm: 'repo-map + 编辑循环',
+    language: ['Python 实现，改任意语言代码'],
+    multiAgent: '单 agent',
+    state: 'git commit 即状态',
+    toolCalling: 'SEARCH/REPLACE 编辑块',
+    traceability: 'cli-log',
+    traceNote: '有 .aider.chat.history.md / llm 历史可解析；每次改动落 git commit，diff 即 trace。',
+    strengths: ['git 原生、可回滚', '模型无关（litellm）', '编辑精准'],
+    weaknesses: ['专注编码、非通用 agent', '无结构化 trace（需解析）'],
+    code: `# Aider —— git 即 trace
+aider --model openai/gpt-x --yes "把日志换成结构化 logging"
+# 每轮改动 = 一个 commit；git log/diff 复盘`,
+  },
+];
+
+// 对比矩阵列定义（前端渲染表头用）
+const MATRIX_COLUMNS = [
+  { key: 'kind', label: '形态' },
+  { key: 'paradigm', label: '范式' },
+  { key: 'multiAgent', label: '多 agent' },
+  { key: 'toolCalling', label: '工具调用' },
+  { key: 'traceability', label: 'trace 可得性' },
+];
+
+const TRACEABILITY_META = {
+  native:    { label: '原生结构化', score: 4, color: '#16a34a', hint: '有一等公民的 trace/spans，直接消费' },
+  otel:      { label: 'OTel/回调',  score: 3, color: '#0891b2', hint: '通过 OpenTelemetry 或 callback 收集' },
+  'cli-log': { label: 'CLI 日志',   score: 2, color: '#d97706', hint: '解析 --json 事件流或 stdout/日志文件' },
+  'api-only':{ label: '仅最终响应', score: 1, color: '#dc2626', hint: '只有最终输出，需自包一层记录中间步骤' },
+};
+
+function getFramework(id) {
+  return FRAMEWORKS.find((f) => f.id === id) || null;
+}
+
+
+// trace.mjs — 统一的 trace 模型 + 效果评审用的 trace 指标/对比
+// 不同框架的原始 trace 形态各异（jsonl / OTel spans / cli json / 自包），
+// adapter 负责把它们归一成下面这套 step 结构，aker 再统一分析。
+
+// step.type: 'think' | 'tool' | 'observe' | 'message' | 'handoff' | 'error'
+function makeStep(i, type, label, extra = {}) {
+  return {
+    i,
+    type,
+    label,
+    detail: extra.detail || '',
+    toolName: extra.toolName || null,
+    tokens: extra.tokens || 0,
+    ms: extra.ms || 0,
+  };
+}
+
+function summarizeTrace(steps = []) {
+  const totals = {
+    steps: steps.length,
+    tokens: steps.reduce((a, s) => a + (s.tokens || 0), 0),
+    toolCalls: steps.filter((s) => s.type === 'tool').length,
+    wallMs: steps.reduce((a, s) => a + (s.ms || 0), 0),
+    errors: steps.filter((s) => s.type === 'error').length,
+    tools: [...new Set(steps.filter((s) => s.toolName).map((s) => s.toolName))],
+  };
+  return totals;
+}
+
+// 效果评审：对比两个 agent 的执行过程（不是结果），给出过程层面的差异
+function diffTraces(a, b) {
+  const ta = summarizeTrace(a.trace?.steps || []);
+  const tb = summarizeTrace(b.trace?.steps || []);
+  const onlyA = ta.tools.filter((t) => !tb.tools.includes(t));
+  const onlyB = tb.tools.filter((t) => !ta.tools.includes(t));
+  const shared = ta.tools.filter((t) => tb.tools.includes(t));
+  return {
+    a: { id: a.agentId, label: agentLabel(a), totals: ta },
+    b: { id: b.agentId, label: agentLabel(b), totals: tb },
+    deltas: {
+      steps: ta.steps - tb.steps,
+      tokens: ta.tokens - tb.tokens,
+      toolCalls: ta.toolCalls - tb.toolCalls,
+      wallMs: ta.wallMs - tb.wallMs,
+    },
+    tools: { onlyA, onlyB, shared },
+  };
+}
+
+function agentLabel(a) {
+  return `${a.framework} · ${a.model}`;
+}
+
+
+// committee.mjs — 评审会引擎
+// 输入：一个 run 的多个 agent 输出（+各自 trace）
+// 输出：交集(共识) / 并集(全集) / 差异归因 / 更优解
+// 关键：所有分析都是“真实计算”出来的，不依赖 LLM 也能跑（Sim 模式）。
+// Live 模式下，synthesizeBetter() 会被替换成真实 LLM 综合（见 adapters.liveSynthesize）。
+
+
+// —— 文本切片：把一段输出拆成“论点/要点”单元 ——
+function splitPoints(text = '') {
+  return text
+    .split(/\n+|(?<=[。！？.!?])\s+/g)
+    .map((s) => s.replace(/^[\s\-*•\d.、)）]+/, '').trim())
+    .filter((s) => s.length >= 4);
+}
+
+// —— 归一化分词：latin 单词 + CJK 字符，用于相似度 ——
+function shingles(s) {
+  const lower = s.toLowerCase();
+  const words = lower.match(/[a-z0-9_]+/g) || [];
+  const cjk = lower.match(/[一-鿿]/g) || [];
+  const cjkBigrams = [];
+  for (let i = 0; i < cjk.length - 1; i++) cjkBigrams.push(cjk[i] + cjk[i + 1]);
+  return new Set([...words, ...cjk, ...cjkBigrams]);
+}
+
+function jaccard(a, b) {
+  if (!a.size || !b.size) return 0;
+  let inter = 0;
+  for (const x of a) if (b.has(x)) inter++;
+  return inter / (a.size + b.size - inter);
+}
+
+const SIM_THRESHOLD = 0.34;
+
+// 把所有 agent 的要点聚类：相似的归为同一个“主张簇”
+function clusterPoints(agents) {
+  const items = [];
+  agents.forEach((ag, ai) => {
+    for (const p of splitPoints(ag.output || '')) {
+      items.push({ ai, agentId: ag.agentId, text: p, sh: shingles(p) });
+    }
+  });
+  const clusters = [];
+  for (const it of items) {
+    let best = null, bestSim = 0;
+    for (const c of clusters) {
+      const sim = jaccard(it.sh, c.centroid);
+      if (sim > bestSim) { bestSim = sim; best = c; }
+    }
+    if (best && bestSim >= SIM_THRESHOLD) {
+      best.members.push(it);
+      for (const x of it.sh) best.centroid.add(x);
+      best.agents.add(it.ai);
+    } else {
+      clusters.push({ members: [it], centroid: new Set(it.sh), agents: new Set([it.ai]) });
+    }
+  }
+  return clusters;
+}
+
+function repText(cluster) {
+  // 选最短且信息量够的成员作代表
+  return cluster.members.slice().sort((a, b) => a.text.length - b.text.length)[0].text;
+}
+
+function review(run, mode = 'intersection') {
+  const agents = run.agents.filter((a) => a.status === 'done' && a.output);
+  const n = agents.length;
+  const clusters = clusterPoints(agents);
+  const majority = Math.ceil(n / 2);
+
+  // 共识(交集)：被多数 agent 覆盖的簇
+  const consensus = clusters
+    .filter((c) => c.agents.size >= Math.max(2, majority))
+    .map((c) => ({
+      text: repText(c),
+      coverage: c.agents.size,
+      agents: [...c.agents].map((i) => agents[i].agentId),
+    }))
+    .sort((a, b) => b.coverage - a.coverage);
+
+  // 全集(并集)：所有去重后的要点
+  const union = clusters.map((c) => ({
+    text: repText(c),
+    coverage: c.agents.size,
+    agents: [...c.agents].map((i) => agents[i].agentId),
+    unique: c.agents.size === 1,
+  }));
+
+  // 分歧：只有单个 agent 提到的要点（其他人没有 = 可能是洞见，也可能是幻觉）
+  const divergence = union
+    .filter((u) => u.unique)
+    .map((u) => ({ text: u.text, by: u.agents[0] }));
+
+  // 差异归因：结合 trace 信号解释“为什么会不同”
+  const attribution = attribute(agents, divergence);
+
+  // 更优解
+  const betterSolution = synthesizeBetter(agents, consensus, union, attribution);
+
+  return {
+    mode,
+    counts: { agents: n, clusters: clusters.length, consensus: consensus.length, divergent: divergence.length },
+    consensus,
+    union,
+    divergence,
+    attribution,
+    betterSolution,
+  };
+}
+
+// —— 差异归因：用 trace 把分歧分类到可解释的原因 ——
+function attribute(agents, divergence) {
+  const reasons = [];
+  const traces = agents.map((a) => ({ a, t: summarizeTrace(a.trace?.steps || []) }));
+
+  // 1) 模型差异
+  const models = [...new Set(agents.map((a) => a.model))];
+  if (models.length > 1) {
+    reasons.push({
+      kind: '模型差异',
+      weight: 'high',
+      detail: `参与的 ${agents.length} 个 agent 用了 ${models.length} 种模型（${models.join('、')}）。不同模型的知识截止、对齐倾向与推理风格不同，会在措辞与取舍上分叉。`,
+    });
+  }
+
+  // 2) 工具/检索差异（trace）
+  const toolSets = traces.map((x) => x.t.tools);
+  const allTools = [...new Set(toolSets.flat())];
+  const partialTools = allTools.filter((tool) => toolSets.some((s) => s.includes(tool)) && toolSets.some((s) => !s.includes(tool)));
+  if (partialTools.length) {
+    reasons.push({
+      kind: '工具/检索差异',
+      weight: 'high',
+      detail: `工具 [${partialTools.join('、')}] 只有部分 agent 调用了。检索/执行到的事实不同 → 结论必然分叉。这类分歧通常“有据可查的一方更可信”。`,
+      evidence: traces.map((x) => ({ agentId: x.a.agentId, tools: x.t.tools })),
+    });
+  }
+
+  // 3) 步骤深度差异（trace）
+  const steps = traces.map((x) => x.t.steps);
+  const maxS = Math.max(...steps), minS = Math.min(...steps);
+  if (maxS - minS >= 2) {
+    const deep = traces.find((x) => x.t.steps === maxS);
+    reasons.push({
+      kind: '推理深度差异',
+      weight: 'medium',
+      detail: `步骤数从 ${minS} 到 ${maxS} 不等。${deep.a.framework}·${deep.a.model} 走了更多步（更多自我验证/迭代），更可能覆盖边角，但也更贵。`,
+    });
+  }
+
+  // 4) 表述/侧重差异（内容层，分歧但非事实冲突）
+  if (divergence.length) {
+    reasons.push({
+      kind: '侧重/表述差异',
+      weight: 'low',
+      detail: `有 ${divergence.length} 条要点仅单一 agent 提及。需人工判断：是独到洞见（保留）还是无依据发挥（剔除）。aker 在“更优解”里默认对“有 trace 工具支撑的一方”加权。`,
+    });
+  }
+
+  return reasons;
+}
+
+// —— 更优解综合（Sim 模式：基于规则的可解释综合）——
+function synthesizeBetter(agents, consensus, union, attribution) {
+  const traces = agents.map((a) => summarizeTrace(a.trace?.steps || []));
+  // 给每个 agent 一个“过程可信度”分（基于 trace：有工具、步骤适中、无错误）
+  const cred = {};
+  agents.forEach((a, i) => {
+    const t = traces[i];
+    cred[a.agentId] = (t.tools.length * 2) + Math.min(t.steps, 6) - t.errors * 3;
+  });
+
+  // 采纳的独有要点：来自可信度高于中位数的 agent
+  const credVals = Object.values(cred).sort((x, y) => x - y);
+  const med = credVals[Math.floor(credVals.length / 2)] ?? 0;
+  const adoptedUnique = union
+    .filter((u) => u.unique && (cred[u.agents[0]] ?? 0) >= med)
+    .map((u) => ({ text: u.text, from: u.agents[0] }));
+
+  const lines = [];
+  lines.push('## 综合最优解（aker 评审会）');
+  lines.push('');
+  lines.push('### 已确立的共识（多数 agent 一致，可信度最高）');
+  if (consensus.length) consensus.forEach((c) => lines.push(`- ${c.text}  _(${c.coverage} 个 agent 覆盖)_`));
+  else lines.push('- （本次无强共识——说明任务发散或 agent 配置差异大，建议增加一致性约束或换更同质的模型组）');
+  lines.push('');
+  lines.push('### 选择性纳入的独有洞见（过程可信度更高的一方提出）');
+  if (adoptedUnique.length) adoptedUnique.forEach((u) => lines.push(`- ${u.text}  _(来自 ${u.from}，其 trace 有工具/验证支撑)_`));
+  else lines.push('- （无满足采纳门槛的独有要点）');
+  lines.push('');
+  lines.push('### 评审会判断');
+  attribution.forEach((r) => lines.push(`- **${r.kind}**（权重 ${r.weight}）：${r.detail}`));
+  lines.push('');
+  lines.push('> Live 模式接入真实模型后，这一段会替换为 LLM 对以上结构化证据的二次综合（措辞更自然，并能解决事实冲突）。');
+
+  return {
+    credibility: cred,
+    adoptedUnique,
+    markdown: lines.join('\n'),
+  };
+}
+
+
+// adapters.mjs — 可插拔 runner：每个框架一个 adapter
+// 双模式：
+//   Sim  —— 零 key 可跑，产出“可信的”差异化输出 + 归一化 trace（用于演示与离线评审）
+//   Live —— 检测到 key/CLI 时切真实调用（Anthropic/OpenAI HTTP、claude/codex CLI）
+// 设计要点：Sim 的多 agent 输出之间“有共识也有分歧”，这样评审会才有真东西可分析。
+
+
+// —— 确定性伪随机（同 task+agent 复现）——
+function rng(seedStr) {
+  let h = 2166136261;
+  for (let i = 0; i < seedStr.length; i++) { h ^= seedStr.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return () => { h += 0x6D2B79F5; let t = h; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+}
+
+// 模型“人格”：影响风格与一条独有取向
+const MODEL_PERSONA = {
+  default:               { style: '均衡', bias: '在可读性与性能间折中' },
+  'claude-opus-4-8':     { style: '严谨细致', bias: '强调边界条件与可维护性，倾向多写测试' },
+  'claude-sonnet-4-6':   { style: '简洁高效', bias: '优先最小可行改动，控制复杂度' },
+  'gpt-x':               { style: '直接果断', bias: '倾向引入成熟库而非自造轮子' },
+  'o-series':            { style: '深推理', bias: '会显式列出多个候选方案再择优' },
+  'hermes-3':            { style: '开放直白', bias: '给出可私有化/本地化的实现路径' },
+  'gemini-x':            { style: '结构化', bias: '强调与现有平台/生态集成' },
+};
+
+// 框架决定 trace 里会出现哪些“工具”与步骤形态
+const FRAMEWORK_TOOLKIT = {
+  'claude-code':  ['Read', 'Edit', 'Bash'],
+  'codex-cli':    ['shell', 'apply_patch'],
+  'hermes':       [],
+  'langgraph':    ['retriever', 'python_repl'],
+  'crewai':       ['search', 'writer'],
+  'autogen':      ['code_exec'],
+  'openai-agents':['web_search', 'handoff'],
+  'google-adk':   ['vertex_search'],
+  'smolagents':   ['python_code'],
+  'aider':        ['git', 'edit_block'],
+};
+
+// —— 生成差异化但有共识的输出 —— //
+function composeOutput(task, framework, model) {
+  const persona = MODEL_PERSONA[model] || MODEL_PERSONA.default;
+  const fw = getFramework(framework);
+  const tools = FRAMEWORK_TOOLKIT[framework] || [];
+
+  // 三条“共识要点”——所有 agent 都会给（关键词一致，便于聚类成共识）
+  const shared = [
+    `先明确「${task}」的输入输出与边界条件，再动手实现。`,
+    `把核心逻辑与 I/O 解耦，便于测试与替换。`,
+    `补充针对「${task}」的单元测试，覆盖正常与异常路径。`,
+  ];
+
+  // 模型相关的独有取向
+  const modelUnique = `${persona.bias}（${model} 的取向）。`;
+
+  // 框架相关的独有做法（与其工具/范式挂钩）
+  const fwUnique = tools.length
+    ? `用 ${fw?.name || framework} 时，可借助 [${tools.join('、')}] 在过程中验证假设，降低返工。`
+    : `${fw?.name || framework} 无内置工具，建议外包一层执行环境来验证中间结果。`;
+
+  const body = [
+    `针对「${task}」的方案（by ${fw?.name || framework} · ${model}，风格：${persona.style}）：`,
+    '',
+    ...shared.map((s, i) => `${i + 1}. ${s}`),
+    `4. ${modelUnique}`,
+    `5. ${fwUnique}`,
+  ].join('\n');
+  return body;
+}
+
+// —— 生成归一化 trace（形态贴合该框架的 traceability）—— //
+function composeTrace(task, framework, model, seed) {
+  const r = rng(seed);
+  const tools = FRAMEWORK_TOOLKIT[framework] || [];
+  const steps = [];
+  let i = 0;
+  steps.push(makeStep(i++, 'think', '解析任务与约束', { detail: `拆解「${task}」`, tokens: 120 + Math.floor(r() * 200), ms: 300 + Math.floor(r() * 400) }));
+  // 工具调用：每个工具 1-2 次
+  for (const t of tools) {
+    const times = 1 + Math.floor(r() * 2);
+    for (let k = 0; k < times; k++) {
+      steps.push(makeStep(i++, 'tool', `调用 ${t}`, { toolName: t, detail: `${t} 第${k + 1}次`, tokens: 40 + Math.floor(r() * 120), ms: 200 + Math.floor(r() * 900) }));
+      steps.push(makeStep(i++, 'observe', `${t} 结果`, { detail: '读取/执行结果并更新假设', tokens: 60 + Math.floor(r() * 150), ms: 100 + Math.floor(r() * 200) }));
+    }
+  }
+  // 深推理模型多走一步自审
+  if (model === 'o-series' || model === 'claude-opus-4-8') {
+    steps.push(makeStep(i++, 'think', '自我验证 / 反思', { detail: '检查边界与潜在错误', tokens: 200 + Math.floor(r() * 200), ms: 500 + Math.floor(r() * 500) }));
+  }
+  steps.push(makeStep(i++, 'message', '产出最终方案', { tokens: 300 + Math.floor(r() * 300), ms: 400 + Math.floor(r() * 400) }));
+  return steps;
+}
+
+// —— Sim adapter —— //
+async function runSim(framework, model, task, agentId) {
+  const seed = `${task}::${agentId}`;
+  const steps = composeTrace(task, framework, model, seed);
+  // 模拟时延（短，便于演示并行）
+  await new Promise((res) => setTimeout(res, 200 + Math.floor(rng(seed)() * 600)));
+  return {
+    status: 'done',
+    mode: 'sim',
+    output: composeOutput(task, framework, model),
+    trace: { steps, totals: summarizeTrace(steps), source: traceSource(framework) },
+  };
+}
+
+function traceSource(framework) {
+  const fw = getFramework(framework);
+  const meta = fw && TRACEABILITY_META[fw.traceability];
+  return { traceability: fw?.traceability || 'api-only', how: meta?.hint || '' };
+}
+
+// —— Live adapter（检测到能力时启用，否则抛错让上层降级到 Sim）—— //
+function liveCapabilities() {
+  return {
+    anthropicKey: !!__ENV.ANTHROPIC_API_KEY,
+    openaiKey: !!__ENV.OPENAI_API_KEY,
+  };
+}
+
+async function runLive(framework, model, task, agentId) {
+  const caps = liveCapabilities();
+  const fw = getFramework(framework);
+  // 选择真实通道
+  if ((fw?.vendor === 'Anthropic' || model.startsWith('claude')) && caps.anthropicKey) {
+    return await callAnthropic(model, task);
+  }
+  if ((fw?.vendor === 'OpenAI' || model.startsWith('gpt') || model.startsWith('o-')) && caps.openaiKey) {
+    return await callOpenAI(model, task);
+  }
+  throw new Error(`live-unavailable:${framework}/${model}`);
+}
+
+async function callAnthropic(model, task) {
+  const t0 = Date.now();
+  const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'x-api-key': __ENV.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+    body: JSON.stringify({ model, max_tokens: 1024, messages: [{ role: 'user', content: task }] }),
+  });
+  const j = await resp.json();
+  const text = (j.content || []).map((b) => b.text).join('\n');
+  const steps = [makeStep(0, 'message', 'Anthropic 响应', { tokens: j.usage?.output_tokens || 0, ms: Date.now() - t0 })];
+  return { status: 'done', mode: 'live', output: text, trace: { steps, totals: summarizeTrace(steps), source: { traceability: 'native', how: 'API usage + (可升级为 Agent SDK transcript)' } } };
+}
+
+async function callOpenAI(model, task) {
+  const t0 = Date.now();
+  const resp = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', authorization: `Bearer ${__ENV.OPENAI_API_KEY}` },
+    body: JSON.stringify({ model, messages: [{ role: 'user', content: task }] }),
+  });
+  const j = await resp.json();
+  const text = j.choices?.[0]?.message?.content || '';
+  const steps = [makeStep(0, 'message', 'OpenAI 响应', { tokens: j.usage?.completion_tokens || 0, ms: Date.now() - t0 })];
+  return { status: 'done', mode: 'live', output: text, trace: { steps, totals: summarizeTrace(steps), source: { traceability: 'native', how: 'API usage' } } };
+}
+
+// —— 统一入口 —— //
+async function runAgent({ framework, model, task, agentId, mode }) {
+  if (mode === 'live') {
+    try {
+      return await runLive(framework, model, task, agentId);
+    } catch (e) {
+      const sim = await runSim(framework, model, task, agentId);
+      sim.note = `live 不可用（${String(e.message)}），已降级到 sim`;
+      return sim;
+    }
+  }
+  return await runSim(framework, model, task, agentId);
+}
+
+function capabilities() {
+  const caps = liveCapabilities();
+  return {
+    live: caps.anthropicKey || caps.openaiKey,
+    anthropic: caps.anthropicKey,
+    openai: caps.openaiKey,
+    note: caps.anthropicKey || caps.openaiKey ? '检测到 API key，可用 Live 模式' : '未检测到 key/CLI，运行在 Sim 模式（仍可完整演示评审闭环）',
+  };
+}
+
+
+// orchestrator.mjs — 多 agent 并行编排
+
+let counter = 1;
+function newId(prefix) { return `${prefix}_${Date.now().toString(36)}_${(counter++).toString(36)}`; }
+
+// 并行跑所有 agent；任一失败不拖累其他（Promise.allSettled）
+async function runParallel({ task, agents, mode = 'sim' }) {
+  const runId = newId('run');
+  const specs = agents.map((a, i) => ({
+    agentId: a.agentId || `${a.framework}#${i + 1}`,
+    framework: a.framework,
+    model: a.model,
+  }));
+
+  const settled = await Promise.allSettled(
+    specs.map((s) => runAgent({ ...s, task, mode }))
+  );
+
+  const resultAgents = specs.map((s, i) => {
+    const r = settled[i];
+    if (r.status === 'fulfilled') {
+      return { ...s, label: agentLabel(s), ...r.value };
+    }
+    return { ...s, label: agentLabel(s), status: 'error', output: '', error: String(r.reason?.message || r.reason), trace: { steps: [] } };
+  });
+
+  return {
+    id: runId,
+    task,
+    mode,
+    createdAt: new Date().toISOString(),
+    agents: resultAgents,
+  };
+}
+
+
+// ── 浏览器 store（localStorage 持久化）──
+const __KEY = 'aker.runs.v1';
+function __load() { try { return JSON.parse(localStorage.getItem(__KEY)) || { runs: [] }; } catch { return { runs: [] }; } }
+function __save(db) { localStorage.setItem(__KEY, JSON.stringify(db)); }
+function saveRun(run) { const db = __load(); const i = db.runs.findIndex(r => r.id === run.id); if (i >= 0) db.runs[i] = run; else db.runs.unshift(run); __save(db); return run; }
+function getRun(id) { return __load().runs.find(r => r.id === id) || null; }
+function listRuns() { return __load().runs.map(({ id, task, createdAt, mode, agents }) => ({ id, task, createdAt, mode, agentCount: agents.length })); }
+
+// ── 首次访问灌入示例 run（真实编排器跑出，非假数据）──
+let __seeded = false;
+async function ensureSeeded() {
+  if (__seeded) return;
+  __seeded = true;
+  if (__load().runs.length) return;
+  const run = await runParallel({ task: '实现一个带缓存的并发安全计数器', mode: 'sim', agents: [
+    { framework: 'claude-code', model: 'claude-opus-4-8' },
+    { framework: 'codex-cli', model: 'gpt-x' },
+    { framework: 'langgraph', model: 'o-series' },
+    { framework: 'hermes', model: 'hermes-3' },
+  ]});
+  run.id = 'run_demo'; run.createdAt = '2026-06-08T00:00:00.000Z';
+  saveRun(run);
+}
+
+// ── 路由：复刻原 server.mjs 的 API（纯前端执行）──
+async function __handle(method, urlStr, body) {
+  const url = new URL(urlStr, location.origin);
+  const p = url.pathname;
+  await ensureSeeded();
+  if (p === '/api/health') return { status: 200, body: { ok: true, ...capabilities() } };
+  if (p === '/api/frameworks') return { status: 200, body: { frameworks: FRAMEWORKS, matrixColumns: MATRIX_COLUMNS, traceabilityMeta: TRACEABILITY_META } };
+  if (p === '/api/runs' && method === 'GET') return { status: 200, body: { runs: listRuns() } };
+  if (p === '/api/run' && method === 'POST') {
+    const { task, agents, mode } = body || {};
+    if (!task || !Array.isArray(agents) || !agents.length) return { status: 400, body: { error: 'task 与 agents 必填' } };
+    const run = await runParallel({ task, agents, mode: mode || 'sim' });
+    saveRun(run);
+    return { status: 200, body: { run } };
+  }
+  if (p.startsWith('/api/runs/') && method === 'GET') {
+    const run = getRun(decodeURIComponent(p.split('/').pop()));
+    return run ? { status: 200, body: { run } } : { status: 404, body: { error: 'run 不存在' } };
+  }
+  if (p === '/api/review' && method === 'POST') {
+    const run = getRun(body.runId);
+    if (!run) return { status: 404, body: { error: 'run 不存在' } };
+    return { status: 200, body: { review: review(run, body.mode || 'intersection') } };
+  }
+  if (p === '/api/trace/diff' && method === 'GET') {
+    const run = getRun(url.searchParams.get('runId'));
+    if (!run) return { status: 404, body: { error: 'run 不存在' } };
+    const a = run.agents.find(x => x.agentId === url.searchParams.get('a'));
+    const b = run.agents.find(x => x.agentId === url.searchParams.get('b'));
+    if (!a || !b) return { status: 400, body: { error: 'a/b agent 不存在' } };
+    return { status: 200, body: { diff: diffTraces(a, b) } };
+  }
+  return { status: 404, body: { error: 'unknown api' } };
+}
+
+// ── 拦截 fetch：/api/* 走本地路由，其余放行 ──
+const __origFetch = window.fetch.bind(window);
+window.fetch = async (input, init = {}) => {
+  const urlStr = typeof input === 'string' ? input : input.url;
+  if (urlStr && urlStr.includes('/api/')) {
+    const method = (init.method || 'GET').toUpperCase();
+    const body = init.body ? JSON.parse(init.body) : null;
+    let r;
+    try { r = await __handle(method, urlStr, body); }
+    catch (e) { r = { status: 500, body: { error: String(e && e.message || e) } }; }
+    return new Response(JSON.stringify(r.body), { status: r.status, headers: { 'content-type': 'application/json' } });
+  }
+  return __origFetch(input, init);
+};
+
+// app.js — aker 前端 (vanilla, 无构建)
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+const api = (p, opts) => fetch(p, opts).then((r) => r.json());
+const esc = (s) => String(s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+
+let STATE = { frameworks: [], traceMeta: {}, matrixCols: [], mode: 'sim', lastRun: null };
+
+// 模型候选（演示用；Live 模式下按 key 真实可用）
+const MODELS = ['claude-opus-4-8', 'claude-sonnet-4-6', 'gpt-x', 'o-series', 'hermes-3', 'gemini-x'];
+const DEFAULT_AGENTS = [
+  { framework: 'claude-code', model: 'claude-opus-4-8' },
+  { framework: 'codex-cli', model: 'gpt-x' },
+  { framework: 'langgraph', model: 'o-series' },
+];
+
+// ───────── tabs ─────────
+$$('#tabs button').forEach((b) => b.addEventListener('click', () => {
+  $$('#tabs button').forEach((x) => x.classList.toggle('active', x === b));
+  $$('.panel').forEach((p) => p.classList.toggle('active', p.id === `panel-${b.dataset.tab}`));
+  if (b.dataset.tab === 'committee' || b.dataset.tab === 'trace') refreshRunPickers();
+}));
+
+// ───────── init ─────────
+(async function init() {
+  const [health, fw] = await Promise.all([api('/api/health'), api('/api/frameworks')]);
+  STATE.frameworks = fw.frameworks; STATE.traceMeta = fw.traceabilityMeta; STATE.matrixCols = fw.matrixColumns;
+  $('#modedot').classList.toggle('on', health.live);
+  $('#modetext').textContent = health.live ? 'Live 可用' : 'Sim 模式';
+  $('#modepill').title = health.note;
+  renderAgentRows(DEFAULT_AGENTS);
+  renderFrameworks();
+  bindRunControls();
+  refreshRunPickers();
+})();
+
+// ───────── 运行台 ─────────
+function fwOptions(sel) { return STATE.frameworks.map((f) => `<option value="${f.id}" ${f.id === sel ? 'selected' : ''}>${esc(f.name)}</option>`).join(''); }
+function modelOptions(sel) { return MODELS.map((m) => `<option value="${m}" ${m === sel ? 'selected' : ''}>${m}</option>`).join(''); }
+
+function renderAgentRows(agents) {
+  $('#agentRows').innerHTML = agents.map((a, i) => `
+    <div class="agent-row" data-i="${i}">
+      <select class="fw">${fwOptions(a.framework)}</select>
+      <select class="ml">${modelOptions(a.model)}</select>
+      <button class="icon-btn rm" title="移除">×</button>
+    </div>`).join('');
+  $$('#agentRows .rm').forEach((btn) => btn.addEventListener('click', (e) => {
+    const rows = collectAgents(); const i = +e.target.closest('.agent-row').dataset.i;
+    rows.splice(i, 1); renderAgentRows(rows.length ? rows : DEFAULT_AGENTS.slice(0, 1));
+  }));
+}
+function collectAgents() {
+  return $$('#agentRows .agent-row').map((r) => ({ framework: $('.fw', r).value, model: $('.ml', r).value }));
+}
+function bindRunControls() {
+  $('#addAgent').addEventListener('click', () => renderAgentRows([...collectAgents(), { framework: 'crewai', model: 'gemini-x' }]));
+  $$('#modeSeg button').forEach((b) => b.addEventListener('click', () => {
+    $$('#modeSeg button').forEach((x) => x.classList.toggle('active', x === b)); STATE.mode = b.dataset.mode;
+  }));
+  $('#runBtn').addEventListener('click', submitRun);
+}
+
+async function submitRun() {
+  const task = $('#task').value.trim();
+  const agents = collectAgents();
+  if (!task || !agents.length) return;
+  const btn = $('#runBtn'); btn.disabled = true; btn.textContent = '运行中…';
+  $('#runStatus').innerHTML = `<div class="card"><div class="metrics"><span>并行派发 <b>${agents.length}</b> 个 agent · 模式 <b>${STATE.mode}</b></span></div></div>`;
+  // 先渲染 running 占位卡
+  $('#results').innerHTML = agents.map((a, i) => agentCardShell(a, i)).join('');
+  try {
+    const { run, error } = await api('/api/run', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ task, agents, mode: STATE.mode }) });
+    if (error) throw new Error(error);
+    STATE.lastRun = run;
+    $('#results').innerHTML = run.agents.map(agentCard).join('');
+    $('#runStatus').innerHTML = `<div class="card"><div class="metrics"><span class="status done"></span><span>完成 · run <b>${run.id}</b> · 已存档，可在「评审会 / Trace」中调用</span></div></div>`;
+    refreshRunPickers(run.id);
+  } catch (e) {
+    $('#runStatus').innerHTML = `<div class="card"><span style="color:var(--red)">运行失败：${esc(e.message)}</span></div>`;
+  } finally { btn.disabled = false; btn.textContent = '▶ 并行运行'; }
+}
+
+function agentCardShell(a, i) {
+  return `<div class="agent-card"><div class="head"><span class="status running"></span><span class="fw-tag">${esc(fwName(a.framework))}</span><span class="model">${esc(a.model)}</span></div><div class="out" style="color:var(--faint)">执行中…</div></div>`;
+}
+function agentCard(a) {
+  const t = a.trace?.totals || {};
+  const src = a.trace?.source;
+  return `<div class="agent-card">
+    <div class="head"><span class="status ${a.status}"></span><span class="fw-tag">${esc(fwName(a.framework))}</span><span class="model">${esc(a.model)}</span>${a.mode === 'live' ? '<span class="pill">live</span>' : ''}</div>
+    ${a.note ? `<div class="cov" style="color:var(--amber)">${esc(a.note)}</div>` : ''}
+    <div class="out">${esc(a.output || a.error || '')}</div>
+    <div class="metrics">
+      <span>步骤 <b>${t.steps || 0}</b></span>
+      <span>工具 <b>${t.toolCalls || 0}</b></span>
+      <span>token <b>${t.tokens || 0}</b></span>
+      <span>耗时 <b>${t.wallMs || 0}</b>ms</span>
+      ${src ? `<span title="${esc(src.how)}">trace: <b>${esc(STATE.traceMeta[src.traceability]?.label || src.traceability)}</b></span>` : ''}
+    </div>
+  </div>`;
+}
+function fwName(id) { return STATE.frameworks.find((f) => f.id === id)?.name || id; }
+
+// ───────── run pickers (评审会 / trace 共用) ─────────
+async function refreshRunPickers(selectId) {
+  const { runs } = await api('/api/runs');
+  const opts = runs.map((r) => `<option value="${r.id}">${esc(r.task.slice(0, 28))} · ${r.agentCount}agent</option>`).join('');
+  for (const sel of ['#reviewRun', '#traceRun']) { const el = $(sel); if (el) { el.innerHTML = opts; if (selectId) el.value = selectId; } }
+  onTraceRunChange();
+}
+
+// ───────── 评审会 ─────────
+$('#reviewBtn').addEventListener('click', doReview);
+$$('#reviewMode button').forEach((b) => b.addEventListener('click', () => {
+  $$('#reviewMode button').forEach((x) => x.classList.toggle('active', x === b)); doReview();
+}));
+async function doReview() {
+  const runId = $('#reviewRun').value;
+  const mode = $('#reviewMode button.active').dataset.mode;
+  if (!runId) return;
+  $('#committeeOut').innerHTML = '<div class="card empty">评审中…</div>';
+  const { review, error } = await api('/api/review', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ runId, mode }) });
+  if (error) { $('#committeeOut').innerHTML = `<div class="card empty">${esc(error)}</div>`; return; }
+  renderReview(review, mode);
+}
+function renderReview(r, mode) {
+  const list = mode === 'intersection' ? r.consensus : r.union;
+  const listTitle = mode === 'intersection' ? `共识 / 交集 (${r.consensus.length})` : `全集 / 并集 (${r.union.length})`;
+  const listHtml = list.length ? list.map((c) => `
+    <div class="consensus-item">${esc(c.text)} <span class="cov">· ${c.coverage} agent${c.unique ? ' · 仅此一家' : ''}</span></div>`).join('')
+    : '<div class="empty">无</div>';
+
+  const divHtml = r.divergence.length ? r.divergence.map((d) => `<div class="div-item">${esc(d.text)} <span class="cov">· 来自 ${esc(d.by)}</span></div>`).join('') : '<div class="empty">无显著分歧</div>';
+
+  const attrHtml = r.attribution.map((a) => `
+    <div class="attr ${a.weight}"><span class="k">${esc(a.kind)}</span><span class="w">${a.weight}</span><div style="color:var(--muted);margin-top:3px">${esc(a.detail)}</div></div>`).join('');
+
+  $('#committeeOut').innerHTML = `
+    <div class="grid" style="grid-template-columns:1fr 1fr;gap:16px">
+      <div class="card">
+        <h2 class="section">${listTitle}</h2>
+        <p class="section-hint">${mode === 'intersection' ? '多数 agent 一致认可的要点，可信度最高' : '去重后的全部要点，含仅单一 agent 提出的'}</p>
+        ${listHtml}
+      </div>
+      <div class="card">
+        <h2 class="section">分歧点 (${r.divergence.length})</h2>
+        <p class="section-hint">仅单一 agent 提出 —— 可能是独到洞见，也可能是无依据发挥</p>
+        ${divHtml}
+      </div>
+    </div>
+    <div style="height:16px"></div>
+    <div class="two-col">
+      <div class="card">
+        <h2 class="section">差异归因</h2>
+        <p class="section-hint">结合 trace 解释「为什么会不同」</p>
+        ${attrHtml}
+      </div>
+      <div class="card">
+        <h2 class="section">更优解</h2>
+        <p class="section-hint">评审会综合共识 + 高可信度独有洞见</p>
+        <div class="markdown">${renderMarkdown(r.betterSolution.markdown)}</div>
+      </div>
+    </div>`;
+}
+
+// ───────── Trace 对比 ─────────
+$('#traceRun').addEventListener('change', onTraceRunChange);
+$('#traceBtn').addEventListener('click', doTraceDiff);
+async function onTraceRunChange() {
+  const runId = $('#traceRun')?.value; if (!runId) return;
+  const { run } = await api(`/api/runs/${encodeURIComponent(runId)}`);
+  if (!run) return;
+  const opts = run.agents.map((a) => `<option value="${a.agentId}">${esc(a.label)}</option>`).join('');
+  $('#traceA').innerHTML = opts; $('#traceB').innerHTML = opts;
+  if (run.agents[1]) $('#traceB').value = run.agents[1].agentId;
+  STATE.traceRun = run;
+}
+async function doTraceDiff() {
+  const runId = $('#traceRun').value, a = $('#traceA').value, b = $('#traceB').value;
+  if (a === b) { $('#traceOut').innerHTML = '<div class="card empty">请选择两个不同的 agent</div>'; return; }
+  const { diff, error } = await api(`/api/trace/diff?runId=${encodeURIComponent(runId)}&a=${encodeURIComponent(a)}&b=${encodeURIComponent(b)}`);
+  if (error) { $('#traceOut').innerHTML = `<div class="card empty">${esc(error)}</div>`; return; }
+  const run = STATE.traceRun;
+  const agA = run.agents.find((x) => x.agentId === a), agB = run.agents.find((x) => x.agentId === b);
+  renderTrace(diff, agA, agB);
+}
+function deltaBox(label, v, unit = '', invert = false) {
+  const cls = v === 0 ? '' : (v > 0 ? (invert ? 'neg' : 'pos') : (invert ? 'pos' : 'neg'));
+  const sign = v > 0 ? '+' : '';
+  return `<div class="delta"><span class="cov">${label} 差 (A−B)</span><b class="${cls}">${sign}${v}${unit}</b></div>`;
+}
+function renderTrace(diff, agA, agB) {
+  const tools = diff.tools;
+  $('#traceOut').innerHTML = `
+    <div class="card">
+      <h2 class="section">过程差异 · ${esc(diff.a.label)} vs ${esc(diff.b.label)}</h2>
+      <div class="deltas">
+        ${deltaBox('步骤', diff.deltas.steps)}
+        ${deltaBox('工具调用', diff.deltas.toolCalls)}
+        ${deltaBox('token', diff.deltas.tokens)}
+        ${deltaBox('耗时', diff.deltas.wallMs, 'ms')}
+      </div>
+      <div class="metrics">
+        <span>共用工具：<b>${tools.shared.join('、') || '无'}</b></span>
+        <span style="color:var(--cyan)">仅 A：<b>${tools.onlyA.join('、') || '无'}</b></span>
+        <span style="color:var(--amber)">仅 B：<b>${tools.onlyB.join('、') || '无'}</b></span>
+      </div>
+      <p class="section-hint" style="margin-top:10px">💡 效果评审提示：${traceInsight(diff)}</p>
+    </div>
+    <div style="height:16px"></div>
+    <div class="trace-cmp">
+      ${traceColumn(agA)}
+      ${traceColumn(agB)}
+    </div>`;
+}
+function traceInsight(diff) {
+  const out = [];
+  if (diff.tools.onlyA.length || diff.tools.onlyB.length) out.push('两者调用的工具集不同，事实来源就不同——结论分歧大概率源于此，应信「有据可查」的一方。');
+  if (Math.abs(diff.deltas.steps) >= 2) out.push(`步骤数差 ${Math.abs(diff.deltas.steps)}，步数多的一方更可能做了自我验证（更稳但更贵）。`);
+  if (Math.abs(diff.deltas.tokens) >= 200) out.push(`token 差 ${Math.abs(diff.deltas.tokens)}，注意性价比。`);
+  return out.join(' ') || '两者过程相近，差异更可能来自模型本身而非执行路径。';
+}
+function traceColumn(a) {
+  const steps = a.trace?.steps || [];
+  const src = a.trace?.source;
+  return `<div class="card">
+    <div class="head" style="display:flex;gap:8px;align-items:center;margin-bottom:4px"><span class="fw-tag">${esc(fwName(a.framework))}</span><span class="model">${esc(a.model)}</span></div>
+    ${src ? `<span class="trace-badge" style="background:${STATE.traceMeta[src.traceability]?.color}">trace: ${esc(STATE.traceMeta[src.traceability]?.label)}</span><div class="cov" style="margin-top:4px">${esc(src.how)}</div>` : ''}
+    <ul class="tl">${steps.map((s) => `
+      <li><span class="ico ${s.type}">${stepIcon(s.type)}</span>
+        <span class="lab">${esc(s.label)}${s.detail ? `<div class="cov">${esc(s.detail)}</div>` : ''}</span>
+        <span class="meta">${s.tokens ? s.tokens + 't' : ''} ${s.ms ? s.ms + 'ms' : ''}</span></li>`).join('')}</ul>
+  </div>`;
+}
+function stepIcon(t) { return { think: '🧠', tool: '🔧', observe: '👁', message: '✦', error: '!', handoff: '↔' }[t] || '·'; }
+
+// ───────── 框架图鉴 ─────────
+function renderFrameworks() {
+  // 矩阵
+  const cols = STATE.matrixCols;
+  const head = `<thead><tr><th>框架</th>${cols.map((c) => `<th>${esc(c.label)}</th>`).join('')}</tr></thead>`;
+  const rows = STATE.frameworks.map((f) => `<tr>
+    <td><b>${esc(f.name)}</b><div class="vendor">${esc(f.vendor)}</div></td>
+    ${cols.map((c) => {
+      if (c.key === 'traceability') { const m = STATE.traceMeta[f.traceability]; return `<td><span class="trace-badge" style="background:${m.color}">${esc(m.label)}</span></td>`; }
+      return `<td>${esc(f[c.key])}</td>`;
+    }).join('')}
+  </tr>`).join('');
+  $('#matrix').innerHTML = head + `<tbody>${rows}</tbody>`;
+
+  // 卡片
+  $('#fwGrid').innerHTML = STATE.frameworks.map((f) => {
+    const m = STATE.traceMeta[f.traceability];
+    return `<div class="fw-card">
+      <div class="title"><b>${esc(f.name)}</b><span class="vendor">${esc(f.vendor)} · ${esc(f.kind)}</span></div>
+      <span class="trace-badge" style="background:${m.color};align-self:flex-start">trace 可得性：${esc(m.label)}</span>
+      <div class="cov">${esc(f.traceNote)}</div>
+      <div class="kv">
+        <span class="k">范式</span><span>${esc(f.paradigm)}</span>
+        <span class="k">多 agent</span><span>${esc(f.multiAgent)}</span>
+        <span class="k">状态</span><span>${esc(f.state)}</span>
+        <span class="k">工具调用</span><span>${esc(f.toolCalling)}</span>
+        <span class="k">语言</span><span>${esc(f.language.join(' / '))}</span>
+      </div>
+      <div>
+        <div class="cov" style="color:var(--green)">✓ ${f.strengths.map(esc).join(' · ')}</div>
+        <div class="cov" style="color:var(--red)">△ ${f.weaknesses.map(esc).join(' · ')}</div>
+      </div>
+      <pre class="code">${highlightCode(f.code)}</pre>
+    </div>`;
+  }).join('');
+}
+
+// ───────── tiny markdown + code highlight ─────────
+function renderMarkdown(md) {
+  const lines = md.split('\n'); let html = '', inUl = false;
+  const inline = (s) => esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/_(.+?)_/g, '<i style="color:var(--muted)">$1</i>').replace(/`(.+?)`/g, '<code>$1</code>');
+  for (const ln of lines) {
+    if (/^### /.test(ln)) { if (inUl) { html += '</ul>'; inUl = false; } html += `<h3>${inline(ln.slice(4))}</h3>`; }
+    else if (/^## /.test(ln)) { if (inUl) { html += '</ul>'; inUl = false; } html += `<h2>${inline(ln.slice(3))}</h2>`; }
+    else if (/^> /.test(ln)) { if (inUl) { html += '</ul>'; inUl = false; } html += `<blockquote>${inline(ln.slice(2))}</blockquote>`; }
+    else if (/^- /.test(ln)) { if (!inUl) { html += '<ul>'; inUl = true; } html += `<li>${inline(ln.slice(2))}</li>`; }
+    else if (ln.trim() === '') { if (inUl) { html += '</ul>'; inUl = false; } }
+    else { if (inUl) { html += '</ul>'; inUl = false; } html += `<p>${inline(ln)}</p>`; }
+  }
+  if (inUl) html += '</ul>';
+  return html;
+}
+function highlightCode(code) {
+  return esc(code).replace(/(#.*|\/\/.*)/g, '<span class="cm">$1</span>');
+}
+
+</script>
+</body>
+</html>

@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Aker</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='9' fill='%23d97757'/><text x='16' y='23' font-size='20' fill='white' text-anchor='middle' font-family='sans-serif' font-weight='700'>A</text></svg>" />
+</head>
+<body>
+  <div class="shell">
+    <!-- 侧边栏 -->
+    <aside class="sidebar">
+      <div class="macpad"></div>
+      <div class="brand">
+        <div class="mark">A</div>
+        <div class="brand-text">
+          <h1>Aker</h1>
+          <div class="sub">多 agent 并行评审</div>
+        </div>
+      </div>
+
+      <nav class="side-nav" id="tabs">
+        <button data-tab="run" class="active"><span class="ni">▶</span><span>运行台</span></button>
+        <button data-tab="committee"><span class="ni">⚖</span><span>评审会</span></button>
+        <button data-tab="trace"><span class="ni">◫</span><span>Trace 对比</span></button>
+        <button data-tab="frameworks"><span class="ni">▤</span><span>框架图鉴</span></button>
+      </nav>
+
+      <div class="side-foot">
+        <div class="modepill" id="modepill"><span class="dot" id="modedot"></span><span id="modetext">检测中…</span></div>
+        <div class="side-tag">适配器架构 · Sim/Live 双模式</div>
+      </div>
+    </aside>
+
+    <!-- 内容区 -->
+    <main class="content">
+    <!-- 运行台 -->
+    <section class="panel active" id="panel-run">
+      <div class="page-head"><h2 class="page-title">并行运行台</h2><p class="page-sub">同一个任务，派发给多个 (框架 × 模型) 组合并行执行，收集各自输出与 trace。</p></div>
+      <div class="card">
+        <div class="runbar">
+          <div class="field">
+            <label>任务</label>
+            <textarea class="task" id="task">实现一个带缓存的并发安全计数器</textarea>
+          </div>
+          <div class="field">
+            <label>参与的 agent（框架 × 模型）</label>
+            <div class="agent-rows" id="agentRows"></div>
+          </div>
+          <div class="row-actions">
+            <button class="btn ghost sm" id="addAgent">+ 加一个 agent</button>
+            <div class="seg" id="modeSeg">
+              <button data-mode="sim" class="active">Sim 模式</button>
+              <button data-mode="live">Live 模式</button>
+            </div>
+            <button class="btn" id="runBtn" style="margin-left:auto">▶ 并行运行</button>
+          </div>
+        </div>
+      </div>
+      <div style="height:16px"></div>
+      <div id="runStatus"></div>
+      <div class="grid cols" id="results"></div>
+    </section>
+
+    <!-- 评审会 -->
+    <section class="panel" id="panel-committee">
+      <div class="page-head"><h2 class="page-title">评审会</h2><p class="page-sub">对多个 agent 输出取交集/并集，做差异归因，给出更优解。</p></div>
+      <div class="card">
+        <div class="toolbar">
+          <select id="reviewRun"></select>
+          <div class="seg" id="reviewMode">
+            <button data-mode="intersection" class="active">交集 · 共识</button>
+            <button data-mode="union">并集 · 全集</button>
+          </div>
+          <button class="btn sm" id="reviewBtn">评审</button>
+        </div>
+      </div>
+      <div style="height:16px"></div>
+      <div id="committeeOut"></div>
+    </section>
+
+    <!-- Trace 对比 -->
+    <section class="panel" id="panel-trace">
+      <div class="page-head"><h2 class="page-title">Trace 对比 · 效果评审</h2><p class="page-sub">不看结果看过程：对比两个 agent 的执行步骤、工具、token、耗时。</p></div>
+      <div class="card">
+        <div class="toolbar">
+          <select id="traceRun"></select>
+          <select id="traceA"></select>
+          <span style="color:var(--muted)">vs</span>
+          <select id="traceB"></select>
+          <button class="btn sm" id="traceBtn">对比</button>
+        </div>
+      </div>
+      <div style="height:16px"></div>
+      <div id="traceOut"></div>
+    </section>
+
+    <!-- 框架图鉴 -->
+    <section class="panel" id="panel-frameworks">
+      <div class="page-head"><h2 class="page-title">Agent 框架图鉴</h2><p class="page-sub">不同 agent 框架的范式、多 agent 支持、工具调用与 <b>trace 可得性</b>对比 —— trace 可得性直接决定 Aker 能否对它做效果评审。</p></div>
+      <div class="card">
+        <div class="scroll-x"><table class="matrix" id="matrix"></table></div>
+      </div>
+      <div style="height:16px"></div>
+      <div class="fw-grid" id="fwGrid"></div>
+    </section>
+    </main>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+# deps & build artifacts
+node_modules/
+dist/
+dist-app/
+build/Aker.iconset/
+
+# runtime data
+data/
+
+# packaged binaries (distributed via GitHub Release, not committed)
+*.zip
+Aker.app/
+
+# misc
+*.log
+.DS_Store
