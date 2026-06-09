@@ -5,383 +5,334 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Aker</title>
   <style>
-/* aker — claude design 风格：暖米底色 + 黏土橙强调 + 高可读排版 */
 :root {
-  --bg: #f4f2ec;
-  --surface: #ffffff;
-  --surface-2: #faf9f5;
-  --ink: #20201d;
-  --muted: #6f6a60;
-  --faint: #6f6a60;
-  --accent: #c25d3f;
-  --accent-ink: #a04e32;
-  --amber-ink: #8a5d12;
-  --border: #e7e3d9;
-  --border-strong: #d8d3c6;
-  --green: #4f9d69;
-  --cyan: #2f8aa3;
-  --amber: #9a6a1a;
-  --red: #c75d4f;
-  --shadow: 0 1px 2px rgba(40,35,25,.04), 0 6px 20px rgba(40,35,25,.06);
-  --radius: 14px;
-  --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
-  --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --bg: #f3f1eb;
+  --surface: #fff;
+  --surface-soft: #faf8f3;
+  --ink: #24231f;
+  --muted: #726d63;
+  --faint: #9a9488;
+  --accent: #bd6548;
+  --accent-dark: #984c34;
+  --border: #e6e1d7;
+  --border-strong: #d6d0c3;
+  --green: #4d9162;
+  --amber: #a77726;
+  --red: #bd554b;
+  --blue: #4e719d;
+  --shadow: 0 1px 2px rgba(40,35,25,.04), 0 12px 32px rgba(40,35,25,.06);
+  --sans: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, monospace;
 }
 * { box-sizing: border-box; }
-html, body { margin: 0; padding: 0; }
-body { background: var(--bg); color: var(--ink); font-family: var(--sans); font-size: 14px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
-a { color: var(--accent-ink); }
-button { font-family: inherit; cursor: pointer; }
-code, pre { font-family: var(--mono); }
+html, body { margin: 0; height: 100%; }
+body { color: var(--ink); background: var(--bg); font: 14px/1.55 var(--sans); -webkit-font-smoothing: antialiased; }
+button, textarea, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+.skip-link { position: absolute; top: -50px; left: 10px; z-index: 20; padding: 8px 12px; color: white; background: var(--accent); border-radius: 8px; }
+.skip-link:focus { top: 10px; }
+.app-shell { height: 100vh; display: grid; grid-template-columns: 238px minmax(0, 1fr); overflow: hidden; }
 
-/* ── shell：侧边栏 + 内容区 ── */
-.shell { display: grid; grid-template-columns: 232px 1fr; height: 100vh; overflow: hidden; }
-.sidebar { background: var(--surface-2); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 18px 14px; gap: 6px; -webkit-app-region: drag; }
-.sidebar button, .sidebar .modepill { -webkit-app-region: no-drag; }
-.brand { display: flex; align-items: center; gap: 11px; padding: 8px 8px 16px; }
-.brand .mark { width: 34px; height: 34px; border-radius: 10px; background: var(--accent); display: grid; place-items: center; color: #fff; font-weight: 700; font-size: 19px; box-shadow: var(--shadow); }
-.brand h1 { font-size: 20px; margin: 0; letter-spacing: -.02em; }
-.brand .sub { color: var(--muted); font-size: 11.5px; }
-.macpad { height: 22px; } /* mac 红绿灯留白 */
-
-.side-nav { display: flex; flex-direction: column; gap: 3px; margin-top: 4px; }
-.side-nav button { display: flex; align-items: center; gap: 11px; width: 100%; text-align: left; background: none; border: none; padding: 10px 12px; font-size: 14px; color: var(--muted); border-radius: 9px; transition: background .12s, color .12s; }
-.side-nav button .ni { width: 20px; text-align: center; font-size: 14px; opacity: .8; }
-.side-nav button:hover { background: rgba(217,119,87,.08); color: var(--ink); }
-.side-nav button.active { background: var(--accent); color: #fff; font-weight: 600; box-shadow: var(--shadow); }
-.side-nav button.active .ni { opacity: 1; }
-
-.side-foot { margin-top: auto; display: flex; flex-direction: column; gap: 8px; padding: 8px; }
-.modepill { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; color: var(--muted); background: var(--surface); border: 1px solid var(--border); padding: 6px 11px; border-radius: 999px; align-self: flex-start; }
-.side-tag { color: var(--faint); font-size: 11px; padding: 0 3px; }
+.sidebar { display: flex; flex-direction: column; gap: 12px; padding: 16px 12px; background: #f8f6f1; border-right: 1px solid var(--border); -webkit-app-region: drag; }
+.sidebar button, .project-list { -webkit-app-region: no-drag; }
+.macpad { height: 24px; }
+.brand { display: flex; align-items: center; gap: 10px; padding: 2px 8px 6px; }
+.mark { width: 34px; height: 34px; display: grid; place-items: center; color: white; background: var(--accent); border-radius: 10px; font-size: 18px; font-weight: 750; box-shadow: var(--shadow); }
+.brand h1 { margin: 0; font-size: 19px; letter-spacing: -.03em; }
+.brand p { margin: 0; color: var(--muted); font-size: 11px; }
+.new-project { width: 100%; padding: 10px 12px; border: 1px solid var(--border-strong); border-radius: 10px; background: var(--surface); text-align: left; font-weight: 650; box-shadow: 0 1px 2px rgba(0,0,0,.03); }
+.new-project:hover { border-color: var(--accent); color: var(--accent-dark); }
+.side-label { padding: 4px 8px 0; color: var(--faint); font-size: 10px; font-weight: 750; letter-spacing: .1em; text-transform: uppercase; }
+.project-list { min-height: 0; display: grid; align-content: start; gap: 3px; overflow-y: auto; }
+.project-item { display: grid; grid-template-columns: 8px 1fr; gap: 9px; align-items: start; width: 100%; padding: 9px 10px; border: 0; border-radius: 9px; background: transparent; text-align: left; }
+.project-item:hover { background: #eeeae1; }
+.project-item.active { background: var(--accent); color: white; }
+.project-item b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12.5px; font-weight: 650; }
+.project-item small { display: block; margin-top: 1px; color: var(--faint); font-size: 10.5px; }
+.project-item.active small { color: #f4d8cf; }
+.project-state { width: 7px; height: 7px; margin-top: 6px; border-radius: 50%; background: var(--faint); }
+.project-state.complete { background: var(--green); }
+.project-state.running { background: var(--amber); animation: pulse 1s infinite; }
+.project-state.failed { background: var(--red); }
+.empty-projects { padding: 15px 10px; color: var(--faint); font-size: 12px; }
+.side-bottom { margin-top: auto; display: grid; gap: 8px; }
+.side-action { display: grid; grid-template-columns: 20px 1fr auto; align-items: center; width: 100%; padding: 9px 10px; border: 0; border-radius: 9px; background: transparent; text-align: left; color: var(--muted); }
+.side-action:hover { background: #eeeae1; color: var(--ink); }
+.side-action b { min-width: 20px; padding: 1px 6px; border-radius: 999px; background: var(--surface); color: var(--muted); text-align: center; font-size: 10px; }
+.mode-status { display: flex; align-items: center; gap: 7px; padding: 7px 10px; color: var(--faint); font-size: 10.5px; }
 .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--faint); }
 .dot.on { background: var(--green); }
 
-.content { overflow-y: auto; padding: 30px 32px 60px; }
-.content > .panel { max-width: 1080px; }
-.page-head { margin-bottom: 18px; }
-.page-title { font-size: 21px; margin: 0 0 4px; letter-spacing: -.02em; }
-.page-sub { color: var(--muted); font-size: 13.5px; margin: 0; }
-.toolbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-.toolbar select { min-width: 180px; }
-.onboarding { background: #282723; color: #fff; border-radius: var(--radius); padding: 20px; display: grid; grid-template-columns: 1.2fr 1fr auto; gap: 20px; align-items: center; box-shadow: var(--shadow); }
-.onboarding h2 { font-size: 18px; line-height: 1.35; margin: 3px 0 6px; }
-.onboarding p { color: #d7d2c7; font-size: 12.5px; margin: 0; }
-.onboarding .eyebrow { color: #e7a88e; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
-.onboarding .btn { background: transparent; color: #fff; border-color: #777268; white-space: nowrap; }
-.onboarding .btn:hover { border-color: #e7a88e; color: #f4c0a9; }
-.steps { list-style: none; padding: 0; margin: 0; display: grid; gap: 7px; counter-reset: steps; }
-.steps li { display: grid; grid-template-columns: 22px 1fr; grid-template-rows: auto auto; column-gap: 7px; row-gap: 0; color: #d7d2c7; font-size: 11.5px; }
-.steps li::before { counter-increment: steps; content: counter(steps); width: 18px; height: 18px; border-radius: 50%; background: var(--accent); color: #fff; display: grid; place-items: center; font-weight: 700; grid-row: 1 / span 2; }
-.steps b, .steps span { grid-column: 2; }
-.steps b { color: #fff; line-height: 18px; }
-.ok { color: #91d2a5; }
-.warn-text { color: #f0c77a; }
+main { min-width: 0; height: 100vh; }
+.view { display: none; height: 100%; }
+.view.active { display: block; }
+.project-layout { height: 100%; display: grid; grid-template-columns: minmax(480px, 1fr) 340px; }
+.conversation-column { min-width: 0; height: 100%; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; }
+.project-header { display: flex; justify-content: space-between; gap: 20px; padding: 22px 28px 18px; border-bottom: 1px solid var(--border); background: rgba(255,255,255,.55); }
+.eyebrow { color: var(--accent); font-size: 9.5px; font-weight: 800; letter-spacing: .13em; }
+.project-header h2, .connections-header h2 { margin: 3px 0 3px; font-size: 20px; line-height: 1.25; letter-spacing: -.025em; }
+.project-header p, .connections-header p { margin: 0; color: var(--muted); font-size: 12px; }
+.header-actions { display: flex; align-items: flex-start; gap: 8px; }
+select, input, textarea { border: 1px solid var(--border-strong); border-radius: 9px; background: var(--surface); }
+select { padding: 7px 9px; font-size: 11.5px; }
+.conversation { min-height: 0; overflow-y: auto; padding: 32px max(28px, calc((100% - 760px) / 2)); scroll-behavior: smooth; }
+.welcome { max-width: 680px; margin: 8vh auto 0; text-align: center; }
+.welcome-kicker { color: var(--accent); font-size: 11px; font-weight: 750; letter-spacing: .08em; }
+.welcome h3 { margin: 8px 0; font-size: 27px; line-height: 1.25; letter-spacing: -.035em; }
+.welcome p { max-width: 570px; margin: 0 auto; color: var(--muted); }
+.examples { display: grid; gap: 7px; margin-top: 26px; text-align: left; }
+.examples button { padding: 12px 14px; border: 1px solid var(--border); border-radius: 11px; background: rgba(255,255,255,.65); color: var(--muted); }
+.examples button:hover { border-color: var(--accent); color: var(--ink); background: var(--surface); }
+.message { display: grid; grid-template-columns: 42px minmax(0, 1fr); gap: 11px; margin-bottom: 22px; }
+.message-role { width: 34px; height: 34px; display: grid; place-items: center; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--muted); font-size: 10px; font-weight: 750; }
+.message.assistant .message-role { color: white; background: var(--accent); border-color: var(--accent); }
+.message-body { min-width: 0; padding: 12px 15px; border: 1px solid var(--border); border-radius: 4px 13px 13px; background: var(--surface); box-shadow: 0 1px 3px rgba(40,35,25,.03); }
+.message.user .message-body { background: #f8f4ec; }
+.message-body p { margin: 3px 0 8px; }
+.message-body h3 { margin: 2px 0 6px; font-size: 15px; }
+.message-body ul, .message-body ol { margin: 5px 0; padding-left: 20px; }
+.inline-action { padding: 5px 9px; border: 1px solid var(--border-strong); border-radius: 7px; background: var(--surface-soft); color: var(--accent-dark); font-size: 11px; }
+.timeline-block { margin: 10px 0 25px 53px; padding: 14px 16px; border: 1px solid var(--border); border-radius: 13px; background: rgba(255,255,255,.65); }
+.timeline-head { display: flex; justify-content: space-between; margin-bottom: 10px; color: var(--muted); font-size: 11px; }
+.timeline-head b { color: var(--faint); font-weight: 500; }
+.timeline { display: grid; gap: 0; }
+.timeline-event { position: relative; display: grid; grid-template-columns: 12px minmax(0, 1fr) auto; gap: 8px; padding: 7px 0; }
+.timeline-event:not(:last-child)::before { position: absolute; left: 5px; top: 19px; bottom: -5px; width: 1px; background: var(--border); content: ""; }
+.event-dot { z-index: 1; width: 9px; height: 9px; margin-top: 5px; border: 2px solid var(--surface); border-radius: 50%; background: var(--faint); box-shadow: 0 0 0 1px var(--border-strong); }
+.timeline-event.done .event-dot { background: var(--green); }
+.timeline-event.running .event-dot { background: var(--amber); animation: pulse 1s infinite; }
+.timeline-event.warning .event-dot { background: var(--amber); }
+.timeline-event.error .event-dot { background: var(--red); }
+.timeline-event.committee .event-dot { background: var(--blue); }
+.event-title { display: flex; align-items: center; gap: 7px; font-size: 12px; }
+.event-title span { padding: 1px 5px; border-radius: 5px; background: #eeeae1; color: var(--muted); font-size: 9.5px; }
+.timeline-event p { margin: 2px 0 0; color: var(--muted); font-size: 11px; }
+.timeline-event time { color: var(--faint); font: 9.5px var(--mono); }
+.composer { margin: 0 max(22px, calc((100% - 800px) / 2)) 18px; border: 1px solid var(--border-strong); border-radius: 14px; background: var(--surface); box-shadow: var(--shadow); }
+.composer textarea { width: 100%; min-height: 72px; max-height: 180px; resize: vertical; padding: 13px 15px 4px; border: 0; outline: 0; background: transparent; }
+.composer-foot { display: flex; align-items: center; justify-content: space-between; gap: 15px; padding: 7px 8px 8px 15px; }
+.composer-foot span { color: var(--faint); font-size: 10.5px; }
+.composer-foot button, .primary-btn { padding: 8px 13px; border: 0; border-radius: 9px; background: var(--accent); color: white; font-weight: 650; font-size: 12px; }
+.composer-foot button:hover, .primary-btn:hover { background: var(--accent-dark); }
+.composer-foot button:disabled, .primary-btn:disabled { opacity: .55; cursor: default; }
+.inline-error { margin: 10px 0 20px 53px; padding: 10px 13px; border-left: 3px solid var(--red); border-radius: 8px; background: #fff0ed; color: #873d36; font-size: 12px; }
 
-/* ── cards ── */
-.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px; }
-.panel { display: none; }
-.panel.active { display: block; animation: fade .25s ease; }
-@keyframes fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
-h2.section { font-size: 16px; margin: 0 0 4px; letter-spacing: -.01em; }
-.section-hint { color: var(--muted); font-size: 13px; margin: 0 0 16px; }
+.inspector { min-width: 0; height: 100%; border-left: 1px solid var(--border); background: #f8f6f1; overflow-y: auto; }
+.inspector-tabs { position: sticky; top: 0; z-index: 2; display: grid; grid-template-columns: repeat(3, 1fr); padding: 12px; background: rgba(248,246,241,.94); backdrop-filter: blur(10px); }
+.inspector-tabs button { padding: 8px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--muted); font-size: 11.5px; }
+.inspector-tabs button.active { border-color: var(--accent); color: var(--ink); font-weight: 700; }
+.inspector-panel { display: none; padding: 10px 16px 30px; }
+.inspector-panel.active { display: block; }
+.inspector-intro h3 { margin: 0 0 3px; font-size: 14px; }
+.inspector-intro p { margin: 0 0 15px; color: var(--muted); font-size: 11px; }
+.brief-summary { display: grid; gap: 8px; }
+.brief-item { padding: 9px 10px; border: 1px solid var(--border); border-radius: 9px; background: var(--surface); }
+.brief-item span { color: var(--faint); font-size: 9.5px; font-weight: 700; letter-spacing: .04em; }
+.brief-item p { margin: 3px 0 0; font-size: 11.5px; }
+.empty-small { padding: 30px 12px; color: var(--faint); text-align: center; font-size: 11px; }
+.brief-editor { margin-top: 12px; border-top: 1px solid var(--border); }
+.brief-editor summary { padding: 12px 0; color: var(--accent-dark); cursor: pointer; font-size: 11.5px; font-weight: 650; }
+.brief-editor label, .connection-field { display: grid; gap: 4px; margin-bottom: 9px; color: var(--muted); font-size: 10.5px; }
+.brief-editor textarea { width: 100%; min-height: 58px; resize: vertical; padding: 7px 8px; font-size: 11px; }
+.wide { width: 100%; }
+.decision-content { font-size: 11.5px; }
+.decision-content h3 { margin: 17px 0 5px; color: var(--accent-dark); font-size: 13px; }
+.decision-content h3:first-child { margin-top: 0; }
+.decision-content h4 { margin: 12px 0 4px; font-size: 12px; }
+.decision-content p { margin: 4px 0 8px; }
+.decision-content ul, .decision-content ol { margin: 4px 0; padding-left: 18px; }
+.decision-content li { position: relative; margin-bottom: 6px; padding-right: 50px; }
+.decision-content blockquote { margin: 8px 0; padding: 7px 9px; border-left: 3px solid var(--accent); background: var(--surface); color: var(--muted); }
+.branch-button { position: absolute; right: 0; top: 0; padding: 2px 4px; border: 0; background: transparent; color: var(--faint); font-size: 9px; opacity: 0; }
+.decision-content li:hover .branch-button { opacity: 1; }
+.source-list { display: grid; gap: 8px; }
+.source-card { padding: 10px; border: 1px solid var(--border); border-radius: 9px; background: var(--surface); }
+.source-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px; }
+.source-head b { color: var(--accent-dark); font: 700 10px var(--mono); }
+.source-head span { padding: 1px 5px; border-radius: 5px; background: #eeeae1; color: var(--muted); font-size: 9px; }
+.source-head span.ready { background: #e5f2e8; color: #34724a; }
+.source-head span.failed { background: #fff0ed; color: #873d36; }
+.source-card a { color: var(--ink); font-size: 11.5px; font-weight: 650; text-decoration: none; overflow-wrap: anywhere; }
+.source-card a:hover { color: var(--accent-dark); text-decoration: underline; }
+.source-card p { margin: 5px 0 0; color: var(--muted); font-size: 10.5px; }
 
-/* ── run form ── */
-.runbar { display: grid; gap: 14px; }
-.field label { display: block; font-size: 12.5px; color: var(--muted); margin-bottom: 6px; font-weight: 600; }
-.field-note { color: var(--faint); font-size: 11.5px; margin: 8px 0 0; }
-.required { color: var(--accent-ink); font-size: 10.5px; margin-left: 4px; }
-.label-hint { color: var(--faint); font-size: 11px; font-weight: 400; margin-left: 6px; }
-textarea.task { width: 100%; min-height: 70px; resize: vertical; padding: 12px 14px; border: 1px solid var(--border-strong); border-radius: 10px; font: inherit; background: var(--surface-2); }
-textarea.task:focus { border-color: var(--accent); background: #fff; }
-.brief-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-textarea.brief-input.compact { width: 100%; min-height: 84px; resize: vertical; padding: 10px 12px; border: 1px solid var(--border-strong); border-radius: 10px; font: inherit; background: var(--surface-2); }
-textarea.brief-input:focus { border-color: var(--accent); background: #fff; }
-.agent-rows { display: grid; gap: 8px; }
-.agent-row { display: grid; grid-template-columns: .9fr 1fr 1.15fr auto; gap: 8px; align-items: center; }
-select, .agent-row input { padding: 9px 11px; border: 1px solid var(--border-strong); border-radius: 9px; font: inherit; background: var(--surface-2); color: var(--ink); }
-.icon-btn { border: 1px solid var(--border-strong); background: var(--surface); border-radius: 9px; width: 36px; height: 36px; font-size: 16px; color: var(--muted); }
-.icon-btn:hover { border-color: var(--red); color: var(--red); }
-.row-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-.btn { background: var(--accent); color: #fff; border: none; padding: 10px 18px; border-radius: 10px; font-weight: 600; font-size: 14px; box-shadow: var(--shadow); }
-.btn:hover { background: var(--accent-ink); }
-.btn:disabled { opacity: .55; cursor: default; }
-.btn.ghost { background: var(--surface); color: var(--ink); border: 1px solid var(--border-strong); box-shadow: none; }
-.btn.ghost:hover { border-color: var(--accent); color: var(--accent-ink); }
-.btn.sm { padding: 6px 12px; font-size: 13px; }
-.seg { display: inline-flex; border: 1px solid var(--border-strong); border-radius: 9px; overflow: hidden; }
-.seg button { background: var(--surface); border: none; padding: 8px 14px; font-size: 13px; color: var(--muted); }
-.seg button.active { background: var(--accent); color: #fff; }
-
-/* ── result cards ── */
-.grid { display: grid; gap: 14px; }
-.grid.cols { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
-.agent-card { border: 1px solid var(--border); border-radius: 12px; padding: 14px; background: var(--surface); }
-.agent-card .head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-.fw-tag { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 6px; background: #f0ece1; color: var(--accent-ink); }
-.role-tag { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 6px; background: #e8eef8; color: #395c8c; }
-.agent-card .model { font-size: 12px; color: var(--muted); font-family: var(--mono); }
-.agent-card .out { font-size: 13px; white-space: pre-wrap; color: #38352f; max-height: 240px; overflow: auto; border-top: 1px solid var(--border); padding-top: 10px; margin-top: 4px; }
-.metrics { display: flex; gap: 12px; flex-wrap: wrap; font-size: 11.5px; color: var(--muted); margin-top: 10px; }
-.metrics b { color: var(--ink); font-variant-numeric: tabular-nums; }
-.status { width: 8px; height: 8px; border-radius: 50%; }
-.status.running { background: var(--amber); animation: pulse 1s infinite; }
-.status.done { background: var(--green); }
-.status.error { background: var(--red); }
+.connections-header { display: flex; align-items: flex-start; justify-content: space-between; padding: 34px 38px 22px; border-bottom: 1px solid var(--border); background: rgba(255,255,255,.55); }
+.connections-content { max-width: 1100px; height: calc(100vh - 108px); padding: 26px 38px 60px; overflow-y: auto; }
+.connections-content section { margin-bottom: 30px; }
+.section-title { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 10px; }
+.section-title h3 { margin: 0; font-size: 15px; }
+.section-title span { color: var(--faint); font-size: 10.5px; }
+.connection-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
+.connection-card { padding: 15px; border: 1px solid var(--border); border-radius: 13px; background: var(--surface); box-shadow: 0 1px 3px rgba(40,35,25,.03); }
+.connection-top { display: grid; grid-template-columns: 36px 1fr auto; gap: 9px; align-items: center; }
+.connection-icon { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 9px; background: #eeeae1; color: var(--accent-dark); font: 650 10px var(--mono); }
+.connection-top h4 { margin: 0; font-size: 13px; }
+.connection-top p { margin: 1px 0 0; color: var(--muted); font-size: 10.5px; }
+.connection-state { padding: 2px 6px; border-radius: 6px; background: #eeeae1; color: var(--faint); font-size: 9px; }
+.connection-state.ready { background: #e5f2e8; color: #34724a; }
+.capabilities { display: flex; flex-wrap: wrap; gap: 4px; margin: 12px 0 8px; }
+.capabilities span { padding: 2px 5px; border: 1px solid var(--border); border-radius: 5px; color: var(--muted); font-size: 9px; }
+.connection-path { min-height: 30px; margin-bottom: 9px; color: var(--faint); font: 9.5px/1.45 var(--mono); overflow-wrap: anywhere; }
+.connection-field { margin-top: 12px; }
+.connection-field input { width: 100%; padding: 8px; font-size: 11px; }
+.connection-actions { display: flex; gap: 7px; align-items: center; margin-top: 10px; }
+.ghost-btn { padding: 7px 10px; border: 1px solid var(--border-strong); border-radius: 8px; background: var(--surface); color: var(--muted); font-size: 11px; }
+.ghost-btn:hover { border-color: var(--accent); color: var(--accent-dark); }
+.text-btn { border: 0; background: transparent; color: var(--muted); font-size: 10.5px; }
+.text-btn.danger { color: var(--red); }
+.connection-note { padding: 12px 14px; border-left: 3px solid var(--accent); background: #f7eee9; color: var(--muted); font-size: 11px; }
+code { padding: 1px 3px; border-radius: 4px; background: #eeeae1; font: 10px var(--mono); }
+i { color: var(--muted); }
 @keyframes pulse { 50% { opacity: .35; } }
-
-/* ── committee ── */
-.consensus-item, .div-item { padding: 9px 12px; border-radius: 9px; margin-bottom: 7px; font-size: 13px; border: 1px solid var(--border); }
-.consensus-item { background: #f1f7f2; border-color: #d8ebdd; }
-.div-item { background: #fbf4ef; border-color: #f0ddcf; }
-.cov { font-size: 11px; color: var(--muted); }
-.attr { border-left: 3px solid var(--border-strong); padding: 4px 0 4px 12px; margin-bottom: 12px; }
-.attr.high { border-color: var(--red); }
-.attr.medium { border-color: var(--amber); }
-.attr.low { border-color: var(--cyan); }
-.attr .k { font-weight: 700; font-size: 13px; }
-.attr .w { font-size: 10.5px; padding: 1px 7px; border-radius: 5px; background: #f0ece1; color: var(--muted); margin-left: 6px; }
-.markdown { font-size: 13.5px; }
-.markdown h2 { font-size: 15px; margin: 4px 0 8px; }
-.markdown h3 { font-size: 13.5px; margin: 14px 0 6px; color: var(--accent-ink); }
-.markdown ul { margin: 4px 0; padding-left: 20px; }
-.markdown ol { margin: 4px 0; padding-left: 22px; }
-.markdown blockquote { border-left: 3px solid var(--accent); margin: 10px 0; padding: 4px 12px; color: var(--muted); background: var(--surface-2); border-radius: 0 8px 8px 0; }
-.md-table-wrap { overflow-x: auto; margin: 8px 0 14px; }
-.markdown table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
-.markdown th, .markdown td { border: 1px solid var(--border); padding: 7px 9px; text-align: left; vertical-align: top; }
-.markdown th { background: var(--surface-2); color: var(--muted); }
-.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.decision-package { border-top: 4px solid var(--accent); padding-top: 15px; }
-.decision-package .markdown { max-width: 860px; }
-@media (max-width: 820px) { .two-col, .trace-cmp { grid-template-columns: 1fr; } }
-
-/* ── trace ── */
-.trace-cmp { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.tl { list-style: none; padding: 0; margin: 10px 0 0; }
-.tl li { display: grid; grid-template-columns: 22px 1fr auto; gap: 8px; align-items: start; padding: 6px 0; border-bottom: 1px dashed var(--border); font-size: 12.5px; }
-.tl .ico { width: 20px; height: 20px; border-radius: 6px; display: grid; place-items: center; font-size: 11px; color: #fff; }
-.ico.think { background: #8a7fb0; } .ico.tool { background: var(--cyan); } .ico.observe { background: #6f9e7a; } .ico.message { background: var(--accent); } .ico.error { background: var(--red); } .ico.handoff { background: var(--amber); }
-.tl .lab { color: var(--ink); }
-.tl .meta { color: var(--faint); font-family: var(--mono); font-size: 11px; white-space: nowrap; }
-.deltas { display: flex; gap: 10px; flex-wrap: wrap; margin: 10px 0; }
-.delta { background: var(--surface-2); border: 1px solid var(--border); border-radius: 9px; padding: 8px 12px; font-size: 12px; }
-.delta b { font-size: 16px; font-variant-numeric: tabular-nums; display: block; }
-.delta .pos { color: var(--green); } .delta .neg { color: var(--red); }
-
-/* ── frameworks ── */
-.fw-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 14px; }
-.fw-card { border: 1px solid var(--border); border-radius: 12px; padding: 16px; background: var(--surface); display: flex; flex-direction: column; gap: 8px; }
-.fw-card .title { display: flex; align-items: baseline; gap: 8px; }
-.fw-card .title b { font-size: 15px; }
-.fw-card .vendor { font-size: 11.5px; color: var(--faint); }
-.kv { display: grid; grid-template-columns: 72px 1fr; gap: 4px 10px; font-size: 12px; }
-.kv .k { color: var(--muted); }
-.trace-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 7px; color: #1c1a16; }
-.pill-list { display: flex; gap: 5px; flex-wrap: wrap; }
-.pill { font-size: 11px; padding: 2px 8px; border-radius: 6px; background: var(--surface-2); border: 1px solid var(--border); color: var(--muted); }
-pre.code { background: #2b2722; color: #e9e3d6; padding: 12px 14px; border-radius: 10px; overflow-x: auto; font-size: 12px; line-height: 1.55; margin: 4px 0 0; }
-pre.code .cm { color: #8f8775; }
-.matrix { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-top: 8px; }
-.matrix th, .matrix td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
-.matrix th { color: var(--muted); font-weight: 600; background: var(--surface-2); }
-.matrix tr:hover td { background: var(--surface-2); }
-.scroll-x { overflow-x: auto; }
-details.help { margin-top: 10px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 4px 14px; }
-details.help summary { cursor: pointer; font-weight: 600; font-size: 13px; padding: 8px 0; color: var(--accent-ink); }
-.empty { color: var(--faint); font-size: 13px; padding: 30px; text-align: center; }
-.foot { color: var(--faint); font-size: 12px; margin-top: 28px; text-align: center; }
-
-/* ── 诚实性标记：模拟数据徽章 / 告警横幅 ── */
-.pill.sim { background: var(--amber); color: #fff; border: none; font-weight: 700; letter-spacing: .01em; }
-.pill.failed { background: var(--red); color: #fff; border: none; font-weight: 700; }
-.metric-sim { color: var(--faint); }
-.metric-sim b { color: var(--muted); font-weight: 600; }
-.card.warn { background: #fbf2e2; border: 1px solid #e8cf9a; border-left: 4px solid var(--amber); color: #6b4a10; }
-.card.warn b { color: #5a3d0c; }
-.card-banner { margin: -14px -14px 12px; padding: 9px 14px; border-radius: 12px 12px 0 0; font-size: 12px; font-weight: 600; }
-.card-banner.warn { background: var(--amber); color: #fff; }
-.agent-card.is-sim { border-color: #e8cf9a; }
-
-/* 复制按钮（与 .btn.sm 同尺寸的 ghost 变体） */
-.btn.copy { background: var(--surface); color: var(--accent-ink); border: 1px solid var(--border-strong); box-shadow: none; }
-.btn.copy:hover { border-color: var(--accent); }
-.section-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-.run-complete { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-
-/* run 计时指示 */
-.spin { display: inline-block; width: 11px; height: 11px; border: 2px solid var(--border-strong); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; vertical-align: -1px; margin-right: 4px; }
-@keyframes spin { to { transform: rotate(360deg); } }
-
-/* 屏幕阅读器专用 + skip link */
-.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
-.skip-link { position: absolute; left: 8px; top: -48px; z-index: 100; background: var(--accent); color: #fff; padding: 8px 14px; border-radius: 8px; transition: top .15s; text-decoration: none; }
-.skip-link:focus { top: 8px; }
-
-/* ── 无障碍：可见焦点环（替代被移除的 outline:none） ── */
-a:focus-visible, button:focus-visible, select:focus-visible, textarea:focus-visible, summary:focus-visible, [tabindex]:focus-visible {
-  outline: 2px solid var(--accent-ink); outline-offset: 2px; border-radius: 6px;
+button:focus-visible, textarea:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible { outline: 2px solid var(--accent-dark); outline-offset: 2px; }
+@media (max-width: 1050px) {
+  .project-layout { grid-template-columns: 1fr; }
+  .inspector { display: none; }
 }
-.side-nav button.active:focus-visible, .seg button.active:focus-visible, .btn:focus-visible {
-  outline: 2px solid #2b2722; outline-offset: 2px;
-}
-
-/* ── 窄屏响应式 ── */
-@media (max-width: 680px) {
-  .shell { grid-template-columns: 1fr; height: auto; overflow: visible; }
-  .sidebar { flex-direction: row; flex-wrap: wrap; align-items: center; border-right: none; border-bottom: 1px solid var(--border); padding: 12px; }
-  .macpad { display: none; }
-  .brand { padding: 4px 8px; }
-  .side-nav { flex-direction: row; flex-wrap: wrap; margin-top: 0; width: auto; }
-  .side-nav button { width: auto; }
-  .side-foot { margin-top: 0; flex-direction: row; align-items: center; }
-  .content { height: auto; }
-  .onboarding { grid-template-columns: 1fr; }
-  .brief-grid { grid-template-columns: 1fr; }
-  .agent-row { grid-template-columns: 1fr; }
-  .deltas { flex-direction: column; }
-  .delta { width: 100%; }
+@media (max-width: 720px) {
+  .app-shell { grid-template-columns: 1fr; overflow: visible; }
+  .sidebar { display: none; }
+  main, .view { height: auto; min-height: 100vh; }
+  .conversation-column { min-height: 100vh; }
+  .project-header { padding: 18px; }
+  .conversation { padding: 24px 16px; }
+  .composer { margin: 0 12px 12px; }
 }
 
 </style>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='9' fill='%23d97757'/><text x='16' y='23' font-size='20' fill='white' text-anchor='middle' font-family='sans-serif' font-weight='700'>A</text></svg>" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='9' fill='%23c25d3f'/><text x='16' y='23' font-size='20' fill='white' text-anchor='middle' font-family='sans-serif' font-weight='700'>A</text></svg>" />
 </head>
 <body>
   <a href="#main" class="skip-link">跳到主内容</a>
-  <div class="shell">
-    <!-- 侧边栏 -->
+  <div class="app-shell">
     <aside class="sidebar">
       <div class="macpad"></div>
       <div class="brand">
         <div class="mark">A</div>
-        <div class="brand-text">
-          <h1>Aker</h1>
-          <div class="sub">多视角决策工作台</div>
-        </div>
+        <div><h1>Aker</h1><p>决策探究工作台</p></div>
       </div>
-
-      <nav class="side-nav" id="tabs" role="tablist" aria-label="主导航">
-        <button data-tab="run" class="active" role="tab" id="tab-run" aria-controls="panel-run" aria-selected="true"><span class="ni" aria-hidden="true">▶</span><span>决策台</span></button>
-        <button data-tab="committee" role="tab" id="tab-committee" aria-controls="panel-committee" aria-selected="false" tabindex="-1"><span class="ni" aria-hidden="true">⚖</span><span>决策包</span></button>
-        <button data-tab="trace" role="tab" id="tab-trace" aria-controls="panel-trace" aria-selected="false" tabindex="-1"><span class="ni" aria-hidden="true">◫</span><span>过程审计</span></button>
-        <button data-tab="frameworks" role="tab" id="tab-frameworks" aria-controls="panel-frameworks" aria-selected="false" tabindex="-1"><span class="ni" aria-hidden="true">▤</span><span>方法透明度</span></button>
-      </nav>
-
-      <div class="side-foot">
-        <div class="modepill" id="modepill"><span class="dot" id="modedot" aria-hidden="true"></span><span id="modetext">检测中…</span></div>
-        <div class="side-tag">独立视角 · 分歧保留 · 可验证行动</div>
+      <button class="new-project" id="newProject">＋ 新建探究</button>
+      <div class="side-label">决策项目</div>
+      <nav class="project-list" id="projectList" aria-label="决策项目"></nav>
+      <div class="side-bottom">
+        <button class="side-action" id="openConnections"><span>◉</span><span>运行通道</span><b id="connectionCount">0</b></button>
+        <div class="mode-status" id="modeStatus"><span class="dot"></span><span>检测中…</span></div>
       </div>
     </aside>
 
-    <!-- 内容区 -->
-    <main class="content" id="main" aria-label="主内容">
-    <!-- 运行台 -->
-    <section class="panel active" id="panel-run" role="tabpanel" aria-labelledby="tab-run" tabindex="0">
-      <div class="page-head"><h2 class="page-title">决策台</h2><p class="page-sub">把一个没有标准答案的重要问题，变成经过独立判断、反方审查和证据校准的决策。</p></div>
-      <div class="onboarding" id="welcome">
-        <div>
-          <div class="eyebrow">适合一次性、高不确定性的调研与决策</div>
-          <h2>不要只拿到更多答案，要降低做错决定的风险</h2>
-          <p id="capabilityText">正在检测可用运行通道…</p>
-        </div>
-        <ol class="steps">
-          <li><b>写清决策</b><span>明确问题、约束、标准与未知项</span></li>
-          <li><b>独立判断</b><span>不同视角分别给出主张与反证</span></li>
-          <li><b>形成决策包</b><span>保留分歧，并给出最低成本验证</span></li>
-        </ol>
-        <button class="btn ghost sm" id="loadExample">填入产品决策示例</button>
-      </div>
-      <div style="height:16px"></div>
-      <div class="card">
-        <div class="runbar">
-          <div class="field">
-            <label for="decision">要做的决定 <span class="required">必填</span></label>
-            <textarea class="task brief-input" id="decision" placeholder="例如：我们是否应该在未来两周上线 AI 周报功能？" maxlength="1200">我们是否应该在未来两周上线面向现有客户的 AI 周报功能？</textarea>
-          </div>
-          <div class="brief-grid">
-            <div class="field">
-              <label for="context">已知背景</label>
-              <textarea class="brief-input compact" id="context" placeholder="已有事实、当前状态、为什么现在需要决定" maxlength="1600">已有客户持续反馈周报整理耗时，但尚未验证他们是否愿意使用 AI 自动生成内容。</textarea>
-            </div>
-            <div class="field">
-              <label for="constraints">约束与不可接受结果</label>
-              <textarea class="brief-input compact" id="constraints" placeholder="时间、预算、资源、风险边界" maxlength="1600">团队只有 2 名工程师，周期 2 周，不能新增付费基础设施；不能向客户展示未经确认的事实。</textarea>
-            </div>
-            <div class="field">
-              <label for="criteria">成功标准</label>
-              <textarea class="brief-input compact" id="criteria" placeholder="什么结果意味着这个决定是对的" maxlength="1600">至少 5 名现有客户真实试用；其中 3 名愿意连续使用；人工校对时间低于 10 分钟。</textarea>
-            </div>
-            <div class="field">
-              <label for="unknowns">关键未知项</label>
-              <textarea class="brief-input compact" id="unknowns" placeholder="哪些未知信息最可能改变最终结论" maxlength="1600">客户真实使用频率、可接受的错误率、是否愿意授权所需数据。</textarea>
-            </div>
-          </div>
-          <div class="field">
-            <label id="agentRowsLabel">独立判断视角 <span class="label-hint">运行通道是实现细节；视角决定它重点挑战什么</span></label>
-            <div class="agent-rows" id="agentRows" aria-labelledby="agentRowsLabel"></div>
-            <p class="field-note">默认视角互不查看彼此答案，但可能由同一模型与同一信息源运行。角色差异能减少遗漏，不等于真正的多模型独立性。</p>
-          </div>
-          <div class="row-actions">
-            <button class="btn ghost sm" id="addAgent">+ 加一个视角</button>
-            <div class="seg" id="modeSeg" role="group" aria-label="运行模式">
-              <button data-mode="sim" class="active">Sim 模式</button>
-              <button data-mode="live">Live 模式</button>
-            </div>
-            <button class="btn" id="runBtn" style="margin-left:auto">▶ 开始独立判断</button>
-          </div>
-        </div>
-      </div>
-      <div style="height:16px"></div>
-      <div id="runStatus" aria-live="polite" aria-atomic="true"></div>
-      <div class="grid cols" id="results"></div>
-    </section>
+    <main id="main">
+      <section class="view active" id="projectView">
+        <div class="project-layout">
+          <div class="conversation-column">
+            <header class="project-header">
+              <div>
+                <div class="eyebrow">DECISION PROJECT</div>
+                <h2 id="projectTitle">提出真正重要的问题</h2>
+                <p id="projectSubtitle">Aker 会在探究过程中持续审查证据、分歧与下一步，而不是最后才做评审。</p>
+              </div>
+              <div class="header-actions">
+                <select id="projectMode" aria-label="运行模式">
+                  <option value="live">Live · 使用我的通道</option>
+                  <option value="sim">Sim · 演示流程</option>
+                </select>
+                <button class="ghost-btn" id="rerunProject" hidden>再次探究</button>
+              </div>
+            </header>
 
-    <!-- 评审会 -->
-    <section class="panel" id="panel-committee" role="tabpanel" aria-labelledby="tab-committee" tabindex="0">
-      <div class="page-head"><h2 class="page-title">决策包</h2><p class="page-sub">综合独立判断，但不机械投票；明确建议成立的条件、关键反对意见和下一步验证。</p></div>
-      <div class="card">
-        <div class="toolbar">
-          <select id="reviewRun" aria-label="选择要评审的 run"></select>
-          <div class="seg" id="reviewMode" role="group" aria-label="评审取值方式">
-            <button data-mode="intersection" class="active">共同主张</button>
-            <button data-mode="union">全部观点</button>
+            <div class="conversation" id="conversation">
+              <div class="welcome">
+                <div class="welcome-kicker">从一句话开始</div>
+                <h3>你现在需要研究什么问题，或者做出什么决定？</h3>
+                <p>不需要先填写表单。Aker 会自动整理目标、约束、成功标准和关键未知项，只在真正影响结论时追问。</p>
+                <div class="examples">
+                  <button data-example="我们是否应该在未来两周上线面向现有客户的 AI 周报功能？团队只有 2 名工程师，不能新增付费基础设施。">是否应该上线一个尚未验证需求的新功能？</button>
+                  <button data-example="我们应该选择自建 AI 客服还是采购 SaaS？希望三个月内上线，最不能接受的是客户数据泄露。">自建还是采购 AI 客服？</button>
+                  <button data-example="请调研我们进入东南亚市场的可行性，并给出先进入哪个国家的建议。">应该先进入哪个新市场？</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="composer">
+              <textarea id="messageInput" placeholder="提出一个重要问题，或继续补充信息…" maxlength="5000"></textarea>
+              <div class="composer-foot">
+                <span id="composerHint">Aker 会使用合理假设继续，并明确标注未知项</span>
+                <button id="sendMessage">开始探究</button>
+              </div>
+            </div>
           </div>
-          <button class="btn sm" id="reviewBtn">生成决策包</button>
-        </div>
-      </div>
-      <div style="height:16px"></div>
-      <div id="committeeOut" aria-live="polite" aria-atomic="true"></div>
-    </section>
 
-    <!-- Trace 对比 -->
-    <section class="panel" id="panel-trace" role="tabpanel" aria-labelledby="tab-trace" tabindex="0">
-      <div class="page-head"><h2 class="page-title">过程审计</h2><p class="page-sub">检查不同视角用了哪些步骤、工具、token 与时间，辅助判断结论是否有足够过程支撑。</p></div>
-      <div class="card">
-        <div class="toolbar">
-          <select id="traceRun" aria-label="选择要对比的 run"></select>
-          <select id="traceA" aria-label="对比的 A 方 agent"></select>
-          <span style="color:var(--muted)" aria-hidden="true">vs</span>
-          <select id="traceB" aria-label="对比的 B 方 agent"></select>
-          <button class="btn sm" id="traceBtn">对比</button>
+          <aside class="inspector" id="inspector">
+            <div class="inspector-tabs" role="tablist">
+              <button class="active" data-inspector="brief">工作简报</button>
+              <button data-inspector="sources">证据</button>
+              <button data-inspector="package">决策包</button>
+            </div>
+            <section class="inspector-panel active" id="inspector-brief">
+              <div class="inspector-intro">
+                <h3>自动整理的上下文</h3>
+                <p>这是对话背后的结构化状态，不是首次使用门槛。</p>
+              </div>
+              <div id="briefSummary" class="brief-summary empty-small">提出问题后自动生成</div>
+              <details class="brief-editor" id="briefEditor">
+                <summary>编辑工作简报</summary>
+                <label>决策问题<textarea id="briefDecision"></textarea></label>
+                <label>已知背景<textarea id="briefContext"></textarea></label>
+                <label>约束与不可接受结果<textarea id="briefConstraints"></textarea></label>
+                <label>成功标准<textarea id="briefCriteria"></textarea></label>
+                <label>关键未知项<textarea id="briefUnknowns"></textarea></label>
+                <label>默认假设<textarea id="briefAssumptions"></textarea></label>
+                <button class="primary-btn" id="saveBrief">保存简报</button>
+              </details>
+            </section>
+            <section class="inspector-panel" id="inspector-sources">
+              <div class="inspector-intro">
+                <h3>用户提供的证据</h3>
+                <p>直接在对话中粘贴公开网页链接。Aker 会读取摘要、编号并交给各视角审查。</p>
+              </div>
+              <div id="sourceList" class="source-list empty-small">还没有来源</div>
+            </section>
+            <section class="inspector-panel" id="inspector-package">
+              <div class="inspector-intro">
+                <h3>当前决策包</h3>
+                <p>点击任何要点可从该主张创建新的探究分支。</p>
+              </div>
+              <div id="decisionPackage" class="decision-content empty-small">完成探究后生成</div>
+              <button class="primary-btn wide" id="copyPackage" hidden>复制决策包</button>
+            </section>
+          </aside>
         </div>
-      </div>
-      <div style="height:16px"></div>
-      <div id="traceOut" aria-live="polite" aria-atomic="true"></div>
-    </section>
+      </section>
 
-    <!-- 框架图鉴 -->
-    <section class="panel" id="panel-frameworks" role="tabpanel" aria-labelledby="tab-frameworks" tabindex="0">
-      <div class="page-head"><h2 class="page-title">方法透明度</h2><p class="page-sub">了解不同运行通道的编排方式、工具与过程数据可得性。它们会影响可信度，但不是 Aker 最终交付给用户的产品。</p></div>
-      <div class="card">
-        <div class="scroll-x"><table class="matrix" id="matrix"></table></div>
-      </div>
-      <div style="height:16px"></div>
-      <div class="fw-grid" id="fwGrid"></div>
-    </section>
+      <section class="view" id="connectionsView">
+        <header class="connections-header">
+          <div>
+            <div class="eyebrow">CONNECTIONS</div>
+            <h2>使用你自己的 Agent CLI 与模型 API</h2>
+            <p>本地 CLI 自动检测；API key 存入 macOS Keychain。Aker 只负责匹配、编排和审计。</p>
+          </div>
+          <button class="ghost-btn" id="closeConnections">返回项目</button>
+        </header>
+        <div class="connections-content">
+          <section>
+            <div class="section-title"><h3>本地 Agent CLI</h3><span>自动扫描当前电脑</span></div>
+            <div class="connection-grid" id="cliConnections"></div>
+          </section>
+          <section>
+            <div class="section-title"><h3>模型 API</h3><span>调用产生的费用由你的账户承担</span></div>
+            <div class="connection-grid" id="apiConnections"></div>
+          </section>
+          <div class="connection-note">
+            Aker 会优先让不同视角使用不同可运行通道。只有一个通道时仍可运行，但会明确提示相关性风险。
+          </div>
+        </div>
+      </section>
     </main>
   </div>
   <script>
 const __ENV = {};
+function getApiKey() { return null; }
+function getApiModel(provider) { return provider === 'anthropic' ? 'claude-sonnet-4-6' : 'gpt-4.1-mini'; }
+function listConnections() { return { cli: [], api: [{ id: 'openai', type: 'api', label: 'OpenAI API', configured: false, runnable: false, model: 'gpt-4.1-mini', note: 'Web 演示不支持配置 API' }, { id: 'anthropic', type: 'api', label: 'Anthropic API', configured: false, runnable: false, model: 'claude-sonnet-4-6', note: 'Web 演示不支持配置 API' }], keychain: false }; }
 // frameworks.mjs — agent 框架图鉴
 // 每个条目除了基础信息，重点标注【trace 可得性】，因为这直接决定 aker 能否做效果评审。
 // traceability 取值：'native'(原生结构化 trace) | 'otel'(走 OpenTelemetry/callback) | 'cli-log'(只能解析 stdout/日志) | 'api-only'(只有最终响应)
@@ -692,6 +643,13 @@ const CONFIG = {
   DEPTH_GAP: 2,
 };
 
+const ROLE_LABELS = {
+  strategist: '策略视角',
+  critic: '反方视角',
+  operator: '行动视角',
+  researcher: '证据视角',
+};
+
 // —— 文本切片：把一段输出拆成“论点/要点”单元 ——
 // P2 修复：剔除“方案标题/元信息行”，避免三家相似标题被聚成头号伪共识。
 //   命中以下任一模式即视为标题/元信息，不进入可聚类正文：
@@ -859,7 +817,10 @@ function synthesizeBetter(agents, consensus, union, attribution) {
   const adoptedUnique = union
     .filter((u) => u.unique)
     .slice(0, 8)
-    .map((u) => ({ text: u.text, from: u.agents[0] }));
+    .map((u) => {
+      const agent = agents.find((item) => item.agentId === u.agents[0]);
+      return { text: u.text, from: ROLE_LABELS[agent?.role] || '独立视角' };
+    });
 
   // 是否含 Sim agent：决定是否醒目标注演示边界。
   const isSim = agents.some((a) => (a.mode || 'sim') === 'sim');
@@ -884,7 +845,9 @@ function synthesizeBetter(agents, consensus, union, attribution) {
   else lines.push('- 当前没有可自动识别的少数意见；这不代表不存在共同盲区。');
   lines.push('');
   lines.push('## 未解决的不确定性');
-  attribution.forEach((r) => lines.push(`- **${r.kind}**（权重 ${r.weight}）：${r.detail}`));
+  const unknowns = union.filter((item) => /\[未知\]|证据不足|没有提供足够/.test(item.text)).slice(0, 5);
+  if (unknowns.length) unknowns.forEach((item) => lines.push(`- ${item.text}`));
+  else lines.push('- 当前材料仍不足以证明真实需求、预期收益和执行成本；这些未知项可能改变建议。');
   lines.push('');
   lines.push('## 最低成本验证');
   lines.push('- 选择最可能改变结论的未知项，设计一个有明确观察指标和停止条件的小规模验证。');
@@ -894,7 +857,7 @@ function synthesizeBetter(agents, consensus, union, attribution) {
   lines.push('- 指定一名决策负责人，明确决策截止时间与不可接受结果。');
   lines.push('- 把当前最关键假设转成未来 1-7 天内可验证的行动。');
   lines.push('');
-  lines.push('> 当前显示规则式基础决策包。Live 模式会调用真实委员会主席进行二次综合。');
+  lines.push('> Sim 模式的内容用于演示工作流；处理真实决策时请使用 Live 通道并提供可核验来源。');
 
   return {
     credibility: {},
@@ -929,17 +892,6 @@ function rng(seedStr) {
   return () => { h += 0x6D2B79F5; let t = h; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 }
 
-// 模型“人格”：影响风格与一条独有取向
-const MODEL_PERSONA = {
-  default:               { style: '均衡', bias: '在可读性与性能间折中' },
-  'claude-opus-4-8':     { style: '严谨细致', bias: '强调边界条件与可维护性，倾向多写测试' },
-  'claude-sonnet-4-6':   { style: '简洁高效', bias: '优先最小可行改动，控制复杂度' },
-  'gpt-x':               { style: '直接果断', bias: '倾向引入成熟库而非自造轮子' },
-  'o-series':            { style: '深推理', bias: '会显式列出多个候选方案再择优' },
-  'hermes-3':            { style: '开放直白', bias: '给出可私有化/本地化的实现路径' },
-  'gemini-x':            { style: '结构化', bias: '强调与现有平台/生态集成' },
-};
-
 // 框架决定 trace 里会出现哪些“工具”与步骤形态
 const FRAMEWORK_TOOLKIT = {
   'claude-code':  ['Read', 'Edit', 'Bash'],
@@ -956,6 +908,7 @@ const FRAMEWORK_TOOLKIT = {
 
 // —— 生成差异化但有共识的输出 —— //
 function composeOutput(task, framework, model, role) {
+  const suppliedSources = [...String(task).matchAll(/^### \[(S\d+)\]/gm)].map((match) => match[1]);
   const roleSpecific = {
     strategist: {
       claim: '[推断] 当前机会的可逆性高于一次性全面投入，先试点能保留后续选择权。',
@@ -973,7 +926,9 @@ function composeOutput(task, framework, model, role) {
       validation: '把一个关键未知项转成 1-7 天可完成的实验，预先约定通过与停止阈值。',
     },
     researcher: {
-      claim: '[未知] 当前简报没有提供足够的外部证据，不能把需求强度和预期收益视为事实。',
+      claim: suppliedSources.length
+        ? `[事实] 用户提供了 ${suppliedSources.length} 个可审查来源（${suppliedSources.map((id) => `[${id}]`).join('、')}）；来源内容仍需与具体主张逐条对应，不能仅凭存在来源就确认结论。`
+        : '[未知] 当前简报没有提供足够的外部证据，不能把需求强度和预期收益视为事实。',
       objection: '等待完美证据既不现实，也可能比小规模行动更昂贵。',
       validation: '列出会改变结论的三项证据，优先获取成本最低且影响最大的那一项。',
     },
@@ -1054,30 +1009,22 @@ function simTraceSource() {
 }
 
 // —— Live adapter（检测到能力时启用；不可用时明确失败，不静默降级）—— //
-function findExecutable(name) {
-  if (typeof process === 'undefined') return null;
-  const paths = (__ENV.PATH || '').split(delimiter).filter(Boolean).map((dir) => join(dir, name));
-  if (name === 'codex') paths.push(
-    '/Applications/Codex.app/Contents/Resources/codex',
-    join(homedir(), '.local', 'bin', 'codex'),
-  );
-  for (const path of paths) if (existsSync(path)) return path;
-  return null;
-}
-
 function configuredModels() {
   return {
-    anthropic: __ENV.AKER_ANTHROPIC_MODEL || __ENV.ANTHROPIC_MODEL || 'claude-sonnet-4-6',
-    openai: __ENV.AKER_OPENAI_MODEL || __ENV.OPENAI_MODEL || 'gpt-4.1-mini',
+    anthropic: __ENV.AKER_ANTHROPIC_MODEL || __ENV.ANTHROPIC_MODEL || getApiModel('anthropic'),
+    openai: __ENV.AKER_OPENAI_MODEL || __ENV.OPENAI_MODEL || getApiModel('openai'),
   };
 }
 
 function liveCapabilities() {
   const node = typeof process !== 'undefined' && !!process.versions?.node;
+  const cli = node ? listConnections().cli : [];
   return {
-    anthropicKey: node && !!__ENV.ANTHROPIC_API_KEY,
-    openaiKey: node && !!__ENV.OPENAI_API_KEY,
-    codexPath: node ? findExecutable('codex') : null,
+    anthropicKey: node && !!getApiKey('anthropic'),
+    openaiKey: node && !!getApiKey('openai'),
+    codexPath: cli.find((item) => item.id === 'codex-cli' && item.runnable)?.path || null,
+    claudePath: cli.find((item) => item.id === 'claude-cli' && item.runnable)?.path || null,
+    geminiPath: cli.find((item) => item.id === 'gemini-cli' && item.runnable)?.path || null,
   };
 }
 
@@ -1113,6 +1060,12 @@ async function runLive(framework, model, task, agentId, role) {
   // 选择真实通道
   if (framework === 'codex-cli' && caps.codexPath) {
     return await callCodexCli(caps.codexPath, model, prompt);
+  }
+  if (framework === 'claude-cli' && caps.claudePath) {
+    return await callClaudeCli(caps.claudePath, model, prompt);
+  }
+  if (framework === 'gemini-cli' && caps.geminiPath) {
+    return await callGeminiCli(caps.geminiPath, model, prompt);
   }
   if ((fw?.vendor === 'Anthropic' || model.startsWith('claude')) && caps.anthropicKey) {
     return await callAnthropic(model, prompt);
@@ -1206,9 +1159,57 @@ async function callCodexCli(codexPath, model, prompt) {
   }
 }
 
-function spawnCollect(command, args, input, timeoutMs) {
+async function callClaudeCli(claudePath, model, prompt) {
+  const workdir = mkdtempSync(join(tmpdir(), 'aker-claude-'));
+  const args = ['-p', '--output-format', 'json', '--permission-mode', 'plan', '--tools', '', '--no-session-persistence'];
+  if (model && model !== 'claude-default') args.push('--model', model);
+  const t0 = Date.now();
+  try {
+    const { stdout, stderr, code } = await spawnCollect(claudePath, args, prompt, 180_000, workdir);
+    let payload;
+    try { payload = JSON.parse(stdout); } catch {}
+    const output = payload?.result || payload?.response || stdout.trim();
+    if (code !== 0 || !output) throw new Error(`Claude Code ${code || '无输出'}: ${payload?.error || stderr.slice(-400) || '未产生最终回答'}`);
+    const steps = [makeStep(0, 'message', 'Claude Code 最终回答', { tokens: payload?.usage?.output_tokens || 0, ms: Date.now() - t0 })];
+    return {
+      status: 'done',
+      mode: 'live',
+      output,
+      usage: payload?.usage || {},
+      trace: { steps, totals: summarizeTrace(steps), source: { traceability: 'native', how: 'claude -p JSON 响应' } },
+    };
+  } finally {
+    rmSync(workdir, { recursive: true, force: true });
+  }
+}
+
+async function callGeminiCli(geminiPath, model, prompt) {
+  const workdir = mkdtempSync(join(tmpdir(), 'aker-gemini-'));
+  const args = ['-p', prompt, '--output-format', 'json', '--approval-mode=plan'];
+  if (model && model !== 'gemini-default') args.push('--model', model);
+  const t0 = Date.now();
+  try {
+    const { stdout, stderr, code } = await spawnCollect(geminiPath, args, '', 180_000, workdir);
+    let payload;
+    try { payload = JSON.parse(stdout); } catch {}
+    const output = payload?.response || payload?.result || stdout.trim();
+    if (code !== 0 || !output) throw new Error(`Gemini CLI ${code || '无输出'}: ${payload?.error?.message || stderr.slice(-400) || '未产生最终回答'}`);
+    const steps = [makeStep(0, 'message', 'Gemini CLI 最终回答', { tokens: payload?.stats?.models?.total?.tokens || 0, ms: Date.now() - t0 })];
+    return {
+      status: 'done',
+      mode: 'live',
+      output,
+      usage: payload?.stats || {},
+      trace: { steps, totals: summarizeTrace(steps), source: { traceability: 'native', how: 'gemini headless JSON 响应' } },
+    };
+  } finally {
+    rmSync(workdir, { recursive: true, force: true });
+  }
+}
+
+function spawnCollect(command, args, input, timeoutMs, cwd) {
   return new Promise((resolve, reject) => {
-    const child = spawn(command, args, { stdio: ['pipe', 'pipe', 'pipe'] });
+    const child = spawn(command, args, { cwd, stdio: ['pipe', 'pipe', 'pipe'] });
     let stdout = '', stderr = '';
     const append = (current, chunk) => (current + chunk).slice(-2_000_000);
     child.stdout.on('data', (c) => { stdout = append(stdout, c); });
@@ -1264,6 +1265,12 @@ async function synthesizeReview({ task, agents, evidence }) {
   } else if (caps.codexPath) {
     channel = 'Codex CLI';
     result = await callCodexCli(caps.codexPath, 'codex-default', prompt);
+  } else if (caps.claudePath) {
+    channel = 'Claude Code';
+    result = await callClaudeCli(caps.claudePath, 'claude-default', prompt);
+  } else if (caps.geminiPath) {
+    channel = 'Gemini CLI';
+    result = await callGeminiCli(caps.geminiPath, 'gemini-default', prompt);
   } else {
     throw new Error('没有可用于真实综合的 Live 通道');
   }
@@ -1283,6 +1290,8 @@ function capabilities() {
   const models = configuredModels();
   const liveAgents = [];
   if (caps.codexPath) liveAgents.push({ framework: 'codex-cli', model: 'codex-default', label: 'Codex CLI · 当前登录' });
+  if (caps.claudePath) liveAgents.push({ framework: 'claude-cli', model: 'claude-default', label: 'Claude Code · 当前登录' });
+  if (caps.geminiPath) liveAgents.push({ framework: 'gemini-cli', model: 'gemini-default', label: 'Gemini CLI · 当前登录' });
   if (caps.openaiKey) liveAgents.push({ framework: 'openai-agents', model: models.openai, label: `OpenAI API · ${models.openai}` });
   if (caps.anthropicKey) liveAgents.push({ framework: 'claude-code', model: models.anthropic, label: `Anthropic API · ${models.anthropic}` });
   const channels = liveAgents.map((a) => a.label);
@@ -1291,11 +1300,14 @@ function capabilities() {
     anthropic: caps.anthropicKey,
     openai: caps.openaiKey,
     codex: !!caps.codexPath,
+    claudeCli: !!caps.claudePath,
+    geminiCli: !!caps.geminiPath,
     liveAgents,
     reviewRoles: REVIEW_ROLES,
     note: channels.length
       ? `检测到真实通道：${channels.join('、')}。实际调用仍取决于登录状态、额度与网络`
       : '未检测到 Codex CLI 或 API key，只能使用 Sim 演示模式',
+    connections: listConnections(),
   };
 }
 
@@ -1306,7 +1318,7 @@ let counter = 1;
 function newId(prefix) { return `${prefix}_${Date.now().toString(36)}_${(counter++).toString(36)}`; }
 
 // 并行跑所有 agent；任一失败不拖累其他（Promise.allSettled）
-async function runParallel({ task, agents, mode = 'sim' }) {
+async function runParallel({ task, agents, mode = 'sim', onAgentStart, onAgentComplete }) {
   const runId = newId('run');
   const specs = agents.map((a, i) => ({
     agentId: a.agentId || `${a.framework}#${i + 1}`,
@@ -1315,17 +1327,19 @@ async function runParallel({ task, agents, mode = 'sim' }) {
     role: a.role || 'strategist',
   }));
 
-  const settled = await Promise.allSettled(
-    specs.map((s) => runAgent({ ...s, task, mode }))
-  );
-
-  const resultAgents = specs.map((s, i) => {
-    const r = settled[i];
-    if (r.status === 'fulfilled') {
-      return { ...s, label: agentLabel(s), ...r.value };
+  const resultAgents = [];
+  await Promise.all(specs.map(async (s) => {
+    await onAgentStart?.(s);
+    let agent;
+    try {
+      agent = { ...s, label: agentLabel(s), ...await runAgent({ ...s, task, mode }) };
+    } catch (error) {
+      agent = { ...s, label: agentLabel(s), status: 'error', output: '', error: String(error?.message || error), trace: { steps: [] } };
     }
-    return { ...s, label: agentLabel(s), status: 'error', output: '', error: String(r.reason?.message || r.reason), trace: { steps: [] } };
-  });
+    resultAgents.push(agent);
+    await onAgentComplete?.(agent, resultAgents.slice());
+  }));
+  resultAgents.sort((a, b) => specs.findIndex((s) => s.agentId === a.agentId) - specs.findIndex((s) => s.agentId === b.agentId));
 
   return {
     id: runId,
@@ -1337,13 +1351,278 @@ async function runParallel({ task, agents, mode = 'sim' }) {
 }
 
 
+
+let projectCounter = 1;
+function newProjectId(prefix) { return `${prefix}_${Date.now().toString(36)}_${(projectCounter++).toString(36)}`; }
+
+const ROLE_PLAN = [
+  { role: 'strategist', label: '策略视角', why: '比较可选路径、机会成本与可逆性' },
+  { role: 'critic', label: '反方视角', why: '构造最强反对意见与失败预演' },
+  { role: 'operator', label: '行动视角', why: '把未知项转成低成本验证行动' },
+  { role: 'researcher', label: '证据视角', why: '区分事实、假设、推断与证据缺口' },
+];
+
+function clean(text = '') { return String(text).replace(/\s+/g, ' ').trim(); }
+
+function sentenceMatches(text, pattern) {
+  return clean(text).split(/[。！？!?；;\n]+/).filter((s) => pattern.test(s)).join('；');
+}
+
+function deriveBrief(question, previous = {}) {
+  const text = clean(question);
+  const constraints = sentenceMatches(text, /不能|必须|仅|只有|预算|成本|周期|周|天|月|人|截止|风险|不可接受/i);
+  const criteria = sentenceMatches(text, /成功|目标|达到|至少|指标|意味着|验收|接受/i);
+  return {
+    decision: previous.decision || text,
+    context: previous.context || '',
+    constraints: previous.constraints || constraints,
+    criteria: previous.criteria || criteria,
+    unknowns: previous.unknowns || '真实需求强度、执行成本、关键风险边界，以及哪些新信息会改变当前选择。',
+    assumptions: previous.assumptions || '在缺少更多信息时，优先采用可逆、低成本且能产生新证据的行动。',
+  };
+}
+
+function extractSourceLinks(text = '') {
+  const links = String(text).match(/https?:\/\/[^\s<>"'，。！？；）)]+/gi) || [];
+  return [...new Set(links.map((url) => url.replace(/[.,;:!?]+$/, '')))].slice(0, 12);
+}
+
+function addSourceLinks(project, text) {
+  project.sources ||= [];
+  for (const url of extractSourceLinks(text)) {
+    if (project.sources.some((source) => source.url === url)) continue;
+    let host = url;
+    try { host = new URL(url).hostname; } catch {}
+    project.sources.push({
+      id: `S${project.sources.length + 1}`,
+      url,
+      title: host,
+      excerpt: '',
+      status: 'provided',
+      addedAt: new Date().toISOString(),
+    });
+  }
+}
+
+function briefToTask(brief, sources = []) {
+  const sections = [
+    ['决策问题', brief.decision],
+    ['已知背景', brief.context],
+    ['约束与不可接受结果', brief.constraints],
+    ['成功标准', brief.criteria],
+    ['关键未知项', brief.unknowns],
+    ['默认假设', brief.assumptions],
+  ];
+  const sourceText = sources.length
+    ? `## 用户提供来源\n${sources.map((source) => {
+      const status = source.status === 'ready' ? '已读取' : source.status === 'failed' ? `读取失败：${source.error}` : '仅记录链接';
+      return `### [${source.id}] ${source.title || source.url}\nURL: ${source.finalUrl || source.url}\n状态: ${status}\n摘要: ${source.excerpt || '尚无可读取摘要'}`;
+    }).join('\n\n')}\n\n引用来源时必须使用 [S1] 这类编号；没有来源支持的内容不能写成事实。`
+    : '## 用户提供来源\n当前没有用户提供的来源。不得把外部事实写成已经核验。';
+  return [...sections.filter(([, value]) => clean(value)).map(([title, value]) => `## ${title}\n${clean(value)}`), sourceText].join('\n\n');
+}
+
+function createProject({ message, mode = 'sim', parentId = null, branchFrom = null }) {
+  const question = clean(message);
+  const now = new Date().toISOString();
+  const project = {
+    id: newProjectId('project'),
+    title: question.slice(0, 56),
+    status: 'ready',
+    mode,
+    parentId,
+    branchFrom,
+    createdAt: now,
+    updatedAt: now,
+    brief: deriveBrief(question),
+    messages: [
+      { id: newProjectId('msg'), role: 'user', content: question, createdAt: now },
+      {
+        id: newProjectId('msg'),
+        role: 'assistant',
+        content: '我已把问题整理成工作简报。你可以直接开始探究；缺失信息将按可逆、低成本原则作为假设处理，也可以继续补充约束。',
+        createdAt: now,
+      },
+    ],
+    timeline: [],
+    runs: [],
+    sources: [],
+    decisionPackage: null,
+    review: null,
+  };
+  addSourceLinks(project, question);
+  return project;
+}
+
+function appendProjectMessage(project, message) {
+  const content = clean(message);
+  const now = new Date().toISOString();
+  project.messages.push({ id: newProjectId('msg'), role: 'user', content, createdAt: now });
+
+  const lower = content.toLowerCase();
+  if (/成功|标准|指标|验收|达到/.test(lower)) project.brief.criteria = clean([project.brief.criteria, content].filter(Boolean).join('；'));
+  else if (/约束|不能|必须|预算|周期|截止|风险/.test(lower)) project.brief.constraints = clean([project.brief.constraints, content].filter(Boolean).join('；'));
+  else if (/未知|不确定|需要验证|假设/.test(lower)) project.brief.unknowns = clean([project.brief.unknowns, content].filter(Boolean).join('；'));
+  else if (/背景|已知|现状|客户|目前/.test(lower)) project.brief.context = clean([project.brief.context, content].filter(Boolean).join('；'));
+  else project.brief.context = clean([project.brief.context, content].filter(Boolean).join('；'));
+
+  project.messages.push({
+    id: newProjectId('msg'),
+    role: 'assistant',
+    content: '已更新工作简报。除非这条信息改变了目标，你不需要重新填写任何字段。',
+    createdAt: now,
+  });
+  addSourceLinks(project, content);
+  project.updatedAt = now;
+  return project;
+}
+
+function planProject(project, capabilities) {
+  const liveAgents = capabilities.liveAgents || [];
+  const mode = project.mode === 'live' && liveAgents.length ? 'live' : 'sim';
+  const simRunners = [
+    { framework: 'claude-code', model: 'claude-opus-4-8' },
+    { framework: 'codex-cli', model: 'gpt-x' },
+    { framework: 'langgraph', model: 'o-series' },
+    { framework: 'crewai', model: 'gemini-x' },
+  ];
+  const runners = mode === 'live' ? liveAgents : simRunners;
+  const agents = ROLE_PLAN.map((item, index) => {
+    const runner = runners[index % runners.length];
+    return { ...item, framework: runner.framework, model: runner.model };
+  });
+  const sharedRunner = new Set(agents.map((a) => `${a.framework}:${a.model}`)).size === 1;
+  return {
+    mode,
+    agents,
+    warnings: [
+      ...(project.mode === 'live' && mode === 'sim' ? ['未检测到真实运行通道，本次只能使用 Sim 演示。'] : []),
+      ...(sharedRunner ? ['所有视角将使用同一运行通道，角色独立不等于模型独立。'] : []),
+    ],
+  };
+}
+
+function timelineEvent(type, title, detail = '', extra = {}) {
+  return { id: newProjectId('event'), type, title, detail, at: new Date().toISOString(), ...extra };
+}
+
+async function exploreProject(project, capabilities, { onEvent, synthesize }) {
+  const emit = async (event) => {
+    const item = timelineEvent(event.type, event.title, event.detail, event);
+    project.timeline.push(item);
+    project.updatedAt = item.at;
+    await onEvent?.(item, project);
+  };
+
+  project.status = 'running';
+  project.timeline = [];
+  project.decisionPackage = null;
+  project.review = null;
+  const plan = planProject(project, capabilities);
+  project.mode = plan.mode;
+  const sources = project.sources || [];
+  if (sources.length) {
+    const ready = sources.filter((source) => source.status === 'ready').length;
+    await emit({
+      type: 'source_audit',
+      title: `已整理 ${sources.length} 个用户提供来源`,
+      detail: `${ready} 个已读取摘要；${sources.length - ready} 个仅记录或读取失败。来源存在不等于主张已经得到证实。`,
+    });
+  }
+  await emit({
+    type: 'plan',
+    title: `已生成 ${plan.agents.length} 个独立判断分支`,
+    detail: plan.agents.map((a) => `${a.label}：${a.why}`).join('；'),
+    plan,
+  });
+  for (const warning of plan.warnings) await emit({ type: 'warning', title: warning });
+
+  const task = briefToTask(project.brief, sources);
+  const run = await runParallel({
+    task,
+    agents: plan.agents,
+    mode: plan.mode,
+    onAgentStart: async (spec) => emit({
+      type: 'agent_start',
+      title: `${ROLE_PLAN.find((item) => item.role === spec.role)?.label || '独立视角'}开始判断`,
+      detail: ROLE_PLAN.find((item) => item.role === spec.role)?.why || '',
+      agentId: spec.agentId,
+      role: spec.role,
+    }),
+    onAgentComplete: async (agent, partialAgents) => {
+      await emit({
+        type: agent.status === 'done' ? 'agent_done' : 'agent_error',
+        title: `${ROLE_PLAN.find((item) => item.role === agent.role)?.label || '独立视角'}${agent.status === 'done' ? '已形成观点' : '运行失败'}`,
+        detail: agent.status === 'done' ? summarizeOpinion(agent.output) : agent.error,
+        agentId: agent.agentId,
+        role: agent.role,
+        agent,
+      });
+      const completed = partialAgents.filter((a) => a.status === 'done' && a.output);
+      if (completed.length >= 2) {
+        const interim = review({ agents: completed }, 'intersection');
+        await emit({
+          type: 'committee_update',
+          title: `委员会已检查 ${completed.length} 个观点`,
+          detail: `识别到 ${interim.consensus.length} 条共同主张、${interim.divergence.length} 条少数观点；共同出现不代表事实正确。`,
+          counts: interim.counts,
+        });
+      }
+    },
+  });
+  project.runs.unshift(run.id);
+
+  const completed = run.agents.filter((a) => a.status === 'done' && a.output);
+  if (completed.length < 2) {
+    project.status = 'failed';
+    await emit({ type: 'error', title: '可用观点不足，无法形成可靠决策包', detail: '至少需要两个成功完成的独立视角。' });
+    return { project, run, review: null };
+  }
+
+  await emit({ type: 'synthesis_start', title: '委员会正在处理分歧并形成决策包' });
+  const result = review(run, 'intersection');
+  if (plan.mode === 'live' && synthesize) {
+    try {
+      const live = await synthesize({ task, agents: completed, evidence: result });
+      result.betterSolution = {
+        ...result.betterSolution,
+        ruleMarkdown: result.betterSolution.markdown,
+        markdown: live.markdown,
+        synthesis: { mode: 'live', channel: live.channel },
+      };
+    } catch (error) {
+      result.betterSolution.synthesis = { mode: 'error', error: String(error?.message || error) };
+      await emit({ type: 'warning', title: '真实综合失败，保留规则式决策包', detail: result.betterSolution.synthesis.error });
+    }
+  }
+  project.review = result;
+  project.decisionPackage = result.betterSolution.markdown;
+  project.status = 'complete';
+  await emit({
+    type: 'complete',
+    title: '决策包已完成',
+    detail: '你可以继续补充信息、从任意主张创建分支，或复制当前决策包。',
+  });
+  return { project, run, review: result };
+}
+
+function summarizeOpinion(output = '') {
+  const lines = String(output).split('\n').map((line) => line.replace(/^[-#>\s]+/, '').trim()).filter(Boolean);
+  const useful = lines.find((line) => !/^(独立判断|关键主张|最强反对意见|会改变结论的信息|最低成本验证)$/.test(line));
+  return (useful || '已完成独立判断').slice(0, 180);
+}
+
+
 // ── 浏览器 store（localStorage 持久化）──
-const __KEY = 'aker.runs.v1';
-function __load() { try { return JSON.parse(localStorage.getItem(__KEY)) || { runs: [] }; } catch { return { runs: [] }; } }
+const __KEY = 'aker.projects.v2';
+function __load() { try { const db = JSON.parse(localStorage.getItem(__KEY)) || {}; db.runs ||= []; db.projects ||= []; return db; } catch { return { runs: [], projects: [] }; } }
 function __save(db) { localStorage.setItem(__KEY, JSON.stringify(db)); }
 function saveRun(run) { const db = __load(); const i = db.runs.findIndex(r => r.id === run.id); if (i >= 0) db.runs[i] = run; else db.runs.unshift(run); __save(db); return run; }
 function getRun(id) { return __load().runs.find(r => r.id === id) || null; }
 function listRuns() { return __load().runs.map(({ id, task, createdAt, mode, agents }) => ({ id, task, createdAt, mode, agentCount: agents.length })); }
+function saveProject(project) { const db = __load(); const i = db.projects.findIndex(p => p.id === project.id); if (i >= 0) db.projects[i] = project; else db.projects.unshift(project); __save(db); return project; }
+function getProject(id) { return __load().projects.find(p => p.id === id) || null; }
+function listProjects() { return __load().projects.map(({ id, title, status, mode, createdAt, updatedAt, parentId }) => ({ id, title, status, mode, createdAt, updatedAt, parentId })); }
 
 // ── 首次访问灌入 Sim 示例 run（模板数据，仅用于演示流程）──
 let __seeded = false;
@@ -1367,8 +1646,27 @@ async function __handle(method, urlStr, body) {
   const p = url.pathname;
   await ensureSeeded();
   if (p === '/api/health') return { status: 200, body: { ok: true, ...capabilities() } };
+  if (p === '/api/connections') return { status: 200, body: listConnections() };
   if (p === '/api/frameworks') return { status: 200, body: { frameworks: FRAMEWORKS, matrixColumns: MATRIX_COLUMNS, traceabilityMeta: TRACEABILITY_META } };
   if (p === '/api/runs' && method === 'GET') return { status: 200, body: { runs: listRuns() } };
+  if (p === '/api/projects' && method === 'GET') return { status: 200, body: { projects: listProjects() } };
+  if (p === '/api/projects' && method === 'POST') {
+    const project = createProject({ message: body.message, mode: 'sim' }); saveProject(project); return { status: 201, body: { project } };
+  }
+  const projectMatch = p.match(/^\/api\/projects\/([^/]+)$/);
+  if (projectMatch && method === 'GET') { const project = getProject(decodeURIComponent(projectMatch[1])); return project ? { status: 200, body: { project } } : { status: 404, body: { error: 'project 不存在' } }; }
+  if (projectMatch && method === 'PATCH') { const project = getProject(decodeURIComponent(projectMatch[1])); if (!project) return { status: 404, body: { error: 'project 不存在' } }; if (body.brief) project.brief = { ...project.brief, ...body.brief }; project.mode = 'sim'; saveProject(project); return { status: 200, body: { project } }; }
+  const messageMatch = p.match(/^\/api\/projects\/([^/]+)\/messages$/);
+  if (messageMatch && method === 'POST') { const project = getProject(decodeURIComponent(messageMatch[1])); appendProjectMessage(project, body.message); saveProject(project); return { status: 200, body: { project } }; }
+  const branchMatch = p.match(/^\/api\/projects\/([^/]+)\/branches$/);
+  if (branchMatch && method === 'POST') { const parent = getProject(decodeURIComponent(branchMatch[1])); const project = createProject({ message: body.prompt || ('请验证：' + body.claim), mode: 'sim', parentId: parent.id, branchFrom: body.claim }); saveProject(project); return { status: 201, body: { project } }; }
+  const exploreMatch = p.match(/^\/api\/projects\/([^/]+)\/explore$/);
+  if (exploreMatch && method === 'POST') {
+    const project = getProject(decodeURIComponent(exploreMatch[1])); const stream = [];
+    const result = await exploreProject(project, capabilities(), { onEvent: async event => { saveProject(project); stream.push({ type: 'event', event }); } });
+    saveRun(result.run); saveProject(result.project); stream.push({ type: 'complete', project: result.project, run: result.run, review: result.review });
+    return { status: 200, stream };
+  }
   if (p === '/api/run' && method === 'POST') {
     const { task, agents, mode } = body || {};
     if (!task || !Array.isArray(agents) || !agents.length) return { status: 400, body: { error: 'task 与 agents 必填' } };
@@ -1406,548 +1704,554 @@ window.fetch = async (input, init = {}) => {
     let r;
     try { r = await __handle(method, urlStr, body); }
     catch (e) { r = { status: 500, body: { error: String(e && e.message || e) } }; }
+    if (r.stream) return new Response(r.stream.map(x => JSON.stringify(x)).join('\n') + '\n', { status: r.status, headers: { 'content-type': 'application/x-ndjson' } });
     return new Response(JSON.stringify(r.body), { status: r.status, headers: { 'content-type': 'application/json' } });
   }
   return __origFetch(input, init);
 };
 
-// app.js — aker 前端 (vanilla, 无构建)
-const $ = (s, el = document) => el.querySelector(s);
-const $$ = (s, el = document) => [...el.querySelectorAll(s)];
-const api = (p, opts) => fetch(p, opts).then((r) => r.json());
-const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const $ = (selector, root = document) => root.querySelector(selector);
+const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
+const api = async (path, options = {}) => {
+  const response = await fetch(path, options);
+  const payload = await response.json();
+  if (!response.ok || payload.error) throw new Error(payload.error || `HTTP ${response.status}`);
+  return payload;
+};
+const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-let STATE = { frameworks: [], traceMeta: {}, matrixCols: [], liveAgents: [], reviewRoles: [], mode: 'sim', lastRun: null };
+const STATE = {
+  health: null,
+  projects: [],
+  project: null,
+  connections: null,
+  exploring: false,
+};
 
-// Sim 模式展示用候选；Live 模式候选完全由 /api/health 返回，保证选择后真的可运行。
-const SIM_MODELS = ['claude-opus-4-8', 'claude-sonnet-4-6', 'gpt-x', 'o-series', 'hermes-3', 'gemini-x'];
-const DEFAULT_SIM_AGENTS = [
-  { role: 'strategist', framework: 'claude-code', model: 'claude-opus-4-8' },
-  { role: 'critic', framework: 'codex-cli', model: 'gpt-x' },
-  { role: 'operator', framework: 'langgraph', model: 'o-series' },
-  { role: 'researcher', framework: 'crewai', model: 'gemini-x' },
-];
+const EVENT_META = {
+  plan: ['计划', 'plan'],
+  source_audit: ['证据', 'committee'],
+  warning: ['提醒', 'warning'],
+  agent_start: ['进行中', 'running'],
+  agent_done: ['观点', 'done'],
+  agent_error: ['失败', 'error'],
+  committee_update: ['委员会', 'committee'],
+  synthesis_start: ['综合', 'running'],
+  complete: ['完成', 'done'],
+  error: ['错误', 'error'],
+};
 
-// ───────── tabs ─────────
-function activateTab(b) {
-  $$('#tabs button').forEach((x) => {
-    const on = x === b;
-    x.classList.toggle('active', on);
-    x.setAttribute('aria-selected', on ? 'true' : 'false');
-    x.tabIndex = on ? 0 : -1;
-  });
-  $$('.panel').forEach((p) => p.classList.toggle('active', p.id === `panel-${b.dataset.tab}`));
-  if (b.dataset.tab === 'committee') { refreshRunPickers().then(() => { if ($('#reviewRun').value) doReview(); }); }
-  else if (b.dataset.tab === 'trace') { refreshRunPickers(); }
+document.addEventListener('DOMContentLoaded', init);
+
+async function init() {
+  bindStaticControls();
+  const [health, projectData, connections] = await Promise.all([
+    api('/api/health'),
+    api('/api/projects').catch(() => ({ projects: [] })),
+    api('/api/connections').catch(() => ({ cli: [], api: [], keychain: false })),
+  ]);
+  STATE.health = health;
+  STATE.projects = projectData.projects || [];
+  STATE.connections = connections;
+  $('#projectMode').value = health.live ? 'live' : 'sim';
+  renderConnectionStatus();
+  renderProjectList();
+  renderConnections();
+  if (STATE.projects[0]) await openProject(STATE.projects[0].id);
 }
-$$('#tabs button').forEach((b) => {
-  b.addEventListener('click', () => activateTab(b));
-  // 键盘左右方向键在 tablist 内移动焦点（roving tabindex）
-  b.addEventListener('keydown', (e) => {
-    const tabs = $$('#tabs button');
-    const i = tabs.indexOf(b);
-    let ni = -1;
-    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') ni = (i + 1) % tabs.length;
-    else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') ni = (i - 1 + tabs.length) % tabs.length;
-    else if (e.key === 'Home') ni = 0;
-    else if (e.key === 'End') ni = tabs.length - 1;
-    if (ni >= 0) { e.preventDefault(); activateTab(tabs[ni]); tabs[ni].focus(); }
-  });
-});
 
-// ───────── init ─────────
-(async function init() {
-  const [health, fw] = await Promise.all([api('/api/health'), api('/api/frameworks')]);
-  STATE.frameworks = fw.frameworks; STATE.traceMeta = fw.traceabilityMeta; STATE.matrixCols = fw.matrixColumns;
-  STATE.live = !!health.live;
-  STATE.liveAgents = health.liveAgents || [];
-  STATE.reviewRoles = health.reviewRoles || [
-    { id: 'strategist', label: '策略评审' }, { id: 'critic', label: '反方评审' }, { id: 'operator', label: '执行评审' },
-  ];
-  STATE.mode = health.live ? 'live' : 'sim';
-  $('#modedot').classList.toggle('on', health.live);
-  $('#modetext').textContent = health.live ? 'Live 通道已检测' : '仅 Sim 演示';
-  $('#modepill').title = health.note || '';
-  $('#capabilityText').innerHTML = health.live
-    ? `<b class="ok">已检测：</b>${esc(health.note)}。默认尝试真实判断；失败会明确报错，不会降级成模拟结果。`
-    : `<b class="warn-text">尚无真实通道：</b>${esc(health.note)}。可先体验 Sim；要产生真实效果，请安装并登录 Codex CLI，或设置 OPENAI_API_KEY / ANTHROPIC_API_KEY 后重启。`;
-  $$('#modeSeg button').forEach((b) => b.classList.toggle('active', b.dataset.mode === STATE.mode));
-  renderAgentRows(defaultAgentsForMode());
-  renderFrameworks();
-  bindRunControls();
-  $('#loadExample').addEventListener('click', () => {
-    $('#decision').value = '我们是否应该在未来两周上线面向现有客户的 AI 周报功能？';
-    $('#context').value = '已有客户持续反馈周报整理耗时，但尚未验证他们是否愿意使用 AI 自动生成内容。';
-    $('#constraints').value = '团队只有 2 名工程师，周期 2 周，不能新增付费基础设施；不能向客户展示未经确认的事实。';
-    $('#criteria').value = '至少 5 名现有客户真实试用；其中 3 名愿意连续使用；人工校对时间低于 10 分钟。';
-    $('#unknowns').value = '客户真实使用频率、可接受的错误率、是否愿意授权所需数据。';
-    $('#decision').focus();
+function bindStaticControls() {
+  $('#newProject').addEventListener('click', newProject);
+  $('#sendMessage').addEventListener('click', submitMessage);
+  $('#rerunProject').addEventListener('click', exploreCurrentProject);
+  $('#openConnections').addEventListener('click', () => showView('connections'));
+  $('#closeConnections').addEventListener('click', () => showView('project'));
+  $('#saveBrief').addEventListener('click', saveBrief);
+  $('#copyPackage').addEventListener('click', copyDecisionPackage);
+  $('#projectMode').addEventListener('change', updateProjectMode);
+  $('#messageInput').addEventListener('keydown', (event) => {
+    if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') { event.preventDefault(); submitMessage(); }
   });
-  $('#committeeOut').innerHTML = '<div class="card empty">完成一次独立判断后，在这里生成建议、条件、反对意见与验证动作完整的决策包。</div>';
-  $('#traceOut').innerHTML = '<div class="card empty">选择一次决策与两个视角，检查它们的过程支撑是否存在明显差异。</div>';
-  // 无 key 时锁定 Sim：禁用 Live 按钮（U1 / H6 —— Pages 在线版永远走这里）
-  if (!health.live) {
-    const lb = $('#modeSeg [data-mode="live"]');
-    if (lb) {
-      lb.disabled = true;
-      lb.setAttribute('aria-disabled', 'true');
-      lb.title = '未检测到 ANTHROPIC_API_KEY / OPENAI_API_KEY，无法 Live（仅 Sim 模拟）';
+  $$('.examples button').forEach((button) => button.addEventListener('click', () => {
+    $('#messageInput').value = button.dataset.example;
+    $('#messageInput').focus();
+  }));
+  $$('.inspector-tabs button').forEach((button) => button.addEventListener('click', () => activateInspector(button.dataset.inspector)));
+  $('#decisionPackage').addEventListener('click', (event) => {
+    const button = event.target.closest('[data-branch-claim]');
+    if (button) createBranch(button.dataset.branchClaim);
+  });
+  $('#conversation').addEventListener('click', (event) => {
+    if (event.target.closest('[data-open-package]')) activateInspector('package');
+  });
+}
+
+function showView(name) {
+  $('#projectView').classList.toggle('active', name === 'project');
+  $('#connectionsView').classList.toggle('active', name === 'connections');
+}
+
+function activateInspector(name) {
+  $$('.inspector-tabs button').forEach((button) => button.classList.toggle('active', button.dataset.inspector === name));
+  $$('.inspector-panel').forEach((panel) => panel.classList.toggle('active', panel.id === `inspector-${name}`));
+}
+
+function renderConnectionStatus() {
+  const usable = [
+    ...(STATE.connections?.cli || []).filter((item) => item.runnable),
+    ...(STATE.connections?.api || []).filter((item) => item.runnable),
+  ];
+  $('#connectionCount').textContent = usable.length;
+  $('#modeStatus').innerHTML = `<span class="dot ${usable.length ? 'on' : ''}"></span><span>${usable.length ? `${usable.length} 条通道可运行` : '仅 Sim 演示'}</span>`;
+}
+
+function renderProjectList() {
+  $('#projectList').innerHTML = STATE.projects.length
+    ? STATE.projects.map((project) => `
+      <button class="project-item ${STATE.project?.id === project.id ? 'active' : ''}" data-project-id="${esc(project.id)}">
+        <span class="project-state ${esc(project.status)}"></span>
+        <span><b>${esc(project.title)}</b><small>${project.parentId ? '分支探究 · ' : ''}${formatDate(project.updatedAt || project.createdAt)}</small></span>
+      </button>`).join('')
+    : '<div class="empty-projects">还没有项目<br>从一个重要问题开始</div>';
+  $$('#projectList [data-project-id]').forEach((button) => button.addEventListener('click', () => openProject(button.dataset.projectId)));
+}
+
+function newProject() {
+  STATE.project = null;
+  STATE.exploring = false;
+  $('#projectTitle').textContent = '提出真正重要的问题';
+  $('#projectSubtitle').textContent = 'Aker 会在探究过程中持续审查证据、分歧与下一步，而不是最后才做评审。';
+  $('#conversation').innerHTML = welcomeHtml();
+  bindExamples();
+  $('#messageInput').value = '';
+  $('#messageInput').placeholder = '提出一个重要问题，或继续补充信息…';
+  $('#sendMessage').textContent = '开始探究';
+  $('#rerunProject').hidden = true;
+  renderBrief(null);
+  renderSources([]);
+  renderPackage(null);
+  renderProjectList();
+  showView('project');
+  $('#messageInput').focus();
+}
+
+function welcomeHtml() {
+  return `<div class="welcome">
+    <div class="welcome-kicker">从一句话开始</div>
+    <h3>你现在需要研究什么问题，或者做出什么决定？</h3>
+    <p>不需要先填写表单。Aker 会自动整理目标、约束、成功标准和关键未知项，只在真正影响结论时追问。</p>
+    <div class="examples">
+      <button data-example="我们是否应该在未来两周上线面向现有客户的 AI 周报功能？团队只有 2 名工程师，不能新增付费基础设施。">是否应该上线一个尚未验证需求的新功能？</button>
+      <button data-example="我们应该选择自建 AI 客服还是采购 SaaS？希望三个月内上线，最不能接受的是客户数据泄露。">自建还是采购 AI 客服？</button>
+      <button data-example="请调研我们进入东南亚市场的可行性，并给出先进入哪个国家的建议。">应该先进入哪个新市场？</button>
+    </div>
+  </div>`;
+}
+
+function bindExamples() {
+  $$('.examples button').forEach((button) => button.addEventListener('click', () => {
+    $('#messageInput').value = button.dataset.example;
+    $('#messageInput').focus();
+  }));
+}
+
+async function openProject(id) {
+  const { project } = await api(`/api/projects/${encodeURIComponent(id)}`);
+  STATE.project = project;
+  STATE.exploring = project.status === 'running';
+  renderProject();
+  renderProjectList();
+  showView('project');
+}
+
+function renderProject() {
+  const project = STATE.project;
+  if (!project) return newProject();
+  $('#projectTitle').textContent = project.title;
+  $('#projectSubtitle').textContent = project.parentId
+    ? '这是从已有结论创建的分支探究。它拥有独立上下文和决策包。'
+    : '对话、执行过程与决策包都保存在这个项目中，可以持续补充和重新探究。';
+  $('#projectMode').value = project.mode;
+  $('#rerunProject').hidden = STATE.exploring;
+  $('#sendMessage').textContent = '补充信息';
+  $('#messageInput').placeholder = '继续补充约束、证据或追问…';
+  $('#conversation').innerHTML = [
+    ...(project.messages || []).map(messageHtml),
+    timelineHtml(project.timeline || []),
+    project.decisionPackage ? packageNoticeHtml(project) : '',
+  ].join('');
+  scrollConversation();
+  renderBrief(project.brief);
+  renderSources(project.sources || []);
+  renderPackage(project.decisionPackage);
+}
+
+function messageHtml(message) {
+  return `<article class="message ${esc(message.role)}">
+    <div class="message-role">${message.role === 'user' ? '你' : 'Aker'}</div>
+    <div class="message-body">${renderMarkdown(message.content)}</div>
+  </article>`;
+}
+
+function timelineHtml(events) {
+  if (!events.length) return '';
+  return `<section class="timeline-block">
+    <div class="timeline-head"><span>实时执行与持续评审</span><b>${events.length} 个事件</b></div>
+    <div class="timeline" id="timeline">${events.map(eventHtml).join('')}</div>
+  </section>`;
+}
+
+function eventHtml(event) {
+  const [label, kind] = EVENT_META[event.type] || ['事件', ''];
+  return `<div class="timeline-event ${kind}">
+    <span class="event-dot"></span>
+    <div><div class="event-title"><b>${esc(event.title)}</b><span>${label}</span></div>${event.detail ? `<p>${esc(event.detail)}</p>` : ''}</div>
+    <time>${formatTime(event.at)}</time>
+  </div>`;
+}
+
+function packageNoticeHtml(project) {
+  return `<article class="message assistant package-notice">
+    <div class="message-role">Aker</div>
+    <div class="message-body"><h3>决策包已完成</h3><p>建议、最强反对意见、未解决的不确定性和最低成本验证已整理到右侧。点击任意要点可以创建分支探究。</p><button class="inline-action" data-open-package>查看决策包</button></div>
+  </article>`;
+}
+
+async function submitMessage() {
+  const input = $('#messageInput');
+  const message = input.value.trim();
+  if (!message || STATE.exploring) return;
+  input.value = '';
+  if (!STATE.project) {
+    setComposerBusy(true, '正在建立决策项目…');
+    try {
+      const { project } = await api('/api/projects', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ message, mode: $('#projectMode').value }),
+      });
+      STATE.project = project;
+      STATE.projects = (await api('/api/projects')).projects;
+      renderProject();
+      renderProjectList();
+      await exploreCurrentProject();
+    } catch (error) {
+      showComposerError(error.message);
+    } finally {
+      if (!STATE.exploring) setComposerBusy(false);
     }
-    STATE.mode = 'sim';
-  }
-  await refreshRunPickers();
-})();
-
-// ───────── 运行台 ─────────
-function defaultAgentsForMode() {
-  if (STATE.mode !== 'live' || !STATE.liveAgents.length) return DEFAULT_SIM_AGENTS.map((a) => ({ ...a }));
-  const runner = STATE.liveAgents[0];
-  return ['strategist', 'critic', 'operator', 'researcher'].map((role) => ({ role, framework: runner.framework, model: runner.model }));
-}
-function availableFrameworks() {
-  if (STATE.mode !== 'live') return STATE.frameworks.map((f) => ({ id: f.id, label: f.name }));
-  return [...new Map(STATE.liveAgents.map((a) => [a.framework, { id: a.framework, label: fwName(a.framework) }])).values()];
-}
-function fwOptions(sel) {
-  return availableFrameworks().map((f) => `<option value="${esc(f.id)}" ${f.id === sel ? 'selected' : ''}>${esc(f.label)}</option>`).join('');
-}
-function modelOptions(sel, framework) {
-  const models = STATE.mode === 'live'
-    ? STATE.liveAgents.filter((a) => a.framework === framework).map((a) => ({ id: a.model, label: a.label }))
-    : SIM_MODELS.map((m) => ({ id: m, label: m }));
-  return models.map((m) => `<option value="${esc(m.id)}" ${m.id === sel ? 'selected' : ''}>${esc(m.label)}</option>`).join('');
-}
-function roleOptions(sel) {
-  return STATE.reviewRoles.map((r) => `<option value="${esc(r.id)}" ${r.id === sel ? 'selected' : ''}>${esc(r.label)}</option>`).join('');
-}
-
-function renderAgentRows(agents) {
-  $('#agentRows').innerHTML = agents.map((a, i) => `
-    <div class="agent-row" data-i="${i}">
-      <select class="role" aria-label="第 ${i + 1} 个判断视角">${roleOptions(a.role)}</select>
-      <select class="fw" aria-label="第 ${i + 1} 个视角的运行通道">${fwOptions(a.framework)}</select>
-      <select class="ml" aria-label="第 ${i + 1} 个视角的模型">${modelOptions(a.model, a.framework)}</select>
-      <button class="icon-btn rm" title="移除该视角" aria-label="移除第 ${i + 1} 个视角"><span aria-hidden="true">×</span></button>
-    </div>`).join('');
-  $$('#agentRows .fw').forEach((select) => select.addEventListener('change', (e) => {
-    const row = e.target.closest('.agent-row');
-    $('.ml', row).innerHTML = modelOptions('', e.target.value);
-  }));
-  $$('#agentRows .rm').forEach((btn) => btn.addEventListener('click', (e) => {
-    const rows = collectAgents(); const i = +e.target.closest('.agent-row').dataset.i;
-    rows.splice(i, 1); renderAgentRows(rows.length ? rows : defaultAgentsForMode().slice(0, 1));
-  }));
-}
-function collectAgents() {
-  return $$('#agentRows .agent-row').map((r) => ({ role: $('.role', r).value, framework: $('.fw', r).value, model: $('.ml', r).value }));
-}
-function bindRunControls() {
-  $('#addAgent').addEventListener('click', () => {
-    const rows = collectAgents();
-    const runner = STATE.mode === 'live' ? STATE.liveAgents[0] : { framework: 'crewai', model: 'gemini-x' };
-    const role = STATE.reviewRoles[rows.length % STATE.reviewRoles.length]?.id || 'researcher';
-    renderAgentRows([...rows, { role, framework: runner.framework, model: runner.model }]);
-  });
-  $$('#modeSeg button').forEach((b) => b.addEventListener('click', () => {
-    if (b.disabled) return; // 无 key 时 Live 不可选（U1）
-    $$('#modeSeg button').forEach((x) => x.classList.toggle('active', x === b)); STATE.mode = b.dataset.mode;
-    renderAgentRows(defaultAgentsForMode());
-  }));
-  $('#runBtn').addEventListener('click', submitRun);
-  $$('.brief-input').forEach((input) => input.addEventListener('keydown', (e) => {
-    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); submitRun(); }
-  }));
-}
-
-function composeDecisionBrief() {
-  const sections = [
-    ['决策问题', $('#decision').value.trim()],
-    ['已知背景', $('#context').value.trim()],
-    ['约束与不可接受结果', $('#constraints').value.trim()],
-    ['成功标准', $('#criteria').value.trim()],
-    ['关键未知项', $('#unknowns').value.trim()],
-  ];
-  return sections.filter(([, value]) => value).map(([title, value]) => `## ${title}\n${value}`).join('\n\n');
-}
-
-async function submitRun() {
-  const decision = $('#decision').value.trim();
-  const task = composeDecisionBrief();
-  const agents = collectAgents();
-  if (!decision) {
-    $('#runStatus').innerHTML = '<div class="card warn" role="alert">请先写清楚要做的决定。一个好的问题通常可以用“是否应该……”或“应选择哪种方案……”表达。</div>';
-    $('#decision').focus();
     return;
   }
-  if (!agents.length) return;
-  const btn = $('#runBtn'); btn.disabled = true; btn.textContent = '判断中…'; btn.setAttribute('aria-busy', 'true');
-  // 先渲染 running 占位卡
-  $('#results').innerHTML = agents.map((a, i) => agentCardShell(a, i)).join('');
-  // 等待期计时指示（U4：真正逐个流式落地需后端 SSE，记入 CRITICISMS.md）
-  const t0 = Date.now();
-  const hint = STATE.mode === 'live' ? ' · Live 模式下单个 agent 可能需要数十秒' : '';
-  const tick = () => {
-    const s = ((Date.now() - t0) / 1000).toFixed(1);
-    $('#runStatus').innerHTML = `<div class="card"><div class="metrics"><span class="spin" aria-hidden="true"></span><span>独立判断中 <b>${s}s</b> · <b>${agents.length}</b> 个视角互不查看彼此答案 · 模式 <b>${esc(STATE.mode)}</b>${hint}</span></div></div>`;
-  };
-  tick();
-  const timer = setInterval(tick, 100);
+  setComposerBusy(true, '正在更新工作简报…');
   try {
-    const { run, error } = await api('/api/run', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ task, agents, mode: STATE.mode }) });
-    if (error) throw new Error(error);
-    STATE.lastRun = run;
-    $('#results').innerHTML = run.agents.map(agentCard).join('');
-    clearInterval(timer);
-    const dur = ((Date.now() - t0) / 1000).toFixed(1);
-    const done = run.agents.filter((a) => a.status === 'done').length;
-    const failed = run.agents.length - done;
-    const simNote = run.mode === 'sim' ? ' · <b>Sim 模拟数据</b>（非真实模型）' : ' · <b>真实运行</b>';
-    const next = done >= 2 ? '<button class="btn sm" id="openCommittee">生成最终决策包</button>' : '';
-    $('#runStatus').innerHTML = `<div class="card run-complete"><div class="metrics"><span class="status ${failed ? 'error' : 'done'}" role="img" aria-label="已完成"></span><span>完成 <b>${done}</b> 个独立视角${failed ? ` · 失败 <b>${failed}</b> 个` : ''} · 用时 <b>${dur}s</b>${simNote} · 已存档</span></div>${next}</div>`;
-    $('#openCommittee')?.addEventListener('click', () => activateTab($('#tab-committee')));
-    refreshRunPickers(run.id);
-  } catch (e) {
-    clearInterval(timer);
-    $('#runStatus').innerHTML = `<div class="card warn" role="alert"><span style="color:var(--red)">运行失败：${esc(e.message)}</span></div>`;
-  } finally { clearInterval(timer); btn.disabled = false; btn.textContent = '▶ 开始独立判断'; btn.removeAttribute('aria-busy'); }
-}
-
-const STATUS_LABEL = { running: '执行中', done: '已完成', error: '失败' };
-function statusDot(s) { return `<span class="status ${esc(s)}" role="img" aria-label="${esc(STATUS_LABEL[s] || s)}"></span>`; }
-
-function agentCardShell(a, i) {
-  return `<div class="agent-card"><div class="head">${statusDot('running')}<span class="fw-tag">${esc(fwName(a.framework))}</span><span class="model">${esc(a.model)}</span></div><div class="out" style="color:var(--faint)">执行中…</div></div>`;
-}
-function agentCard(a) {
-  const t = a.trace?.totals || {};
-  const src = a.trace?.source;
-  const isSim = a.mode === 'sim';
-  const isError = a.status === 'error';
-  // Sim 一律强制标记「模拟数据」，指标加 ~ 前缀 + 弱化 + title。
-  const modePill = isError
-    ? '<span class="pill failed">LIVE FAILED · 未降级</span>'
-    : isSim
-    ? '<span class="pill sim" title="本卡所有指标为模板生成的模拟值，非真实测量">SIMULATED · 模拟数据</span>'
-    : '<span class="pill" title="真实调用模型">live</span>';
-  const mcls = isSim ? 'metric-sim' : '';
-  const mtitle = isSim ? ' title="模拟值，非真实测量"' : '';
-  const pfx = isSim ? '~' : '';
-  // 兼容旧 run 中的 note，显示为卡片级告警横幅。
-  const banner = a.note ? `<div class="card-banner warn" role="note">${esc(a.note)}</div>` : '';
-  return `<div class="agent-card${isSim ? ' is-sim' : ''}">
-    ${banner}
-    <div class="head">${statusDot(a.status)}<span class="role-tag">${esc(roleName(a.role))}</span><span class="fw-tag">${esc(fwName(a.framework))}</span><span class="model">${esc(a.model)}</span>${modePill}</div>
-    <div class="out">${esc(a.output || a.error || '')}</div>
-    <div class="metrics ${mcls}"${mtitle}>
-      <span>步骤 <b>${pfx}${t.steps || 0}</b></span>
-      <span>工具 <b>${pfx}${t.toolCalls || 0}</b></span>
-      <span>token <b>${pfx}${t.tokens || 0}</b></span>
-      <span>耗时 <b>${pfx}${t.wallMs || 0}</b>ms</span>
-      ${src ? `<span title="${esc(src.how)}${isSim ? '（模拟 trace）' : ''}">trace: <b>${esc(STATE.traceMeta[src.traceability]?.label || src.traceability)}${isSim ? '（模拟）' : ''}</b></span>` : ''}
-    </div>
-  </div>`;
-}
-function fwName(id) { return STATE.frameworks.find((f) => f.id === id)?.name || id; }
-function roleName(id) { return STATE.reviewRoles.find((r) => r.id === id)?.label || id || '独立评审'; }
-
-// ───────── run pickers (评审会 / trace 共用) ─────────
-async function refreshRunPickers(selectId) {
-  const { runs } = await api('/api/runs');
-  const opts = runs.map((r) => {
-    const tag = r.mode === 'sim' ? ' · [Sim]' : ' · [Live]';
-    return `<option value="${esc(r.id)}">${esc(decisionTitle(r.task).slice(0, 38))} · ${r.agentCount}视角${tag}</option>`;
-  }).join('');
-  for (const sel of ['#reviewRun', '#traceRun']) { const el = $(sel); if (el) { el.innerHTML = opts; if (selectId) el.value = selectId; } }
-  await onTraceRunChange();
-}
-
-function decisionTitle(task = '') {
-  const match = task.match(/## 决策问题\s*\n([^\n]+)/);
-  return match?.[1]?.trim() || task.replace(/^#+\s*/gm, '').trim();
-}
-
-// ───────── 评审会 ─────────
-$('#reviewBtn').addEventListener('click', doReview);
-$$('#reviewMode button').forEach((b) => b.addEventListener('click', () => {
-  $$('#reviewMode button').forEach((x) => x.classList.toggle('active', x === b)); doReview();
-}));
-async function doReview() {
-  const runId = $('#reviewRun').value;
-  const mode = $('#reviewMode button.active').dataset.mode;
-  if (!runId) return;
-  $('#committeeOut').innerHTML = '<div class="card empty">正在综合决策包…</div>';
-  // 取回完整 run，判断是否含模拟 agent —— 用于「基于模拟 trace」告警。
-  const [{ run }, { review, error }] = await Promise.all([
-    api(`/api/runs/${encodeURIComponent(runId)}`),
-    api('/api/review', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ runId, mode }) }),
-  ]);
-  if (error) { $('#committeeOut').innerHTML = `<div class="card empty" role="alert">${esc(error)}</div>`; return; }
-  const simmy = !run || run.mode === 'sim' || (run.agents || []).some((a) => a.mode === 'sim');
-  renderReview(review, mode, simmy);
-}
-function renderReview(r, mode, isSim) {
-  const list = mode === 'intersection' ? r.consensus : r.union;
-  const listTitle = mode === 'intersection' ? `共同主张 (${r.consensus.length})` : `全部观点 (${r.union.length})`;
-  const listHtml = list.length ? list.map((c) => `
-    <div class="consensus-item">${esc(c.text)} <span class="cov">· ${c.coverage} 个视角${c.unique ? ' · 仅此视角提出' : ''}</span></div>`).join('')
-    : '<div class="empty">无</div>';
-
-  const divHtml = r.divergence.length ? r.divergence.map((d) => `<div class="div-item">${esc(d.text)} <span class="cov">· 来自 ${esc(d.by)}</span></div>`).join('') : '<div class="empty">无显著分歧</div>';
-
-  const attrHtml = r.attribution.map((a) => `
-    <div class="attr ${esc(a.weight)}"><span class="k">${esc(a.kind)}</span><span class="w">${esc(a.weight)}</span><div style="color:var(--muted);margin-top:3px">${esc(a.detail)}</div></div>`).join('');
-
-  // H4：基于模拟 trace 的免责告警
-  const simBanner = isSim
-    ? `<div class="card warn" role="note"><b>本次评审基于模拟 trace。</b>步骤/工具/token 等数字由模板生成，归因仅演示算法形态，<b>不代表真实模型行为</b>。接入 API key 后切换 Live 才会基于真实执行 trace 评审。</div><div style="height:16px"></div>`
-    : '';
-  // H5：sim 下分歧来自固定模板差异化句式，不存在「幻觉」，故切换中性文案
-  const divHint = isSim
-    ? '仅单一视角提出；Sim 模式下这些来自固定模板，只用于演示流程'
-    : '仅单一视角提出；它可能是关键少数意见，也可能缺乏依据，不能因人数少而直接丢弃';
-  const attrHint = isSim
-    ? '结合 trace 解释「为什么会不同」（注意：基于模拟 trace，仅示意算法形态）'
-    : '结合 trace 解释「为什么会不同」';
-
-  // U3：更优解 Markdown 存入全局，供「复制」按钮取用
-  STATE.betterMd = r.betterSolution.markdown;
-  const synth = r.betterSolution.synthesis;
-  const synthHint = synth?.mode === 'live'
-    ? `由真实评审团主席综合 · ${esc(synth.channel)}`
-    : synth?.mode === 'error'
-      ? `真实综合失败：${esc(synth.error)}；当前显示规则式综合`
-      : '规则式综合；Live run 会调用真实评审团主席';
-
-  $('#committeeOut').innerHTML = `
-    ${simBanner}
-    <div class="card decision-package">
-      <div class="section-head"><h2 class="section">最终决策包</h2><button class="btn sm copy" id="copyBetter">复制 Markdown</button></div>
-      <p class="section-hint">${synthHint}</p>
-      <div class="markdown">${renderMarkdown(r.betterSolution.markdown)}</div>
-    </div>
-    <div style="height:16px"></div>
-    <div class="two-col">
-      <div class="card">
-        <h2 class="section">${esc(listTitle)}</h2>
-        <p class="section-hint">${mode === 'intersection' ? '多个视角都提出的主张；共同出现不等于事实正确' : '去重后的全部观点，包含少数但可能关键的意见'}</p>
-        ${listHtml}
-      </div>
-      <div class="card">
-        <h2 class="section">少数观点与盲区 (${r.divergence.length})</h2>
-        <p class="section-hint">${divHint}</p>
-        ${divHtml}
-      </div>
-    </div>
-    <div style="height:16px"></div>
-    <div class="card">
-      <h2 class="section">为什么视角会不同</h2>
-      <p class="section-hint">${attrHint}</p>
-      ${attrHtml}
-    </div>`;
-  const cb = $('#copyBetter');
-  if (cb) cb.addEventListener('click', () => copyToClipboard(STATE.betterMd, cb));
-}
-
-// U3：零依赖复制（带按钮反馈）
-function copyToClipboard(text, btn) {
-  const done = () => { const old = btn.textContent; btn.textContent = '已复制 ✓'; setTimeout(() => { btn.textContent = old; }, 1400); };
-  if (navigator.clipboard?.writeText) {
-    navigator.clipboard.writeText(text).then(done).catch(() => fallbackCopy(text, done));
-  } else fallbackCopy(text, done);
-}
-function fallbackCopy(text, done) {
-  const ta = document.createElement('textarea');
-  ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
-  document.body.appendChild(ta); ta.select();
-  try { document.execCommand('copy'); done(); } catch {}
-  document.body.removeChild(ta);
-}
-
-// ───────── Trace 对比 ─────────
-$('#traceRun').addEventListener('change', onTraceRunChange);
-$('#traceA').addEventListener('change', validateTracePair);
-$('#traceB').addEventListener('change', validateTracePair);
-$('#traceBtn').addEventListener('click', doTraceDiff);
-async function onTraceRunChange() {
-  const runId = $('#traceRun')?.value; if (!runId) return;
-  const { run } = await api(`/api/runs/${encodeURIComponent(runId)}`);
-  if (!run) return;
-  // U5：option 文案补 framework × model，便于辨认
-  const opts = run.agents.map((a) => `<option value="${esc(a.agentId)}">${esc(a.label || (fwName(a.framework) + ' · ' + a.model))} · ${esc(fwName(a.framework))}×${esc(a.model)}</option>`).join('');
-  $('#traceA').innerHTML = opts; $('#traceB').innerHTML = opts;
-  if (run.agents[1]) $('#traceB').value = run.agents[1].agentId;
-  STATE.traceRun = run;
-  // U5：单 agent run 无法对比 → 禁用按钮并就地提示
-  const single = run.agents.length < 2;
-  if (single) {
-    $('#traceOut').innerHTML = '<div class="card empty">该 run 只有 1 个 agent，Trace 对比需要 ≥ 2 个 agent。请回运行台加一个 agent 重跑。</div>';
+    const { project } = await api(`/api/projects/${encodeURIComponent(STATE.project.id)}/messages`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ message }),
+    });
+    STATE.project = project;
+    STATE.projects = (await api('/api/projects')).projects;
+    renderProject();
+    renderProjectList();
+  } catch (error) {
+    showComposerError(error.message);
+  } finally {
+    setComposerBusy(false);
   }
-  validateTracePair();
 }
-function validateTracePair() {
-  const run = STATE.traceRun;
-  const btn = $('#traceBtn');
-  const a = $('#traceA').value, b = $('#traceB').value;
-  const bad = !run || run.agents.length < 2 || !a || a === b;
-  btn.disabled = bad;
-  btn.title = (run && run.agents.length < 2) ? '需要 ≥ 2 个 agent' : (a && a === b ? '请选择两个不同的 agent' : '');
-}
-async function doTraceDiff() {
-  const runId = $('#traceRun').value, a = $('#traceA').value, b = $('#traceB').value;
-  if (a === b) { $('#traceOut').innerHTML = '<div class="card empty" role="alert">请选择两个不同的 agent</div>'; return; }
-  const { diff, error } = await api(`/api/trace/diff?runId=${encodeURIComponent(runId)}&a=${encodeURIComponent(a)}&b=${encodeURIComponent(b)}`);
-  if (error) { $('#traceOut').innerHTML = `<div class="card empty" role="alert">${esc(error)}</div>`; return; }
-  const run = STATE.traceRun;
-  const agA = run.agents.find((x) => x.agentId === a), agB = run.agents.find((x) => x.agentId === b);
-  const isSim = run.mode === 'sim' || [agA, agB].some((x) => x?.mode === 'sim');
-  renderTrace(diff, agA, agB, isSim);
-}
-function deltaBox(label, v, unit = '', invert = false) {
-  const cls = v === 0 ? '' : (v > 0 ? (invert ? 'neg' : 'pos') : (invert ? 'pos' : 'neg'));
-  const sign = v > 0 ? '+' : '';
-  return `<div class="delta"><span class="cov">${label} 差 (A−B)</span><b class="${cls}">${sign}${v}${unit}</b></div>`;
-}
-function renderTrace(diff, agA, agB, isSim) {
-  const tools = diff.tools;
-  const simBanner = isSim
-    ? `<div class="card warn" role="note"><b>以下 trace 为模拟数据。</b>步骤、工具、token、耗时均由模板生成，对比仅演示「效果评审」的算法形态，<b>不代表真实模型行为</b>。</div><div style="height:16px"></div>`
-    : '';
-  // U3：把 trace 结论拼成可复制文本
-  const copyText = buildTraceMarkdown(diff, isSim);
-  STATE.traceMd = copyText;
-  $('#traceOut').innerHTML = `
-    ${simBanner}
-    <div class="card">
-      <div class="section-head"><h2 class="section">过程差异 · ${esc(diff.a.label)} vs ${esc(diff.b.label)}</h2><button class="btn sm copy" id="copyTrace">复制结论</button></div>
-      <div class="deltas">
-        ${deltaBox('步骤', diff.deltas.steps)}
-        ${deltaBox('工具调用', diff.deltas.toolCalls)}
-        ${deltaBox('token', diff.deltas.tokens)}
-        ${deltaBox('耗时', diff.deltas.wallMs, 'ms')}
-      </div>
-      <div class="metrics">
-        <span>共用工具：<b>${esc(tools.shared.join('、') || '无')}</b></span>
-        <span style="color:var(--cyan)">仅 A：<b>${esc(tools.onlyA.join('、') || '无')}</b></span>
-        <span style="color:var(--amber)">仅 B：<b>${esc(tools.onlyB.join('、') || '无')}</b></span>
-      </div>
-      <p class="section-hint" style="margin-top:10px"><span aria-hidden="true">💡</span> 效果评审提示：${esc(traceInsight(diff))}</p>
-    </div>
-    <div style="height:16px"></div>
-    <div class="trace-cmp">
-      ${traceColumn(agA)}
-      ${traceColumn(agB)}
-    </div>`;
-  const ct = $('#copyTrace');
-  if (ct) ct.addEventListener('click', () => copyToClipboard(STATE.traceMd, ct));
-}
-function buildTraceMarkdown(diff, isSim) {
-  const L = [];
-  L.push(`# Trace 对比：${diff.a.label} vs ${diff.b.label}`);
-  if (isSim) L.push('> ⚠️ 模拟数据，非真实模型行为。');
-  L.push('');
-  L.push('## 过程差异 (A − B)');
-  L.push(`- 步骤：${diff.deltas.steps}`);
-  L.push(`- 工具调用：${diff.deltas.toolCalls}`);
-  L.push(`- token：${diff.deltas.tokens}`);
-  L.push(`- 耗时：${diff.deltas.wallMs}ms`);
-  L.push('');
-  L.push('## 工具集');
-  L.push(`- 共用：${diff.tools.shared.join('、') || '无'}`);
-  L.push(`- 仅 A：${diff.tools.onlyA.join('、') || '无'}`);
-  L.push(`- 仅 B：${diff.tools.onlyB.join('、') || '无'}`);
-  L.push('');
-  L.push('## 效果评审提示');
-  L.push(traceInsight(diff));
-  return L.join('\n');
-}
-function traceInsight(diff) {
-  const out = [];
-  if (diff.tools.onlyA.length || diff.tools.onlyB.length) out.push('两者调用的工具集不同，事实来源就不同——结论分歧大概率源于此，应信「有据可查」的一方。');
-  if (Math.abs(diff.deltas.steps) >= 2) out.push(`步骤数差 ${Math.abs(diff.deltas.steps)}，步数多的一方更可能做了自我验证（更稳但更贵）。`);
-  if (Math.abs(diff.deltas.tokens) >= 200) out.push(`token 差 ${Math.abs(diff.deltas.tokens)}，注意性价比。`);
-  return out.join(' ') || '两者过程相近，差异更可能来自模型本身而非执行路径。';
-}
-function traceColumn(a) {
-  const steps = a.trace?.steps || [];
-  const src = a.trace?.source;
-  return `<div class="card">
-    <div class="head" style="display:flex;gap:8px;align-items:center;margin-bottom:4px"><span class="fw-tag">${esc(fwName(a.framework))}</span><span class="model">${esc(a.model)}</span></div>
-    ${src ? `<span class="trace-badge" style="background:${STATE.traceMeta[src.traceability]?.color}">trace: ${esc(STATE.traceMeta[src.traceability]?.label)}</span><div class="cov" style="margin-top:4px">${esc(src.how)}</div>` : ''}
-    <ul class="tl">${steps.map((s) => `
-      <li><span class="ico ${esc(s.type)}" role="img" aria-label="${esc(STEP_LABEL[s.type] || s.type)}"><span aria-hidden="true">${stepIcon(s.type)}</span></span>
-        <span class="lab">${esc(s.label)}${s.detail ? `<div class="cov">${esc(s.detail)}</div>` : ''}</span>
-        <span class="meta">${s.tokens ? esc(s.tokens + 't') : ''} ${s.ms ? esc(s.ms + 'ms') : ''}</span></li>`).join('')}</ul>
-  </div>`;
-}
-const STEP_LABEL = { think: '思考', tool: '工具调用', observe: '观察', message: '消息', error: '错误', handoff: '交接' };
-function stepIcon(t) { return { think: '🧠', tool: '🔧', observe: '👁', message: '✦', error: '!', handoff: '↔' }[t] || '·'; }
 
-// ───────── 框架图鉴 ─────────
-function renderFrameworks() {
-  // 矩阵
-  const cols = STATE.matrixCols;
-  const head = `<thead><tr><th scope="col">框架</th>${cols.map((c) => `<th scope="col">${esc(c.label)}</th>`).join('')}</tr></thead>`;
-  const rows = STATE.frameworks.map((f) => `<tr>
-    <th scope="row" style="font-weight:inherit"><b>${esc(f.name)}</b><div class="vendor">${esc(f.vendor)}</div></th>
-    ${cols.map((c) => {
-      if (c.key === 'traceability') { const m = STATE.traceMeta[f.traceability]; return `<td><span class="trace-badge" style="background:${m.color}">${esc(m.label)}</span></td>`; }
-      return `<td>${esc(f[c.key])}</td>`;
-    }).join('')}
-  </tr>`).join('');
-  $('#matrix').innerHTML = head + `<tbody>${rows}</tbody>`;
+async function exploreCurrentProject() {
+  if (!STATE.project || STATE.exploring) return;
+  STATE.exploring = true;
+  STATE.project.status = 'running';
+  STATE.project.timeline = [];
+  STATE.project.decisionPackage = null;
+  renderProject();
+  setComposerBusy(true, '探究进行中，可实时查看上方过程…');
+  $('#rerunProject').hidden = true;
+  try {
+    const response = await fetch(`/api/projects/${encodeURIComponent(STATE.project.id)}/explore`, { method: 'POST' });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    while (true) {
+      const { value, done } = await reader.read();
+      buffer += decoder.decode(value || new Uint8Array(), { stream: !done });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+      for (const line of lines.filter(Boolean)) handleStreamEvent(JSON.parse(line));
+      if (done) break;
+    }
+  } catch (error) {
+    showComposerError(`探究失败：${error.message}`);
+  } finally {
+    STATE.exploring = false;
+    setComposerBusy(false);
+    $('#rerunProject').hidden = false;
+    STATE.projects = (await api('/api/projects')).projects;
+    renderProjectList();
+  }
+}
 
-  // 卡片
-  $('#fwGrid').innerHTML = STATE.frameworks.map((f) => {
-    const m = STATE.traceMeta[f.traceability];
-    return `<div class="fw-card">
-      <div class="title"><b>${esc(f.name)}</b><span class="vendor">${esc(f.vendor)} · ${esc(f.kind)}</span></div>
-      <span class="trace-badge" style="background:${m.color};align-self:flex-start">trace 可得性：${esc(m.label)}</span>
-      <div class="cov">${esc(f.traceNote)}</div>
-      <div class="kv">
-        <span class="k">范式</span><span>${esc(f.paradigm)}</span>
-        <span class="k">多 agent</span><span>${esc(f.multiAgent)}</span>
-        <span class="k">状态</span><span>${esc(f.state)}</span>
-        <span class="k">工具调用</span><span>${esc(f.toolCalling)}</span>
-        <span class="k">语言</span><span>${esc(f.language.join(' / '))}</span>
-      </div>
-      <div>
-        <div class="cov" style="color:var(--green)">✓ ${f.strengths.map(esc).join(' · ')}</div>
-        <div class="cov" style="color:var(--red)">△ ${f.weaknesses.map(esc).join(' · ')}</div>
-      </div>
-      <pre class="code">${highlightCode(f.code)}</pre>
-    </div>`;
+function handleStreamEvent(payload) {
+  if (payload.type === 'event') {
+    STATE.project.timeline ||= [];
+    STATE.project.timeline.push(payload.event);
+    const timeline = $('#timeline');
+    if (timeline) timeline.insertAdjacentHTML('beforeend', eventHtml(payload.event));
+    else {
+      $('#conversation').insertAdjacentHTML('beforeend', timelineHtml([payload.event]));
+    }
+    scrollConversation();
+  } else if (payload.type === 'complete') {
+    STATE.project = payload.project;
+    renderProject();
+    activateInspector('package');
+  } else if (payload.type === 'error') {
+    STATE.project = payload.project || STATE.project;
+    showComposerError(payload.error);
+  }
+}
+
+function renderBrief(brief) {
+  if (!brief) {
+    $('#briefSummary').innerHTML = '提出问题后自动生成';
+    $('#briefSummary').classList.add('empty-small');
+    for (const id of ['briefDecision', 'briefContext', 'briefConstraints', 'briefCriteria', 'briefUnknowns', 'briefAssumptions']) $(`#${id}`).value = '';
+    return;
+  }
+  $('#briefSummary').classList.remove('empty-small');
+  const entries = [
+    ['决策问题', brief.decision],
+    ['已知背景', brief.context],
+    ['约束', brief.constraints],
+    ['成功标准', brief.criteria],
+    ['关键未知项', brief.unknowns],
+    ['默认假设', brief.assumptions],
+  ];
+  $('#briefSummary').innerHTML = entries.map(([label, value]) => `<div class="brief-item"><span>${label}</span><p>${esc(value || '尚未明确')}</p></div>`).join('');
+  $('#briefDecision').value = brief.decision || '';
+  $('#briefContext').value = brief.context || '';
+  $('#briefConstraints').value = brief.constraints || '';
+  $('#briefCriteria').value = brief.criteria || '';
+  $('#briefUnknowns').value = brief.unknowns || '';
+  $('#briefAssumptions').value = brief.assumptions || '';
+}
+
+async function saveBrief() {
+  if (!STATE.project) return;
+  const brief = {
+    decision: $('#briefDecision').value.trim(),
+    context: $('#briefContext').value.trim(),
+    constraints: $('#briefConstraints').value.trim(),
+    criteria: $('#briefCriteria').value.trim(),
+    unknowns: $('#briefUnknowns').value.trim(),
+    assumptions: $('#briefAssumptions').value.trim(),
+  };
+  const { project } = await api(`/api/projects/${encodeURIComponent(STATE.project.id)}`, {
+    method: 'PATCH',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ brief }),
+  });
+  STATE.project = project;
+  renderBrief(project.brief);
+  $('#briefEditor').open = false;
+}
+
+async function updateProjectMode() {
+  if (!STATE.project) return;
+  const { project } = await api(`/api/projects/${encodeURIComponent(STATE.project.id)}`, {
+    method: 'PATCH',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ mode: $('#projectMode').value }),
+  });
+  STATE.project = project;
+}
+
+function renderPackage(markdown) {
+  const container = $('#decisionPackage');
+  if (!markdown) {
+    container.className = 'decision-content empty-small';
+    container.innerHTML = '完成探究后生成';
+    $('#copyPackage').hidden = true;
+    return;
+  }
+  container.className = 'decision-content';
+  container.innerHTML = renderMarkdown(markdown, true);
+  $('#copyPackage').hidden = false;
+}
+
+function renderSources(sources) {
+  const container = $('#sourceList');
+  if (!sources?.length) {
+    container.className = 'source-list empty-small';
+    container.innerHTML = '在对话中粘贴公开网页链接，Aker 会自动整理';
+    return;
+  }
+  container.className = 'source-list';
+  container.innerHTML = sources.map((source) => {
+    const state = source.status === 'ready' ? '已读取' : source.status === 'failed' ? '读取失败' : '已记录';
+    return `<article class="source-card">
+      <div class="source-head"><b>${esc(source.id)}</b><span class="${esc(source.status)}">${state}</span></div>
+      <a href="${esc(source.finalUrl || source.url)}" target="_blank" rel="noreferrer">${esc(source.title || source.url)}</a>
+      <p>${esc(source.excerpt ? `${source.excerpt.slice(0, 240)}${source.excerpt.length > 240 ? '…' : ''}` : source.error || 'Aker 已记录链接；当前没有可读取摘要。')}</p>
+    </article>`;
   }).join('');
 }
 
-// ───────── tiny markdown + code highlight ─────────
-function renderMarkdown(md) {
-  const lines = md.split('\n'); let html = '', list = null;
-  const inline = (s) => esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/_(.+?)_/g, '<i style="color:var(--muted)">$1</i>').replace(/`(.+?)`/g, '<code>$1</code>');
+async function copyDecisionPackage() {
+  if (!STATE.project?.decisionPackage) return;
+  await navigator.clipboard.writeText(STATE.project.decisionPackage);
+  const button = $('#copyPackage');
+  button.textContent = '已复制';
+  setTimeout(() => { button.textContent = '复制决策包'; }, 1200);
+}
+
+async function createBranch(claim) {
+  if (!STATE.project) return;
+  const { project } = await api(`/api/projects/${encodeURIComponent(STATE.project.id)}/branches`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ claim, prompt: `请挑战并进一步验证这个主张：${claim}` }),
+  });
+  STATE.projects = (await api('/api/projects')).projects;
+  STATE.project = project;
+  renderProject();
+  renderProjectList();
+  activateInspector('brief');
+  await exploreCurrentProject();
+}
+
+function renderConnections() {
+  const cli = STATE.connections?.cli || [];
+  const apis = STATE.connections?.api || [];
+  $('#cliConnections').innerHTML = cli.map((item) => connectionCard(item)).join('');
+  $('#apiConnections').innerHTML = apis.map((item) => apiCard(item)).join('');
+  $$('[data-test-connection]').forEach((button) => button.addEventListener('click', () => testConnection(button.dataset.testConnection, button)));
+  $$('[data-save-api]').forEach((button) => button.addEventListener('click', () => saveApi(button.dataset.saveApi, button)));
+  $$('[data-remove-api]').forEach((button) => button.addEventListener('click', () => removeApi(button.dataset.removeApi)));
+}
+
+function connectionCard(item) {
+  const state = item.runnable ? '可运行' : item.detected ? '已检测' : '未安装';
+  return `<article class="connection-card">
+    <div class="connection-top"><span class="connection-icon">⌘</span><div><h4>${esc(item.label)}</h4><p>${esc(item.note)}</p></div><span class="connection-state ${item.runnable ? 'ready' : ''}">${state}</span></div>
+    <div class="capabilities">${(item.capabilities || []).map((cap) => `<span>${esc(cap)}</span>`).join('')}</div>
+    <div class="connection-path">${esc(item.version || '')}<br>${esc(item.path || '未找到可执行文件')}</div>
+    <button class="ghost-btn wide" data-test-connection="${esc(item.id)}">测试检测</button>
+  </article>`;
+}
+
+function apiCard(item) {
+  return `<article class="connection-card">
+    <div class="connection-top"><span class="connection-icon">API</span><div><h4>${esc(item.label)}</h4><p>${esc(item.note)}</p></div><span class="connection-state ${item.configured ? 'ready' : ''}">${item.configured ? '已配置' : '未配置'}</span></div>
+    <label class="connection-field">模型<input data-api-model="${esc(item.id)}" value="${esc(item.model)}"></label>
+    <label class="connection-field">API Key<input data-api-key="${esc(item.id)}" type="password" placeholder="${item.configured ? `已存储于 ${esc(item.secretStore)}` : '输入后保存到 macOS Keychain'}"></label>
+    <div class="connection-actions">
+      <button class="primary-btn" data-save-api="${esc(item.id)}">保存</button>
+      <button class="ghost-btn" data-test-connection="${esc(item.id)}">测试连接</button>
+      ${item.configured && item.secretStore !== 'environment' ? `<button class="text-btn danger" data-remove-api="${esc(item.id)}">移除</button>` : ''}
+    </div>
+  </article>`;
+}
+
+async function saveApi(provider, button) {
+  button.disabled = true;
+  try {
+    STATE.connections = await api('/api/connections/api', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        provider,
+        model: $(`[data-api-model="${provider}"]`).value,
+        key: $(`[data-api-key="${provider}"]`).value,
+      }),
+    });
+    STATE.health = await api('/api/health');
+    renderConnections();
+    renderConnectionStatus();
+  } finally { button.disabled = false; }
+}
+
+async function removeApi(provider) {
+  STATE.connections = await api('/api/connections/api', {
+    method: 'DELETE',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ provider }),
+  });
+  STATE.health = await api('/api/health');
+  renderConnections();
+  renderConnectionStatus();
+}
+
+async function testConnection(id, button) {
+  const old = button.textContent;
+  button.disabled = true;
+  button.textContent = '测试中…';
+  try {
+    const result = await api('/api/connections/test', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ id }),
+    });
+    button.textContent = result.ok ? '连接正常' : result.message;
+  } catch (error) {
+    button.textContent = error.message;
+  }
+  setTimeout(() => { button.textContent = old; button.disabled = false; }, 2200);
+}
+
+function setComposerBusy(busy, hint) {
+  STATE.exploring = busy && STATE.exploring;
+  $('#sendMessage').disabled = busy;
+  $('#messageInput').disabled = busy;
+  if (hint) $('#composerHint').textContent = hint;
+  else $('#composerHint').textContent = 'Aker 会使用合理假设继续，并明确标注未知项';
+}
+
+function showComposerError(message) {
+  $('#conversation').insertAdjacentHTML('beforeend', `<div class="inline-error">${esc(message)}</div>`);
+  scrollConversation();
+}
+
+function scrollConversation() {
+  const conversation = $('#conversation');
+  requestAnimationFrame(() => { conversation.scrollTop = conversation.scrollHeight; });
+}
+
+function formatDate(value) {
+  if (!value) return '';
+  return new Intl.DateTimeFormat('zh-CN', { month: 'numeric', day: 'numeric' }).format(new Date(value));
+}
+
+function formatTime(value) {
+  if (!value) return '';
+  return new Intl.DateTimeFormat('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }).format(new Date(value));
+}
+
+function renderMarkdown(markdown = '', branchable = false) {
+  const lines = String(markdown).split('\n');
+  let html = '';
+  let list = null;
+  const inline = (text) => esc(text).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/_(.+?)_/g, '<i>$1</i>').replace(/`(.+?)`/g, '<code>$1</code>');
   const closeList = () => { if (list) { html += `</${list}>`; list = null; } };
-  const cells = (s) => s.trim().replace(/^\||\|$/g, '').split('|').map((x) => x.trim());
-  for (let i = 0; i < lines.length; i++) {
-    const ln = lines[i];
-    if (/^\|.*\|$/.test(ln) && /^\|?[\s:|-]+\|?$/.test(lines[i + 1] || '') && cells(lines[i + 1]).every((x) => /^:?-{3,}:?$/.test(x))) {
-      closeList();
-      const head = cells(ln);
-      const rows = [];
-      i += 2;
-      while (i < lines.length && /^\|.*\|$/.test(lines[i])) { rows.push(cells(lines[i])); i++; }
-      i--;
-      html += `<div class="md-table-wrap"><table><thead><tr>${head.map((x) => `<th>${inline(x)}</th>`).join('')}</tr></thead><tbody>${rows.map((row) => `<tr>${row.map((x) => `<td>${inline(x)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
-    } else if (/^### /.test(ln)) { closeList(); html += `<h3>${inline(ln.slice(4))}</h3>`; }
-    else if (/^## /.test(ln)) { closeList(); html += `<h2>${inline(ln.slice(3))}</h2>`; }
-    else if (/^> /.test(ln)) { closeList(); html += `<blockquote>${inline(ln.slice(2))}</blockquote>`; }
-    else if (/^- /.test(ln)) { if (list !== 'ul') { closeList(); html += '<ul>'; list = 'ul'; } html += `<li>${inline(ln.slice(2))}</li>`; }
-    else if (/^\d+\.\s/.test(ln)) { if (list !== 'ol') { closeList(); html += '<ol>'; list = 'ol'; } html += `<li>${inline(ln.replace(/^\d+\.\s+/, ''))}</li>`; }
-    else if (ln.trim() === '') { closeList(); }
-    else { closeList(); html += `<p>${inline(ln)}</p>`; }
+  for (const line of lines) {
+    if (/^### /.test(line)) { closeList(); html += `<h4>${inline(line.slice(4))}</h4>`; }
+    else if (/^## /.test(line)) { closeList(); html += `<h3>${inline(line.slice(3))}</h3>`; }
+    else if (/^> /.test(line)) { closeList(); html += `<blockquote>${inline(line.slice(2))}</blockquote>`; }
+    else if (/^- /.test(line)) {
+      if (list !== 'ul') { closeList(); html += '<ul>'; list = 'ul'; }
+      const claim = line.slice(2);
+      html += `<li>${inline(claim)}${branchable ? `<button class="branch-button" data-branch-claim="${esc(claim)}">分支探究</button>` : ''}</li>`;
+    } else if (/^\d+\.\s/.test(line)) {
+      if (list !== 'ol') { closeList(); html += '<ol>'; list = 'ol'; }
+      html += `<li>${inline(line.replace(/^\d+\.\s+/, ''))}</li>`;
+    } else if (!line.trim()) closeList();
+    else { closeList(); html += `<p>${inline(line)}</p>`; }
   }
   closeList();
   return html;
-}
-function highlightCode(code) {
-  return esc(code).replace(/(#.*|\/\/.*)/g, '<span class="cm">$1</span>');
 }
 
 </script>

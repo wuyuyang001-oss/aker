@@ -1,10 +1,10 @@
 {
   "name": "aker",
   "productName": "Aker",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "type": "module",
-  "description": "Multi-perspective decision workbench for important questions without an immediate ground truth",
+  "description": "Conversation-first decision workbench for consequential questions without an immediate ground truth",
   "main": "main.cjs",
   "scripts": {
     "start": "node server.mjs",
@@ -18,5 +18,7 @@
     "electron": "^33.4.11",
     "@electron/packager": "^18.3.6"
   },
-  "engines": { "node": ">=20" }
+  "engines": {
+    "node": ">=20"
+  }
 }

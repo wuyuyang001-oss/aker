@@ -5,11 +5,12 @@
 // 设计要点：Sim 的多 agent 输出之间“有共识也有分歧”，这样评审会才有真东西可分析。
 
 import { spawn } from 'node:child_process';
-import { existsSync, mkdtempSync, rmSync } from 'node:fs';
-import { homedir, tmpdir } from 'node:os';
-import { delimiter, join } from 'node:path';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { makeStep, summarizeTrace } from './trace.mjs';
 import { getFramework, TRACEABILITY_META } from './frameworks.mjs';
+import { getApiKey, getApiModel, listConnections } from './connections.mjs';
 
 export const REVIEW_ROLES = [
   { id: 'strategist', label: '策略视角', brief: '比较可选路径、机会成本、可逆性和长期影响，给出有条件的方向判断。' },
@@ -29,17 +30,6 @@ function rng(seedStr) {
   return () => { h += 0x6D2B79F5; let t = h; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 }
 
-// 模型“人格”：影响风格与一条独有取向
-const MODEL_PERSONA = {
-  default:               { style: '均衡', bias: '在可读性与性能间折中' },
-  'claude-opus-4-8':     { style: '严谨细致', bias: '强调边界条件与可维护性，倾向多写测试' },
-  'claude-sonnet-4-6':   { style: '简洁高效', bias: '优先最小可行改动，控制复杂度' },
-  'gpt-x':               { style: '直接果断', bias: '倾向引入成熟库而非自造轮子' },
-  'o-series':            { style: '深推理', bias: '会显式列出多个候选方案再择优' },
-  'hermes-3':            { style: '开放直白', bias: '给出可私有化/本地化的实现路径' },
-  'gemini-x':            { style: '结构化', bias: '强调与现有平台/生态集成' },
-};
-
 // 框架决定 trace 里会出现哪些“工具”与步骤形态
 const FRAMEWORK_TOOLKIT = {
   'claude-code':  ['Read', 'Edit', 'Bash'],
@@ -56,6 +46,7 @@ const FRAMEWORK_TOOLKIT = {
 
 // —— 生成差异化但有共识的输出 —— //
 function composeOutput(task, framework, model, role) {
+  const suppliedSources = [...String(task).matchAll(/^### \[(S\d+)\]/gm)].map((match) => match[1]);
   const roleSpecific = {
     strategist: {
       claim: '[推断] 当前机会的可逆性高于一次性全面投入，先试点能保留后续选择权。',
@@ -73,7 +64,9 @@ function composeOutput(task, framework, model, role) {
       validation: '把一个关键未知项转成 1-7 天可完成的实验，预先约定通过与停止阈值。',
     },
     researcher: {
-      claim: '[未知] 当前简报没有提供足够的外部证据，不能把需求强度和预期收益视为事实。',
+      claim: suppliedSources.length
+        ? `[事实] 用户提供了 ${suppliedSources.length} 个可审查来源（${suppliedSources.map((id) => `[${id}]`).join('、')}）；来源内容仍需与具体主张逐条对应，不能仅凭存在来源就确认结论。`
+        : '[未知] 当前简报没有提供足够的外部证据，不能把需求强度和预期收益视为事实。',
       objection: '等待完美证据既不现实，也可能比小规模行动更昂贵。',
       validation: '列出会改变结论的三项证据，优先获取成本最低且影响最大的那一项。',
     },
@@ -154,30 +147,22 @@ function simTraceSource() {
 }
 
 // —— Live adapter（检测到能力时启用；不可用时明确失败，不静默降级）—— //
-function findExecutable(name) {
-  if (typeof process === 'undefined') return null;
-  const paths = (process.env.PATH || '').split(delimiter).filter(Boolean).map((dir) => join(dir, name));
-  if (name === 'codex') paths.push(
-    '/Applications/Codex.app/Contents/Resources/codex',
-    join(homedir(), '.local', 'bin', 'codex'),
-  );
-  for (const path of paths) if (existsSync(path)) return path;
-  return null;
-}
-
 function configuredModels() {
   return {
-    anthropic: process.env.AKER_ANTHROPIC_MODEL || process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-6',
-    openai: process.env.AKER_OPENAI_MODEL || process.env.OPENAI_MODEL || 'gpt-4.1-mini',
+    anthropic: process.env.AKER_ANTHROPIC_MODEL || process.env.ANTHROPIC_MODEL || getApiModel('anthropic'),
+    openai: process.env.AKER_OPENAI_MODEL || process.env.OPENAI_MODEL || getApiModel('openai'),
   };
 }
 
 function liveCapabilities() {
   const node = typeof process !== 'undefined' && !!process.versions?.node;
+  const cli = node ? listConnections().cli : [];
   return {
-    anthropicKey: node && !!process.env.ANTHROPIC_API_KEY,
-    openaiKey: node && !!process.env.OPENAI_API_KEY,
-    codexPath: node ? findExecutable('codex') : null,
+    anthropicKey: node && !!getApiKey('anthropic'),
+    openaiKey: node && !!getApiKey('openai'),
+    codexPath: cli.find((item) => item.id === 'codex-cli' && item.runnable)?.path || null,
+    claudePath: cli.find((item) => item.id === 'claude-cli' && item.runnable)?.path || null,
+    geminiPath: cli.find((item) => item.id === 'gemini-cli' && item.runnable)?.path || null,
   };
 }
 
@@ -214,6 +199,12 @@ async function runLive(framework, model, task, agentId, role) {
   if (framework === 'codex-cli' && caps.codexPath) {
     return await callCodexCli(caps.codexPath, model, prompt);
   }
+  if (framework === 'claude-cli' && caps.claudePath) {
+    return await callClaudeCli(caps.claudePath, model, prompt);
+  }
+  if (framework === 'gemini-cli' && caps.geminiPath) {
+    return await callGeminiCli(caps.geminiPath, model, prompt);
+  }
   if ((fw?.vendor === 'Anthropic' || model.startsWith('claude')) && caps.anthropicKey) {
     return await callAnthropic(model, prompt);
   }
@@ -225,9 +216,10 @@ async function runLive(framework, model, task, agentId, role) {
 
 async function callAnthropic(model, task) {
   const t0 = Date.now();
+  const key = getApiKey('anthropic');
   const resp = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
-    headers: { 'content-type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+    headers: { 'content-type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01' },
     body: JSON.stringify({ model, max_tokens: 1024, messages: [{ role: 'user', content: task }] }),
   });
   const j = await resp.json();
@@ -241,9 +233,10 @@ async function callAnthropic(model, task) {
 
 async function callOpenAI(model, task) {
   const t0 = Date.now();
+  const key = getApiKey('openai');
   const resp = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
-    headers: { 'content-type': 'application/json', authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
+    headers: { 'content-type': 'application/json', authorization: `Bearer ${key}` },
     body: JSON.stringify({ model, messages: [{ role: 'user', content: task }] }),
   });
   const j = await resp.json();
@@ -333,9 +326,57 @@ async function callCodexCli(codexPath, model, prompt) {
   }
 }
 
-function spawnCollect(command, args, input, timeoutMs) {
+async function callClaudeCli(claudePath, model, prompt) {
+  const workdir = mkdtempSync(join(tmpdir(), 'aker-claude-'));
+  const args = ['-p', '--output-format', 'json', '--permission-mode', 'plan', '--tools', '', '--no-session-persistence'];
+  if (model && model !== 'claude-default') args.push('--model', model);
+  const t0 = Date.now();
+  try {
+    const { stdout, stderr, code } = await spawnCollect(claudePath, args, prompt, 180_000, workdir);
+    let payload;
+    try { payload = JSON.parse(stdout); } catch {}
+    const output = payload?.result || payload?.response || stdout.trim();
+    if (code !== 0 || !output) throw new Error(`Claude Code ${code || '无输出'}: ${payload?.error || stderr.slice(-400) || '未产生最终回答'}`);
+    const steps = [makeStep(0, 'message', 'Claude Code 最终回答', { tokens: payload?.usage?.output_tokens || 0, ms: Date.now() - t0 })];
+    return {
+      status: 'done',
+      mode: 'live',
+      output,
+      usage: payload?.usage || {},
+      trace: { steps, totals: summarizeTrace(steps), source: { traceability: 'native', how: 'claude -p JSON 响应' } },
+    };
+  } finally {
+    rmSync(workdir, { recursive: true, force: true });
+  }
+}
+
+async function callGeminiCli(geminiPath, model, prompt) {
+  const workdir = mkdtempSync(join(tmpdir(), 'aker-gemini-'));
+  const args = ['-p', prompt, '--output-format', 'json', '--approval-mode=plan'];
+  if (model && model !== 'gemini-default') args.push('--model', model);
+  const t0 = Date.now();
+  try {
+    const { stdout, stderr, code } = await spawnCollect(geminiPath, args, '', 180_000, workdir);
+    let payload;
+    try { payload = JSON.parse(stdout); } catch {}
+    const output = payload?.response || payload?.result || stdout.trim();
+    if (code !== 0 || !output) throw new Error(`Gemini CLI ${code || '无输出'}: ${payload?.error?.message || stderr.slice(-400) || '未产生最终回答'}`);
+    const steps = [makeStep(0, 'message', 'Gemini CLI 最终回答', { tokens: payload?.stats?.models?.total?.tokens || 0, ms: Date.now() - t0 })];
+    return {
+      status: 'done',
+      mode: 'live',
+      output,
+      usage: payload?.stats || {},
+      trace: { steps, totals: summarizeTrace(steps), source: { traceability: 'native', how: 'gemini headless JSON 响应' } },
+    };
+  } finally {
+    rmSync(workdir, { recursive: true, force: true });
+  }
+}
+
+function spawnCollect(command, args, input, timeoutMs, cwd) {
   return new Promise((resolve, reject) => {
-    const child = spawn(command, args, { stdio: ['pipe', 'pipe', 'pipe'] });
+    const child = spawn(command, args, { cwd, stdio: ['pipe', 'pipe', 'pipe'] });
     let stdout = '', stderr = '';
     const append = (current, chunk) => (current + chunk).slice(-2_000_000);
     child.stdout.on('data', (c) => { stdout = append(stdout, c); });
@@ -391,6 +432,12 @@ export async function synthesizeReview({ task, agents, evidence }) {
   } else if (caps.codexPath) {
     channel = 'Codex CLI';
     result = await callCodexCli(caps.codexPath, 'codex-default', prompt);
+  } else if (caps.claudePath) {
+    channel = 'Claude Code';
+    result = await callClaudeCli(caps.claudePath, 'claude-default', prompt);
+  } else if (caps.geminiPath) {
+    channel = 'Gemini CLI';
+    result = await callGeminiCli(caps.geminiPath, 'gemini-default', prompt);
   } else {
     throw new Error('没有可用于真实综合的 Live 通道');
   }
@@ -410,6 +457,8 @@ export function capabilities() {
   const models = configuredModels();
   const liveAgents = [];
   if (caps.codexPath) liveAgents.push({ framework: 'codex-cli', model: 'codex-default', label: 'Codex CLI · 当前登录' });
+  if (caps.claudePath) liveAgents.push({ framework: 'claude-cli', model: 'claude-default', label: 'Claude Code · 当前登录' });
+  if (caps.geminiPath) liveAgents.push({ framework: 'gemini-cli', model: 'gemini-default', label: 'Gemini CLI · 当前登录' });
   if (caps.openaiKey) liveAgents.push({ framework: 'openai-agents', model: models.openai, label: `OpenAI API · ${models.openai}` });
   if (caps.anthropicKey) liveAgents.push({ framework: 'claude-code', model: models.anthropic, label: `Anthropic API · ${models.anthropic}` });
   const channels = liveAgents.map((a) => a.label);
@@ -418,10 +467,13 @@ export function capabilities() {
     anthropic: caps.anthropicKey,
     openai: caps.openaiKey,
     codex: !!caps.codexPath,
+    claudeCli: !!caps.claudePath,
+    geminiCli: !!caps.geminiPath,
     liveAgents,
     reviewRoles: REVIEW_ROLES,
     note: channels.length
       ? `检测到真实通道：${channels.join('、')}。实际调用仍取决于登录状态、额度与网络`
       : '未检测到 Codex CLI 或 API key，只能使用 Sim 演示模式',
+    connections: listConnections(),
   };
 }

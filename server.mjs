@@ -9,7 +9,10 @@ import { runParallel } from './src/orchestrator.mjs';
 import { review } from './src/committee.mjs';
 import { diffTraces } from './src/trace.mjs';
 import { capabilities, synthesizeReview } from './src/adapters.mjs';
-import { saveRun, getRun, listRuns, seedIfEmpty } from './src/store.mjs';
+import { appendProjectMessage, createProject, exploreProject } from './src/projects.mjs';
+import { enrichProjectSources } from './src/sources.mjs';
+import { configureApi, listConnections, removeApi, testConnection } from './src/connections.mjs';
+import { saveRun, getRun, listRuns, saveProject, getProject, listProjects, seedIfEmpty } from './src/store.mjs';
 import { buildFixtures } from './fixtures/seed.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -22,6 +25,7 @@ const HOST = process.env.HOST || '127.0.0.1';
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8', '.svg': 'image/svg+xml' };
 
 function json(res, code, obj) { res.writeHead(code, { 'content-type': 'application/json; charset=utf-8' }); res.end(JSON.stringify(obj)); }
+function ndjson(res, obj) { res.write(`${JSON.stringify(obj)}\n`); }
 // S2：请求体读全进内存前先卡 1MB 上限，超限即停止累积并抛 413，防内存型 DoS。
 const MAX_BODY = 1e6; // 1MB
 async function body(req) {
@@ -58,10 +62,103 @@ const server = createServer(async (req, res) => {
   const p = url.pathname;
   try {
     if (p === '/api/health') return json(res, 200, { ok: true, ...capabilities() });
+    if (p === '/api/connections' && req.method === 'GET') return json(res, 200, listConnections());
+    if (p === '/api/connections/api' && req.method === 'POST') {
+      const config = await body(req);
+      return json(res, 200, configureApi(config));
+    }
+    if (p === '/api/connections/api' && req.method === 'DELETE') {
+      const { provider } = await body(req);
+      return json(res, 200, removeApi(provider));
+    }
+    if (p === '/api/connections/test' && req.method === 'POST') {
+      const { id } = await body(req);
+      return json(res, 200, await testConnection(id));
+    }
 
     if (p === '/api/frameworks') return json(res, 200, { frameworks: FRAMEWORKS, matrixColumns: MATRIX_COLUMNS, traceabilityMeta: TRACEABILITY_META });
 
     if (p === '/api/runs' && req.method === 'GET') return json(res, 200, { runs: listRuns() });
+    if (p === '/api/projects' && req.method === 'GET') return json(res, 200, { projects: listProjects() });
+
+    if (p === '/api/projects' && req.method === 'POST') {
+      const { message, mode } = await body(req);
+      if (!String(message || '').trim()) return json(res, 400, { error: 'message 必填' });
+      const project = createProject({ message, mode: mode || 'sim' });
+      await enrichProjectSources(project);
+      saveProject(project);
+      return json(res, 201, { project });
+    }
+
+    const projectMatch = p.match(/^\/api\/projects\/([^/]+)$/);
+    if (projectMatch && req.method === 'GET') {
+      const project = getProject(decodeURIComponent(projectMatch[1]));
+      return project ? json(res, 200, { project }) : json(res, 404, { error: 'project 不存在' });
+    }
+    if (projectMatch && req.method === 'PATCH') {
+      const project = getProject(decodeURIComponent(projectMatch[1]));
+      if (!project) return json(res, 404, { error: 'project 不存在' });
+      const update = await body(req);
+      if (update.brief && typeof update.brief === 'object') project.brief = { ...project.brief, ...update.brief };
+      if (update.mode === 'live' || update.mode === 'sim') project.mode = update.mode;
+      if (String(update.title || '').trim()) project.title = String(update.title).trim().slice(0, 80);
+      project.updatedAt = new Date().toISOString();
+      saveProject(project);
+      return json(res, 200, { project });
+    }
+
+    const messageMatch = p.match(/^\/api\/projects\/([^/]+)\/messages$/);
+    if (messageMatch && req.method === 'POST') {
+      const project = getProject(decodeURIComponent(messageMatch[1]));
+      if (!project) return json(res, 404, { error: 'project 不存在' });
+      const { message } = await body(req);
+      if (!String(message || '').trim()) return json(res, 400, { error: 'message 必填' });
+      appendProjectMessage(project, message);
+      await enrichProjectSources(project);
+      saveProject(project);
+      return json(res, 200, { project });
+    }
+
+    const branchMatch = p.match(/^\/api\/projects\/([^/]+)\/branches$/);
+    if (branchMatch && req.method === 'POST') {
+      const parent = getProject(decodeURIComponent(branchMatch[1]));
+      if (!parent) return json(res, 404, { error: 'project 不存在' });
+      const { prompt, claim } = await body(req);
+      const message = String(prompt || '').trim() || `请进一步验证以下主张：${String(claim || '').trim()}`;
+      if (!message.trim()) return json(res, 400, { error: 'prompt 或 claim 必填' });
+      const project = createProject({ message, mode: parent.mode, parentId: parent.id, branchFrom: claim || null });
+      project.brief.context = `这是从决策项目「${parent.title}」创建的分支。原始决策：${parent.brief.decision}`;
+      saveProject(project);
+      return json(res, 201, { project });
+    }
+
+    const exploreMatch = p.match(/^\/api\/projects\/([^/]+)\/explore$/);
+    if (exploreMatch && req.method === 'POST') {
+      const project = getProject(decodeURIComponent(exploreMatch[1]));
+      if (!project) return json(res, 404, { error: 'project 不存在' });
+      res.writeHead(200, {
+        'content-type': 'application/x-ndjson; charset=utf-8',
+        'cache-control': 'no-cache, no-transform',
+        connection: 'keep-alive',
+      });
+      try {
+        const result = await exploreProject(project, capabilities(), {
+          synthesize: synthesizeReview,
+          onEvent: async (event, updated) => {
+            saveProject(updated);
+            ndjson(res, { type: 'event', event });
+          },
+        });
+        saveRun(result.run);
+        saveProject(result.project);
+        ndjson(res, { type: 'complete', project: result.project, run: result.run, review: result.review });
+      } catch (error) {
+        project.status = 'failed';
+        saveProject(project);
+        ndjson(res, { type: 'error', error: String(error?.message || error), project });
+      }
+      return res.end();
+    }
 
     if (p === '/api/run' && req.method === 'POST') {
       const { task, agents, mode } = await body(req);

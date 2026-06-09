@@ -55,17 +55,21 @@ const modules = [
   prep('committee.mjs'),
   prep('adapters.mjs', { envSafe: true }),
   prep('orchestrator.mjs'),
+  prep('projects.mjs'),
 ].join('\n\n');
 
 // 2) 浏览器 store（localStorage）+ 路由 + fetch 拦截
 const runtime = `
 // ── 浏览器 store（localStorage 持久化）──
-const __KEY = 'aker.runs.v1';
-function __load() { try { return JSON.parse(localStorage.getItem(__KEY)) || { runs: [] }; } catch { return { runs: [] }; } }
+const __KEY = 'aker.projects.v2';
+function __load() { try { const db = JSON.parse(localStorage.getItem(__KEY)) || {}; db.runs ||= []; db.projects ||= []; return db; } catch { return { runs: [], projects: [] }; } }
 function __save(db) { localStorage.setItem(__KEY, JSON.stringify(db)); }
 function saveRun(run) { const db = __load(); const i = db.runs.findIndex(r => r.id === run.id); if (i >= 0) db.runs[i] = run; else db.runs.unshift(run); __save(db); return run; }
 function getRun(id) { return __load().runs.find(r => r.id === id) || null; }
 function listRuns() { return __load().runs.map(({ id, task, createdAt, mode, agents }) => ({ id, task, createdAt, mode, agentCount: agents.length })); }
+function saveProject(project) { const db = __load(); const i = db.projects.findIndex(p => p.id === project.id); if (i >= 0) db.projects[i] = project; else db.projects.unshift(project); __save(db); return project; }
+function getProject(id) { return __load().projects.find(p => p.id === id) || null; }
+function listProjects() { return __load().projects.map(({ id, title, status, mode, createdAt, updatedAt, parentId }) => ({ id, title, status, mode, createdAt, updatedAt, parentId })); }
 
 // ── 首次访问灌入 Sim 示例 run（模板数据，仅用于演示流程）──
 let __seeded = false;
@@ -89,8 +93,27 @@ async function __handle(method, urlStr, body) {
   const p = url.pathname;
   await ensureSeeded();
   if (p === '/api/health') return { status: 200, body: { ok: true, ...capabilities() } };
+  if (p === '/api/connections') return { status: 200, body: listConnections() };
   if (p === '/api/frameworks') return { status: 200, body: { frameworks: FRAMEWORKS, matrixColumns: MATRIX_COLUMNS, traceabilityMeta: TRACEABILITY_META } };
   if (p === '/api/runs' && method === 'GET') return { status: 200, body: { runs: listRuns() } };
+  if (p === '/api/projects' && method === 'GET') return { status: 200, body: { projects: listProjects() } };
+  if (p === '/api/projects' && method === 'POST') {
+    const project = createProject({ message: body.message, mode: 'sim' }); saveProject(project); return { status: 201, body: { project } };
+  }
+  const projectMatch = p.match(/^\\/api\\/projects\\/([^/]+)$/);
+  if (projectMatch && method === 'GET') { const project = getProject(decodeURIComponent(projectMatch[1])); return project ? { status: 200, body: { project } } : { status: 404, body: { error: 'project 不存在' } }; }
+  if (projectMatch && method === 'PATCH') { const project = getProject(decodeURIComponent(projectMatch[1])); if (!project) return { status: 404, body: { error: 'project 不存在' } }; if (body.brief) project.brief = { ...project.brief, ...body.brief }; project.mode = 'sim'; saveProject(project); return { status: 200, body: { project } }; }
+  const messageMatch = p.match(/^\\/api\\/projects\\/([^/]+)\\/messages$/);
+  if (messageMatch && method === 'POST') { const project = getProject(decodeURIComponent(messageMatch[1])); appendProjectMessage(project, body.message); saveProject(project); return { status: 200, body: { project } }; }
+  const branchMatch = p.match(/^\\/api\\/projects\\/([^/]+)\\/branches$/);
+  if (branchMatch && method === 'POST') { const parent = getProject(decodeURIComponent(branchMatch[1])); const project = createProject({ message: body.prompt || ('请验证：' + body.claim), mode: 'sim', parentId: parent.id, branchFrom: body.claim }); saveProject(project); return { status: 201, body: { project } }; }
+  const exploreMatch = p.match(/^\\/api\\/projects\\/([^/]+)\\/explore$/);
+  if (exploreMatch && method === 'POST') {
+    const project = getProject(decodeURIComponent(exploreMatch[1])); const stream = [];
+    const result = await exploreProject(project, capabilities(), { onEvent: async event => { saveProject(project); stream.push({ type: 'event', event }); } });
+    saveRun(result.run); saveProject(result.project); stream.push({ type: 'complete', project: result.project, run: result.run, review: result.review });
+    return { status: 200, stream };
+  }
   if (p === '/api/run' && method === 'POST') {
     const { task, agents, mode } = body || {};
     if (!task || !Array.isArray(agents) || !agents.length) return { status: 400, body: { error: 'task 与 agents 必填' } };
@@ -128,6 +151,7 @@ window.fetch = async (input, init = {}) => {
     let r;
     try { r = await __handle(method, urlStr, body); }
     catch (e) { r = { status: 500, body: { error: String(e && e.message || e) } }; }
+    if (r.stream) return new Response(r.stream.map(x => JSON.stringify(x)).join('\\n') + '\\n', { status: r.status, headers: { 'content-type': 'application/x-ndjson' } });
     return new Response(JSON.stringify(r.body), { status: r.status, headers: { 'content-type': 'application/json' } });
   }
   return __origFetch(input, init);
@@ -136,7 +160,10 @@ window.fetch = async (input, init = {}) => {
 
 // 3) 浏览器安全的 __ENV：standalone 恒为 Sim。不从 window 注入 key（移除 S1 的 key 泄露/注入向量）；
 //    真 Live 必须经本地 server.mjs 后端代理，浏览器单文件版永不直连模型 API。
-const envShim = `const __ENV = {};`;
+const envShim = `const __ENV = {};
+function getApiKey() { return null; }
+function getApiModel(provider) { return provider === 'anthropic' ? 'claude-sonnet-4-6' : 'gpt-4.1-mini'; }
+function listConnections() { return { cli: [], api: [{ id: 'openai', type: 'api', label: 'OpenAI API', configured: false, runnable: false, model: 'gpt-4.1-mini', note: 'Web 演示不支持配置 API' }, { id: 'anthropic', type: 'api', label: 'Anthropic API', configured: false, runnable: false, model: 'claude-sonnet-4-6', note: 'Web 演示不支持配置 API' }], keychain: false }; }`;
 
 const app = R('web/app.js');
 const styles = R('web/styles.css');

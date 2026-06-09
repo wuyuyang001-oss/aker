@@ -19,9 +19,11 @@ function load() {
       // 先把坏文件备份成 .bak 并打错误日志，再退回空库，给人留追查 / 手工恢复的机会。
       try { copyFileSync(DB, DB + '.bak'); } catch { /* 备份失败也别阻塞启动 */ }
       console.error(`[store] 解析 ${DB} 失败：${e.message}；已备份为 ${DB}.bak，本次以空库启动。`);
-      cache = { runs: [] };
+      cache = { runs: [], projects: [] };
     }
-  } else cache = { runs: [] };
+  } else cache = { runs: [], projects: [] };
+  cache.runs ||= [];
+  cache.projects ||= [];
   return cache;
 }
 function persist() {
@@ -41,6 +43,17 @@ export function saveRun(run) {
 }
 export function getRun(id) { return load().runs.find((r) => r.id === id) || null; }
 export function listRuns() { return load().runs.map(({ id, task, createdAt, mode, agents }) => ({ id, task, createdAt, mode, agentCount: agents.length })); }
+export function saveProject(project) {
+  const db = load();
+  const idx = db.projects.findIndex((p) => p.id === project.id);
+  if (idx >= 0) db.projects[idx] = project; else db.projects.unshift(project);
+  persist();
+  return project;
+}
+export function getProject(id) { return load().projects.find((p) => p.id === id) || null; }
+export function listProjects() {
+  return load().projects.map(({ id, title, status, mode, createdAt, updatedAt, parentId }) => ({ id, title, status, mode, createdAt, updatedAt, parentId }));
+}
 
 export function seedIfEmpty(runs) {
   const db = load();

@@ -31,6 +31,34 @@ test('server supports the first-use Sim run and review flow', async (t) => {
   assert.ok(Array.isArray(health.reviewRoles), 'health should expose reviewer roles');
   assert.ok(health.reviewRoles.some((role) => role.id === 'researcher'), 'health should expose an evidence perspective');
   assert.ok(Array.isArray(health.liveAgents), 'health should expose actual live runners');
+  assert.ok(health.connections?.cli?.some((item) => item.id === 'codex-cli'), 'health should expose detected CLI connections');
+
+  const projectResponse = await fetch(`${base}/api/projects`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      message: '我们是否应该在两周内上线新功能？团队只有 2 名工程师。',
+      mode: 'sim',
+    }),
+  });
+  const { project } = await projectResponse.json();
+  assert.equal(project.status, 'ready');
+  assert.match(project.brief.constraints, /两周|2 名工程师/);
+
+  const exploreResponse = await fetch(`${base}/api/projects/${project.id}/explore`, { method: 'POST' });
+  const events = (await exploreResponse.text()).trim().split('\n').map((line) => JSON.parse(line));
+  assert.ok(events.some((event) => event.type === 'event' && event.event.type === 'committee_update'), 'explore stream should expose ongoing committee review');
+  const completedProject = events.find((event) => event.type === 'complete')?.project;
+  assert.equal(completedProject?.status, 'complete');
+  assert.match(completedProject?.decisionPackage || '', /## 建议与置信度/);
+
+  const branchResponse = await fetch(`${base}/api/projects/${project.id}/branches`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ claim: '应先做小规模试点' }),
+  });
+  const { project: branch } = await branchResponse.json();
+  assert.equal(branch.parentId, project.id);
 
   const runResponse = await fetch(`${base}/api/run`, {
     method: 'POST',

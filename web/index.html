@@ -5,140 +5,132 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Aker</title>
   <link rel="stylesheet" href="styles.css" />
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='9' fill='%23d97757'/><text x='16' y='23' font-size='20' fill='white' text-anchor='middle' font-family='sans-serif' font-weight='700'>A</text></svg>" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='9' fill='%23c25d3f'/><text x='16' y='23' font-size='20' fill='white' text-anchor='middle' font-family='sans-serif' font-weight='700'>A</text></svg>" />
 </head>
 <body>
   <a href="#main" class="skip-link">跳到主内容</a>
-  <div class="shell">
-    <!-- 侧边栏 -->
+  <div class="app-shell">
     <aside class="sidebar">
       <div class="macpad"></div>
       <div class="brand">
         <div class="mark">A</div>
-        <div class="brand-text">
-          <h1>Aker</h1>
-          <div class="sub">多视角决策工作台</div>
-        </div>
+        <div><h1>Aker</h1><p>决策探究工作台</p></div>
       </div>
-
-      <nav class="side-nav" id="tabs" role="tablist" aria-label="主导航">
-        <button data-tab="run" class="active" role="tab" id="tab-run" aria-controls="panel-run" aria-selected="true"><span class="ni" aria-hidden="true">▶</span><span>决策台</span></button>
-        <button data-tab="committee" role="tab" id="tab-committee" aria-controls="panel-committee" aria-selected="false" tabindex="-1"><span class="ni" aria-hidden="true">⚖</span><span>决策包</span></button>
-        <button data-tab="trace" role="tab" id="tab-trace" aria-controls="panel-trace" aria-selected="false" tabindex="-1"><span class="ni" aria-hidden="true">◫</span><span>过程审计</span></button>
-        <button data-tab="frameworks" role="tab" id="tab-frameworks" aria-controls="panel-frameworks" aria-selected="false" tabindex="-1"><span class="ni" aria-hidden="true">▤</span><span>方法透明度</span></button>
-      </nav>
-
-      <div class="side-foot">
-        <div class="modepill" id="modepill"><span class="dot" id="modedot" aria-hidden="true"></span><span id="modetext">检测中…</span></div>
-        <div class="side-tag">独立视角 · 分歧保留 · 可验证行动</div>
+      <button class="new-project" id="newProject">＋ 新建探究</button>
+      <div class="side-label">决策项目</div>
+      <nav class="project-list" id="projectList" aria-label="决策项目"></nav>
+      <div class="side-bottom">
+        <button class="side-action" id="openConnections"><span>◉</span><span>运行通道</span><b id="connectionCount">0</b></button>
+        <div class="mode-status" id="modeStatus"><span class="dot"></span><span>检测中…</span></div>
       </div>
     </aside>
 
-    <!-- 内容区 -->
-    <main class="content" id="main" aria-label="主内容">
-    <!-- 运行台 -->
-    <section class="panel active" id="panel-run" role="tabpanel" aria-labelledby="tab-run" tabindex="0">
-      <div class="page-head"><h2 class="page-title">决策台</h2><p class="page-sub">把一个没有标准答案的重要问题，变成经过独立判断、反方审查和证据校准的决策。</p></div>
-      <div class="onboarding" id="welcome">
-        <div>
-          <div class="eyebrow">适合一次性、高不确定性的调研与决策</div>
-          <h2>不要只拿到更多答案，要降低做错决定的风险</h2>
-          <p id="capabilityText">正在检测可用运行通道…</p>
-        </div>
-        <ol class="steps">
-          <li><b>写清决策</b><span>明确问题、约束、标准与未知项</span></li>
-          <li><b>独立判断</b><span>不同视角分别给出主张与反证</span></li>
-          <li><b>形成决策包</b><span>保留分歧，并给出最低成本验证</span></li>
-        </ol>
-        <button class="btn ghost sm" id="loadExample">填入产品决策示例</button>
-      </div>
-      <div style="height:16px"></div>
-      <div class="card">
-        <div class="runbar">
-          <div class="field">
-            <label for="decision">要做的决定 <span class="required">必填</span></label>
-            <textarea class="task brief-input" id="decision" placeholder="例如：我们是否应该在未来两周上线 AI 周报功能？" maxlength="1200">我们是否应该在未来两周上线面向现有客户的 AI 周报功能？</textarea>
-          </div>
-          <div class="brief-grid">
-            <div class="field">
-              <label for="context">已知背景</label>
-              <textarea class="brief-input compact" id="context" placeholder="已有事实、当前状态、为什么现在需要决定" maxlength="1600">已有客户持续反馈周报整理耗时，但尚未验证他们是否愿意使用 AI 自动生成内容。</textarea>
-            </div>
-            <div class="field">
-              <label for="constraints">约束与不可接受结果</label>
-              <textarea class="brief-input compact" id="constraints" placeholder="时间、预算、资源、风险边界" maxlength="1600">团队只有 2 名工程师，周期 2 周，不能新增付费基础设施；不能向客户展示未经确认的事实。</textarea>
-            </div>
-            <div class="field">
-              <label for="criteria">成功标准</label>
-              <textarea class="brief-input compact" id="criteria" placeholder="什么结果意味着这个决定是对的" maxlength="1600">至少 5 名现有客户真实试用；其中 3 名愿意连续使用；人工校对时间低于 10 分钟。</textarea>
-            </div>
-            <div class="field">
-              <label for="unknowns">关键未知项</label>
-              <textarea class="brief-input compact" id="unknowns" placeholder="哪些未知信息最可能改变最终结论" maxlength="1600">客户真实使用频率、可接受的错误率、是否愿意授权所需数据。</textarea>
-            </div>
-          </div>
-          <div class="field">
-            <label id="agentRowsLabel">独立判断视角 <span class="label-hint">运行通道是实现细节；视角决定它重点挑战什么</span></label>
-            <div class="agent-rows" id="agentRows" aria-labelledby="agentRowsLabel"></div>
-            <p class="field-note">默认视角互不查看彼此答案，但可能由同一模型与同一信息源运行。角色差异能减少遗漏，不等于真正的多模型独立性。</p>
-          </div>
-          <div class="row-actions">
-            <button class="btn ghost sm" id="addAgent">+ 加一个视角</button>
-            <div class="seg" id="modeSeg" role="group" aria-label="运行模式">
-              <button data-mode="sim" class="active">Sim 模式</button>
-              <button data-mode="live">Live 模式</button>
-            </div>
-            <button class="btn" id="runBtn" style="margin-left:auto">▶ 开始独立判断</button>
-          </div>
-        </div>
-      </div>
-      <div style="height:16px"></div>
-      <div id="runStatus" aria-live="polite" aria-atomic="true"></div>
-      <div class="grid cols" id="results"></div>
-    </section>
+    <main id="main">
+      <section class="view active" id="projectView">
+        <div class="project-layout">
+          <div class="conversation-column">
+            <header class="project-header">
+              <div>
+                <div class="eyebrow">DECISION PROJECT</div>
+                <h2 id="projectTitle">提出真正重要的问题</h2>
+                <p id="projectSubtitle">Aker 会在探究过程中持续审查证据、分歧与下一步，而不是最后才做评审。</p>
+              </div>
+              <div class="header-actions">
+                <select id="projectMode" aria-label="运行模式">
+                  <option value="live">Live · 使用我的通道</option>
+                  <option value="sim">Sim · 演示流程</option>
+                </select>
+                <button class="ghost-btn" id="rerunProject" hidden>再次探究</button>
+              </div>
+            </header>
 
-    <!-- 评审会 -->
-    <section class="panel" id="panel-committee" role="tabpanel" aria-labelledby="tab-committee" tabindex="0">
-      <div class="page-head"><h2 class="page-title">决策包</h2><p class="page-sub">综合独立判断，但不机械投票；明确建议成立的条件、关键反对意见和下一步验证。</p></div>
-      <div class="card">
-        <div class="toolbar">
-          <select id="reviewRun" aria-label="选择要评审的 run"></select>
-          <div class="seg" id="reviewMode" role="group" aria-label="评审取值方式">
-            <button data-mode="intersection" class="active">共同主张</button>
-            <button data-mode="union">全部观点</button>
+            <div class="conversation" id="conversation">
+              <div class="welcome">
+                <div class="welcome-kicker">从一句话开始</div>
+                <h3>你现在需要研究什么问题，或者做出什么决定？</h3>
+                <p>不需要先填写表单。Aker 会自动整理目标、约束、成功标准和关键未知项，只在真正影响结论时追问。</p>
+                <div class="examples">
+                  <button data-example="我们是否应该在未来两周上线面向现有客户的 AI 周报功能？团队只有 2 名工程师，不能新增付费基础设施。">是否应该上线一个尚未验证需求的新功能？</button>
+                  <button data-example="我们应该选择自建 AI 客服还是采购 SaaS？希望三个月内上线，最不能接受的是客户数据泄露。">自建还是采购 AI 客服？</button>
+                  <button data-example="请调研我们进入东南亚市场的可行性，并给出先进入哪个国家的建议。">应该先进入哪个新市场？</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="composer">
+              <textarea id="messageInput" placeholder="提出一个重要问题，或继续补充信息…" maxlength="5000"></textarea>
+              <div class="composer-foot">
+                <span id="composerHint">Aker 会使用合理假设继续，并明确标注未知项</span>
+                <button id="sendMessage">开始探究</button>
+              </div>
+            </div>
           </div>
-          <button class="btn sm" id="reviewBtn">生成决策包</button>
-        </div>
-      </div>
-      <div style="height:16px"></div>
-      <div id="committeeOut" aria-live="polite" aria-atomic="true"></div>
-    </section>
 
-    <!-- Trace 对比 -->
-    <section class="panel" id="panel-trace" role="tabpanel" aria-labelledby="tab-trace" tabindex="0">
-      <div class="page-head"><h2 class="page-title">过程审计</h2><p class="page-sub">检查不同视角用了哪些步骤、工具、token 与时间，辅助判断结论是否有足够过程支撑。</p></div>
-      <div class="card">
-        <div class="toolbar">
-          <select id="traceRun" aria-label="选择要对比的 run"></select>
-          <select id="traceA" aria-label="对比的 A 方 agent"></select>
-          <span style="color:var(--muted)" aria-hidden="true">vs</span>
-          <select id="traceB" aria-label="对比的 B 方 agent"></select>
-          <button class="btn sm" id="traceBtn">对比</button>
+          <aside class="inspector" id="inspector">
+            <div class="inspector-tabs" role="tablist">
+              <button class="active" data-inspector="brief">工作简报</button>
+              <button data-inspector="sources">证据</button>
+              <button data-inspector="package">决策包</button>
+            </div>
+            <section class="inspector-panel active" id="inspector-brief">
+              <div class="inspector-intro">
+                <h3>自动整理的上下文</h3>
+                <p>这是对话背后的结构化状态，不是首次使用门槛。</p>
+              </div>
+              <div id="briefSummary" class="brief-summary empty-small">提出问题后自动生成</div>
+              <details class="brief-editor" id="briefEditor">
+                <summary>编辑工作简报</summary>
+                <label>决策问题<textarea id="briefDecision"></textarea></label>
+                <label>已知背景<textarea id="briefContext"></textarea></label>
+                <label>约束与不可接受结果<textarea id="briefConstraints"></textarea></label>
+                <label>成功标准<textarea id="briefCriteria"></textarea></label>
+                <label>关键未知项<textarea id="briefUnknowns"></textarea></label>
+                <label>默认假设<textarea id="briefAssumptions"></textarea></label>
+                <button class="primary-btn" id="saveBrief">保存简报</button>
+              </details>
+            </section>
+            <section class="inspector-panel" id="inspector-sources">
+              <div class="inspector-intro">
+                <h3>用户提供的证据</h3>
+                <p>直接在对话中粘贴公开网页链接。Aker 会读取摘要、编号并交给各视角审查。</p>
+              </div>
+              <div id="sourceList" class="source-list empty-small">还没有来源</div>
+            </section>
+            <section class="inspector-panel" id="inspector-package">
+              <div class="inspector-intro">
+                <h3>当前决策包</h3>
+                <p>点击任何要点可从该主张创建新的探究分支。</p>
+              </div>
+              <div id="decisionPackage" class="decision-content empty-small">完成探究后生成</div>
+              <button class="primary-btn wide" id="copyPackage" hidden>复制决策包</button>
+            </section>
+          </aside>
         </div>
-      </div>
-      <div style="height:16px"></div>
-      <div id="traceOut" aria-live="polite" aria-atomic="true"></div>
-    </section>
+      </section>
 
-    <!-- 框架图鉴 -->
-    <section class="panel" id="panel-frameworks" role="tabpanel" aria-labelledby="tab-frameworks" tabindex="0">
-      <div class="page-head"><h2 class="page-title">方法透明度</h2><p class="page-sub">了解不同运行通道的编排方式、工具与过程数据可得性。它们会影响可信度，但不是 Aker 最终交付给用户的产品。</p></div>
-      <div class="card">
-        <div class="scroll-x"><table class="matrix" id="matrix"></table></div>
-      </div>
-      <div style="height:16px"></div>
-      <div class="fw-grid" id="fwGrid"></div>
-    </section>
+      <section class="view" id="connectionsView">
+        <header class="connections-header">
+          <div>
+            <div class="eyebrow">CONNECTIONS</div>
+            <h2>使用你自己的 Agent CLI 与模型 API</h2>
+            <p>本地 CLI 自动检测；API key 存入 macOS Keychain。Aker 只负责匹配、编排和审计。</p>
+          </div>
+          <button class="ghost-btn" id="closeConnections">返回项目</button>
+        </header>
+        <div class="connections-content">
+          <section>
+            <div class="section-title"><h3>本地 Agent CLI</h3><span>自动扫描当前电脑</span></div>
+            <div class="connection-grid" id="cliConnections"></div>
+          </section>
+          <section>
+            <div class="section-title"><h3>模型 API</h3><span>调用产生的费用由你的账户承担</span></div>
+            <div class="connection-grid" id="apiConnections"></div>
+          </section>
+          <div class="connection-note">
+            Aker 会优先让不同视角使用不同可运行通道。只有一个通道时仍可运行，但会明确提示相关性风险。
+          </div>
+        </div>
+      </section>
     </main>
   </div>
   <script src="app.js"></script>

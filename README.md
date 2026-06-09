@@ -1,72 +1,81 @@
 # Aker
 
-> A multi-perspective decision workbench for important questions that do not have an immediate ground truth.
+> A conversation-first decision workbench for consequential questions without an immediate ground truth.
 
-[Try the Sim-only web demo](https://wuyuyang001-oss.github.io/aker/) · [Download the latest macOS app](https://github.com/wuyuyang001-oss/aker/releases/latest/download/Aker-mac-arm64.zip) · [View releases](https://github.com/wuyuyang001-oss/aker/releases)
+[Download the latest macOS app](https://github.com/wuyuyang001-oss/aker/releases/latest/download/Aker-mac-arm64.zip) · [Try the Sim-only web demo](https://wuyuyang001-oss.github.io/aker/) · [View releases](https://github.com/wuyuyang001-oss/aker/releases)
 
-Aker helps you make a better decision when there is no test suite, obvious correct answer, or reliable single expert. You provide a structured decision brief; independent strategy, counterargument, action, and evidence perspectives examine it separately; a final committee chair produces one decision package with conditions, objections, uncertainties, and low-cost validation steps.
+Aker helps a user move from an ambiguous question to an auditable decision and a concrete next action. The user starts with one natural-language message. Aker builds a working brief behind the conversation, dispatches independent strategy, counterargument, action, and evidence perspectives, reviews disagreement while they run, and produces one decision package.
 
-Aker is not a model leaderboard and does not treat majority agreement as truth. Its purpose is to reduce decision risk by exposing assumptions and preserving meaningful disagreement.
+Aker is not a model leaderboard, a generic chat wrapper, or a majority-vote machine. It is designed for one-off product, market, vendor, architecture, rollout, and operating decisions where plausible answers are easy to produce but costly to trust blindly.
 
-## Current Status
+## What The User Gets
 
-| Capability | Status |
-|---|---|
-| macOS desktop app | Available for Apple Silicon (`arm64`) |
-| Codex CLI Live runner | Implemented with real `codex exec --json` events and token usage |
-| OpenAI / Anthropic API runners | Implemented with final response and usage data |
-| Structured decision brief | Implemented |
-| Four independent decision perspectives | Implemented |
-| Live decision-package synthesis | Implemented |
-| Browser demo | Sim only; it never calls a real model |
-| Windows / Linux / Intel Mac packages | Not currently published |
-| Code signing / Apple notarization | Not currently configured |
+- No required intake form. Start with one question and refine it through conversation.
+- A persistent decision project containing the brief, messages, evidence, execution timeline, and result.
+- Continuous review during execution, not a hidden evaluation step after the answer.
+- A decision package with a recommendation, confidence, conditions, strongest objection, unresolved unknowns, validation steps, and immediate actions.
+- Branch exploration from any important claim.
+- Local-first execution through the user's own Agent CLIs or model API accounts.
 
-The default Live setup uses four separate calls to the first available runner. The perspectives do not see one another's answers, but they may still share the same model and information source. Role separation reduces omissions; it does **not** guarantee true multi-model independence.
+## Five-Minute Acceptance Tour
 
-Current Aker reviews the information you provide. It does not yet perform source-backed external research, so an evidence perspective identifies missing evidence and unsupported claims rather than inventing or retrieving sources.
+1. Download and open Aker.
+2. Ask a consequential question, including any constraints that already matter.
+3. Use **Sim** to learn the workflow or **Live** to use a detected local/API channel.
+4. Watch independent perspectives and committee checks arrive in the execution timeline.
+5. Paste a public source URL into the conversation. Confirm it appears under **Evidence** with an `[S1]` identifier and readable status.
+6. Open the decision package and create a branch from one claim.
+7. Open **Connections** to verify which local CLIs and APIs are actually runnable.
 
-## Fastest Path: Desktop App
+The product is usable when a first-time user can complete that tour without reading source code, obtain a decision package, and identify the next validation action.
 
-The downloadable desktop app is the recommended way to evaluate Aker visually.
+## Desktop Install
 
 ### Requirements
 
 - Apple Silicon Mac
-- [Codex app](https://openai.com/codex/) installed at `/Applications/Codex.app` and signed in
+- For Live mode, at least one supported channel:
+  - signed-in Codex CLI, Claude Code, or Gemini CLI;
+  - OpenAI API; or
+  - Anthropic API.
 
-Aker does not bundle a model, Codex credentials, or API keys. The desktop app detects the Codex executable bundled with Codex.app and uses its existing login.
+Aker does not bundle models, credentials, or API quota. It detects local executables and lets the user configure API keys in the Connections screen. API keys entered in the desktop app are stored in macOS Keychain.
 
-### Install and run
+### Run
 
 1. Download [`Aker-mac-arm64.zip`](https://github.com/wuyuyang001-oss/aker/releases/latest/download/Aker-mac-arm64.zip).
-2. Optionally verify it using [`Aker-mac-arm64.zip.sha256`](https://github.com/wuyuyang001-oss/aker/releases/latest/download/Aker-mac-arm64.zip.sha256).
-3. Unzip it and move `Aker.app` to Applications or another local folder.
-4. Open Aker. The sidebar should show **Live channel detected** and `Codex CLI · current login`. Detection confirms configuration, not provider reachability, quota, or account health.
-5. Describe the decision, known context, constraints, success criteria, and the unknowns most likely to change your mind.
-6. Keep Live mode selected and run the default strategy / counterargument / action / evidence perspectives.
-7. Open **Decision Package** to generate and copy the final recommendation.
-
-The app is not signed or notarized yet. On first launch, macOS may require **Control-click → Open** or approval under **System Settings → Privacy & Security**. Only run binaries downloaded from this repository, and verify the checksum when provenance matters.
+2. Optionally verify [`Aker-mac-arm64.zip.sha256`](https://github.com/wuyuyang001-oss/aker/releases/latest/download/Aker-mac-arm64.zip.sha256).
+3. Unzip and open `Aker.app`.
+4. If macOS blocks the unsigned app, use **Control-click → Open** or approve it under **System Settings → Privacy & Security**.
 
 ```bash
 cd ~/Downloads
 shasum -a 256 -c Aker-mac-arm64.zip.sha256
 ```
 
-The desktop build does not currently auto-update. Download a newer release explicitly when one is published.
+The app is currently unsigned, not notarized, and does not auto-update.
+
+## Connection Support
+
+| Channel | Current behavior |
+|---|---|
+| Codex CLI | Runnable; read-only sandbox; real JSON event trace |
+| Claude Code | Runnable when detected; non-interactive JSON; tools disabled |
+| Gemini CLI | Runnable when detected; headless JSON; plan approval mode |
+| OpenAI API | Runnable when configured; final answer and usage |
+| Anthropic API | Runnable when configured; final answer and usage |
+| Aider | Detection only; intentionally not used for general decision work |
+| Sim | Deterministic workflow demonstration; never presented as real research |
+
+Detection confirms that an executable or credential exists. It does not guarantee provider reachability, authentication health, quota, or model access. Live failures remain explicit and are never silently replaced with Sim output.
+
+## Evidence Model
+
+Public HTTP/HTTPS links pasted into the conversation become numbered user-provided sources. The desktop server reads a bounded text excerpt, blocks local/private-network targets, and passes the resulting source dossier to each perspective. A source being present does not prove a claim; reviewers are instructed to cite `[S1]`-style identifiers and label unsupported statements as assumptions, inferences, or unknowns.
+
+Aker does not yet autonomously search the public web. It audits sources supplied by the user and makes evidence gaps visible.
 
 ## Run From Source
-
-Use this path for development, non-Codex API runners, or local Web access.
-
-### Requirements
-
-- Node.js 20 or newer
-- At least one Live channel:
-  - a signed-in `codex` executable on `PATH`; or
-  - `OPENAI_API_KEY`; or
-  - `ANTHROPIC_API_KEY`
 
 ```bash
 git clone https://github.com/wuyuyang001-oss/aker.git
@@ -75,9 +84,17 @@ npm install
 npm start
 ```
 
-Open <http://127.0.0.1:5178>. The health indicator lists the Live channels Aker actually detected.
+Open <http://127.0.0.1:5178>. Node.js 20 or newer is required.
 
-Optional API model overrides:
+```bash
+npm run app        # Electron app from source
+npm test           # unit and server smoke tests
+npm run check      # tests plus standalone Web build
+npm run build:web  # build the Sim-only single-file Web demo
+npm run pack       # build macOS app, zip, and checksum on Desktop
+```
+
+Optional environment-based API configuration remains supported:
 
 ```bash
 export OPENAI_API_KEY="..."
@@ -87,76 +104,38 @@ export AKER_ANTHROPIC_MODEL="claude-sonnet-4-6"
 npm start
 ```
 
-API-key configuration is documented for source/server usage. A Finder-launched desktop app does not reliably inherit shell environment variables; use Codex.app for the normal desktop Live path.
+## Important Boundaries
 
-## What a Successful Run Produces
+- Sim output, traces, latency, and token values are generated demonstrations.
+- Shared models, prompts, and sources can create correlated errors even when roles differ.
+- Common-claim clustering is lexical, so paraphrases may appear as disagreement.
+- Direct API runners expose final responses and usage; Codex CLI exposes richer event-level traces.
+- Each Live perspective and Live synthesis consumes the user's provider quota.
+- Aker sends the decision brief and supplied source excerpts to the selected Live provider.
+- Aker supports decision work; the accountable human still owns the decision.
 
-1. Independent judgments that explicitly separate facts, assumptions, inferences, and unknowns.
-2. The strongest objection and the information that would change each judgment.
-3. A decision package containing:
-   - recommendation, confidence, and conditions;
-   - key reasons and their epistemic status;
-   - strongest counterargument;
-   - unresolved uncertainty;
-   - lowest-cost validation steps;
-   - immediate actions.
-4. A local audit record with status, latency, token usage, and available process events.
-
-Live failures are explicit and are **never silently replaced with Sim output**.
-
-## Live, Sim, and Method Transparency
-
-| Mode | Data source | Intended use |
-|---|---|---|
-| Live · Codex CLI | Real answers, JSONL events, and token usage from `codex exec --json` | Actual independent judgment, synthesis, and process audit |
-| Live · OpenAI / Anthropic API | Real final answers and usage | Actual independent judgment and synthesis |
-| Sim | Deterministic template outputs and generated trace values | Learning the interface without model access |
-
-Sim runs demonstrate the workflow only. Their outputs, tokens, latency, and traces are not real model measurements.
-
-The **Method Transparency** screen is a reference catalog describing possible integration and audit strategies. It does **not** mean every listed framework has a runnable Aker adapter. The implemented Live channels are the ones reported by the app's health indicator.
-
-## Important Limitations
-
-- Current reviewers analyze only the submitted brief. Aker does not yet retrieve and cite external evidence.
-- Shared models and shared source information create correlated errors even when roles differ.
-- Common-claim clustering uses lexical Jaccard similarity, not semantic embeddings. Paraphrases may be reported as divergence.
-- A majority is not proof of correctness.
-- Codex CLI exposes real event-level trace data; direct OpenAI and Anthropic API runners currently expose only final response and usage.
-- Each perspective and the committee chair is a real model call in Live mode and consumes provider time and quota.
-- Aker sends the submitted decision brief and synthesis context to the selected model provider.
-
-Runs are stored locally:
+Decision projects and runs are stored locally:
 
 - source/server: `data/runs.json`
-- packaged macOS app: `~/Library/Application Support/Aker/runs.json`
+- packaged app: `~/Library/Application Support/Aker/runs.json`
 
-Aker does not implement its own telemetry service. Model-provider behavior and data handling remain subject to the provider and account configuration you use.
+Aker has no first-party telemetry service.
 
-For the product thesis and prioritized roadmap, see [docs/PRODUCT_DIRECTION.md](docs/PRODUCT_DIRECTION.md). For the detailed critique log, see [docs/CRITICISMS.md](docs/CRITICISMS.md).
-
-## Development
-
-```bash
-npm start          # local Web server at http://127.0.0.1:5178
-npm run app        # Electron app from source
-npm test           # unit and server smoke tests
-npm run check      # tests plus standalone Web build
-npm run build:web  # build dist/aker.html and sync docs/index.html
-npm run pack       # build macOS app, zip, and SHA-256 checksum on Desktop
-```
-
-Architecture:
+## Architecture
 
 ```text
-server.mjs            HTTP API and Live synthesis orchestration
-src/adapters.mjs      Codex CLI, OpenAI, Anthropic, and Sim runners
-src/orchestrator.mjs  parallel dispatch and failure isolation
-src/committee.mjs     lexical consensus, divergence, and rule-based analysis
-src/trace.mjs         normalized trace model and process comparison
-src/store.mjs         local run persistence
-web/                  dependency-free frontend
+server.mjs             loopback HTTP API and streaming orchestration
+src/projects.mjs       conversational project, brief, branch, and timeline model
+src/sources.mjs        bounded public-source intake with private-network blocking
+src/connections.mjs    local CLI detection and macOS Keychain-backed API settings
+src/adapters.mjs       CLI, API, and Sim runners
+src/orchestrator.mjs   parallel dispatch and failure isolation
+src/committee.mjs      claim clustering, disagreement audit, and decision package
+src/store.mjs          local project and run persistence
+web/                   dependency-free desktop/Web interface
 ```
+
+See [docs/PRODUCT_DIRECTION.md](docs/PRODUCT_DIRECTION.md) for the product thesis and roadmap.
 
 ## License
 
