@@ -6,333 +6,112 @@
   <title>Aker</title>
   <style>
 :root {
-  --bg: #f3f1eb;
-  --surface: #fff;
-  --surface-soft: #faf8f3;
-  --ink: #24231f;
-  --muted: #726d63;
-  --faint: #9a9488;
-  --accent: #bd6548;
-  --accent-dark: #984c34;
-  --border: #e6e1d7;
-  --border-strong: #d6d0c3;
-  --green: #4d9162;
-  --amber: #a77726;
-  --red: #bd554b;
-  --blue: #4e719d;
-  --shadow: 0 1px 2px rgba(40,35,25,.04), 0 12px 32px rgba(40,35,25,.06);
-  --sans: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif;
-  --mono: ui-monospace, "SF Mono", Menlo, monospace;
+  --bg:#f2f0ea; --surface:#fff; --soft:#faf8f3; --ink:#26241f; --muted:#736e64; --faint:#9e978b;
+  --line:#e4dfd5; --strong:#d3ccbf; --accent:#bc6144; --accent-dark:#94472f; --green:#3f8055;
+  --amber:#9c7128; --red:#b94c45; --blue:#476f9b; --shadow:0 14px 36px rgba(45,38,25,.07);
+  --sans:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",sans-serif; --mono:ui-monospace,"SF Mono",Menlo,monospace;
 }
-* { box-sizing: border-box; }
-html, body { margin: 0; height: 100%; }
-body { color: var(--ink); background: var(--bg); font: 14px/1.55 var(--sans); -webkit-font-smoothing: antialiased; }
-button, textarea, input, select { font: inherit; color: inherit; }
-button { cursor: pointer; }
-.skip-link { position: absolute; top: -50px; left: 10px; z-index: 20; padding: 8px 12px; color: white; background: var(--accent); border-radius: 8px; }
-.skip-link:focus { top: 10px; }
-.app-shell { height: 100vh; display: grid; grid-template-columns: 238px minmax(0, 1fr); overflow: hidden; }
-
-.sidebar { display: flex; flex-direction: column; gap: 12px; padding: 16px 12px; background: #f8f6f1; border-right: 1px solid var(--border); -webkit-app-region: drag; }
-.sidebar button, .project-list { -webkit-app-region: no-drag; }
-.macpad { height: 24px; }
-.brand { display: flex; align-items: center; gap: 10px; padding: 2px 8px 6px; }
-.mark { width: 34px; height: 34px; display: grid; place-items: center; color: white; background: var(--accent); border-radius: 10px; font-size: 18px; font-weight: 750; box-shadow: var(--shadow); }
-.brand h1 { margin: 0; font-size: 19px; letter-spacing: -.03em; }
-.brand p { margin: 0; color: var(--muted); font-size: 11px; }
-.new-project { width: 100%; padding: 10px 12px; border: 1px solid var(--border-strong); border-radius: 10px; background: var(--surface); text-align: left; font-weight: 650; box-shadow: 0 1px 2px rgba(0,0,0,.03); }
-.new-project:hover { border-color: var(--accent); color: var(--accent-dark); }
-.side-label { padding: 4px 8px 0; color: var(--faint); font-size: 10px; font-weight: 750; letter-spacing: .1em; text-transform: uppercase; }
-.project-list { min-height: 0; display: grid; align-content: start; gap: 3px; overflow-y: auto; }
-.project-item { display: grid; grid-template-columns: 8px 1fr; gap: 9px; align-items: start; width: 100%; padding: 9px 10px; border: 0; border-radius: 9px; background: transparent; text-align: left; }
-.project-item:hover { background: #eeeae1; }
-.project-item.active { background: var(--accent); color: white; }
-.project-item b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12.5px; font-weight: 650; }
-.project-item small { display: block; margin-top: 1px; color: var(--faint); font-size: 10.5px; }
-.project-item.active small { color: #f4d8cf; }
-.project-state { width: 7px; height: 7px; margin-top: 6px; border-radius: 50%; background: var(--faint); }
-.project-state.complete { background: var(--green); }
-.project-state.running { background: var(--amber); animation: pulse 1s infinite; }
-.project-state.failed { background: var(--red); }
-.empty-projects { padding: 15px 10px; color: var(--faint); font-size: 12px; }
-.side-bottom { margin-top: auto; display: grid; gap: 8px; }
-.side-action { display: grid; grid-template-columns: 20px 1fr auto; align-items: center; width: 100%; padding: 9px 10px; border: 0; border-radius: 9px; background: transparent; text-align: left; color: var(--muted); }
-.side-action:hover { background: #eeeae1; color: var(--ink); }
-.side-action b { min-width: 20px; padding: 1px 6px; border-radius: 999px; background: var(--surface); color: var(--muted); text-align: center; font-size: 10px; }
-.mode-status { display: flex; align-items: center; gap: 7px; padding: 7px 10px; color: var(--faint); font-size: 10.5px; }
-.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--faint); }
-.dot.on { background: var(--green); }
-
-main { min-width: 0; height: 100vh; }
-.view { display: none; height: 100%; }
-.view.active { display: block; }
-.project-layout { height: 100%; display: grid; grid-template-columns: minmax(480px, 1fr) 340px; }
-.conversation-column { min-width: 0; height: 100%; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; }
-.project-header { display: flex; justify-content: space-between; gap: 20px; padding: 22px 28px 18px; border-bottom: 1px solid var(--border); background: rgba(255,255,255,.55); }
-.eyebrow { color: var(--accent); font-size: 9.5px; font-weight: 800; letter-spacing: .13em; }
-.project-header h2, .connections-header h2 { margin: 3px 0 3px; font-size: 20px; line-height: 1.25; letter-spacing: -.025em; }
-.project-header p, .connections-header p { margin: 0; color: var(--muted); font-size: 12px; }
-.header-actions { display: flex; align-items: flex-start; gap: 8px; }
-select, input, textarea { border: 1px solid var(--border-strong); border-radius: 9px; background: var(--surface); }
-select { padding: 7px 9px; font-size: 11.5px; }
-.conversation { min-height: 0; overflow-y: auto; padding: 32px max(28px, calc((100% - 760px) / 2)); scroll-behavior: smooth; }
-.welcome { max-width: 680px; margin: 8vh auto 0; text-align: center; }
-.welcome-kicker { color: var(--accent); font-size: 11px; font-weight: 750; letter-spacing: .08em; }
-.welcome h3 { margin: 8px 0; font-size: 27px; line-height: 1.25; letter-spacing: -.035em; }
-.welcome p { max-width: 570px; margin: 0 auto; color: var(--muted); }
-.examples { display: grid; gap: 7px; margin-top: 26px; text-align: left; }
-.examples button { padding: 12px 14px; border: 1px solid var(--border); border-radius: 11px; background: rgba(255,255,255,.65); color: var(--muted); }
-.examples button:hover { border-color: var(--accent); color: var(--ink); background: var(--surface); }
-.message { display: grid; grid-template-columns: 42px minmax(0, 1fr); gap: 11px; margin-bottom: 22px; }
-.message-role { width: 34px; height: 34px; display: grid; place-items: center; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--muted); font-size: 10px; font-weight: 750; }
-.message.assistant .message-role { color: white; background: var(--accent); border-color: var(--accent); }
-.message-body { min-width: 0; padding: 12px 15px; border: 1px solid var(--border); border-radius: 4px 13px 13px; background: var(--surface); box-shadow: 0 1px 3px rgba(40,35,25,.03); }
-.message.user .message-body { background: #f8f4ec; }
-.message-body p { margin: 3px 0 8px; }
-.message-body h3 { margin: 2px 0 6px; font-size: 15px; }
-.message-body ul, .message-body ol { margin: 5px 0; padding-left: 20px; }
-.inline-action { padding: 5px 9px; border: 1px solid var(--border-strong); border-radius: 7px; background: var(--surface-soft); color: var(--accent-dark); font-size: 11px; }
-.timeline-block { margin: 10px 0 25px 53px; padding: 14px 16px; border: 1px solid var(--border); border-radius: 13px; background: rgba(255,255,255,.65); }
-.timeline-head { display: flex; justify-content: space-between; margin-bottom: 10px; color: var(--muted); font-size: 11px; }
-.timeline-head b { color: var(--faint); font-weight: 500; }
-.timeline { display: grid; gap: 0; }
-.timeline-event { position: relative; display: grid; grid-template-columns: 12px minmax(0, 1fr) auto; gap: 8px; padding: 7px 0; }
-.timeline-event:not(:last-child)::before { position: absolute; left: 5px; top: 19px; bottom: -5px; width: 1px; background: var(--border); content: ""; }
-.event-dot { z-index: 1; width: 9px; height: 9px; margin-top: 5px; border: 2px solid var(--surface); border-radius: 50%; background: var(--faint); box-shadow: 0 0 0 1px var(--border-strong); }
-.timeline-event.done .event-dot { background: var(--green); }
-.timeline-event.running .event-dot { background: var(--amber); animation: pulse 1s infinite; }
-.timeline-event.warning .event-dot { background: var(--amber); }
-.timeline-event.error .event-dot { background: var(--red); }
-.timeline-event.committee .event-dot { background: var(--blue); }
-.event-title { display: flex; align-items: center; gap: 7px; font-size: 12px; }
-.event-title span { padding: 1px 5px; border-radius: 5px; background: #eeeae1; color: var(--muted); font-size: 9.5px; }
-.timeline-event p { margin: 2px 0 0; color: var(--muted); font-size: 11px; }
-.timeline-event time { color: var(--faint); font: 9.5px var(--mono); }
-.composer { margin: 0 max(22px, calc((100% - 800px) / 2)) 18px; border: 1px solid var(--border-strong); border-radius: 14px; background: var(--surface); box-shadow: var(--shadow); }
-.composer textarea { width: 100%; min-height: 72px; max-height: 180px; resize: vertical; padding: 13px 15px 4px; border: 0; outline: 0; background: transparent; }
-.composer-foot { display: flex; align-items: center; justify-content: space-between; gap: 15px; padding: 7px 8px 8px 15px; }
-.composer-foot span { color: var(--faint); font-size: 10.5px; }
-.composer-foot button, .primary-btn { padding: 8px 13px; border: 0; border-radius: 9px; background: var(--accent); color: white; font-weight: 650; font-size: 12px; }
-.composer-foot button:hover, .primary-btn:hover { background: var(--accent-dark); }
-.composer-foot button:disabled, .primary-btn:disabled { opacity: .55; cursor: default; }
-.inline-error { margin: 10px 0 20px 53px; padding: 10px 13px; border-left: 3px solid var(--red); border-radius: 8px; background: #fff0ed; color: #873d36; font-size: 12px; }
-
-.inspector { min-width: 0; height: 100%; border-left: 1px solid var(--border); background: #f8f6f1; overflow-y: auto; }
-.inspector-tabs { position: sticky; top: 0; z-index: 2; display: grid; grid-template-columns: repeat(3, 1fr); padding: 12px; background: rgba(248,246,241,.94); backdrop-filter: blur(10px); }
-.inspector-tabs button { padding: 8px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--muted); font-size: 11.5px; }
-.inspector-tabs button.active { border-color: var(--accent); color: var(--ink); font-weight: 700; }
-.inspector-panel { display: none; padding: 10px 16px 30px; }
-.inspector-panel.active { display: block; }
-.inspector-intro h3 { margin: 0 0 3px; font-size: 14px; }
-.inspector-intro p { margin: 0 0 15px; color: var(--muted); font-size: 11px; }
-.brief-summary { display: grid; gap: 8px; }
-.brief-item { padding: 9px 10px; border: 1px solid var(--border); border-radius: 9px; background: var(--surface); }
-.brief-item span { color: var(--faint); font-size: 9.5px; font-weight: 700; letter-spacing: .04em; }
-.brief-item p { margin: 3px 0 0; font-size: 11.5px; }
-.empty-small { padding: 30px 12px; color: var(--faint); text-align: center; font-size: 11px; }
-.brief-editor { margin-top: 12px; border-top: 1px solid var(--border); }
-.brief-editor summary { padding: 12px 0; color: var(--accent-dark); cursor: pointer; font-size: 11.5px; font-weight: 650; }
-.brief-editor label, .connection-field { display: grid; gap: 4px; margin-bottom: 9px; color: var(--muted); font-size: 10.5px; }
-.brief-editor textarea { width: 100%; min-height: 58px; resize: vertical; padding: 7px 8px; font-size: 11px; }
-.wide { width: 100%; }
-.decision-content { font-size: 11.5px; }
-.decision-content h3 { margin: 17px 0 5px; color: var(--accent-dark); font-size: 13px; }
-.decision-content h3:first-child { margin-top: 0; }
-.decision-content h4 { margin: 12px 0 4px; font-size: 12px; }
-.decision-content p { margin: 4px 0 8px; }
-.decision-content ul, .decision-content ol { margin: 4px 0; padding-left: 18px; }
-.decision-content li { position: relative; margin-bottom: 6px; padding-right: 50px; }
-.decision-content blockquote { margin: 8px 0; padding: 7px 9px; border-left: 3px solid var(--accent); background: var(--surface); color: var(--muted); }
-.branch-button { position: absolute; right: 0; top: 0; padding: 2px 4px; border: 0; background: transparent; color: var(--faint); font-size: 9px; opacity: 0; }
-.decision-content li:hover .branch-button { opacity: 1; }
-.source-list { display: grid; gap: 8px; }
-.source-card { padding: 10px; border: 1px solid var(--border); border-radius: 9px; background: var(--surface); }
-.source-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px; }
-.source-head b { color: var(--accent-dark); font: 700 10px var(--mono); }
-.source-head span { padding: 1px 5px; border-radius: 5px; background: #eeeae1; color: var(--muted); font-size: 9px; }
-.source-head span.ready { background: #e5f2e8; color: #34724a; }
-.source-head span.failed { background: #fff0ed; color: #873d36; }
-.source-card a { color: var(--ink); font-size: 11.5px; font-weight: 650; text-decoration: none; overflow-wrap: anywhere; }
-.source-card a:hover { color: var(--accent-dark); text-decoration: underline; }
-.source-card p { margin: 5px 0 0; color: var(--muted); font-size: 10.5px; }
-
-.connections-header { display: flex; align-items: flex-start; justify-content: space-between; padding: 34px 38px 22px; border-bottom: 1px solid var(--border); background: rgba(255,255,255,.55); }
-.connections-content { max-width: 1100px; height: calc(100vh - 108px); padding: 26px 38px 60px; overflow-y: auto; }
-.connections-content section { margin-bottom: 30px; }
-.section-title { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 10px; }
-.section-title h3 { margin: 0; font-size: 15px; }
-.section-title span { color: var(--faint); font-size: 10.5px; }
-.connection-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
-.connection-card { padding: 15px; border: 1px solid var(--border); border-radius: 13px; background: var(--surface); box-shadow: 0 1px 3px rgba(40,35,25,.03); }
-.connection-top { display: grid; grid-template-columns: 36px 1fr auto; gap: 9px; align-items: center; }
-.connection-icon { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 9px; background: #eeeae1; color: var(--accent-dark); font: 650 10px var(--mono); }
-.connection-top h4 { margin: 0; font-size: 13px; }
-.connection-top p { margin: 1px 0 0; color: var(--muted); font-size: 10.5px; }
-.connection-state { padding: 2px 6px; border-radius: 6px; background: #eeeae1; color: var(--faint); font-size: 9px; }
-.connection-state.ready { background: #e5f2e8; color: #34724a; }
-.capabilities { display: flex; flex-wrap: wrap; gap: 4px; margin: 12px 0 8px; }
-.capabilities span { padding: 2px 5px; border: 1px solid var(--border); border-radius: 5px; color: var(--muted); font-size: 9px; }
-.connection-path { min-height: 30px; margin-bottom: 9px; color: var(--faint); font: 9.5px/1.45 var(--mono); overflow-wrap: anywhere; }
-.connection-field { margin-top: 12px; }
-.connection-field input { width: 100%; padding: 8px; font-size: 11px; }
-.connection-actions { display: flex; gap: 7px; align-items: center; margin-top: 10px; }
-.ghost-btn { padding: 7px 10px; border: 1px solid var(--border-strong); border-radius: 8px; background: var(--surface); color: var(--muted); font-size: 11px; }
-.ghost-btn:hover { border-color: var(--accent); color: var(--accent-dark); }
-.text-btn { border: 0; background: transparent; color: var(--muted); font-size: 10.5px; }
-.text-btn.danger { color: var(--red); }
-.connection-note { padding: 12px 14px; border-left: 3px solid var(--accent); background: #f7eee9; color: var(--muted); font-size: 11px; }
-code { padding: 1px 3px; border-radius: 4px; background: #eeeae1; font: 10px var(--mono); }
-i { color: var(--muted); }
-@keyframes pulse { 50% { opacity: .35; } }
-button:focus-visible, textarea:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible { outline: 2px solid var(--accent-dark); outline-offset: 2px; }
-@media (max-width: 1050px) {
-  .project-layout { grid-template-columns: 1fr; }
-  .inspector { display: none; }
-}
-@media (max-width: 720px) {
-  .app-shell { grid-template-columns: 1fr; overflow: visible; }
-  .sidebar { display: none; }
-  main, .view { height: auto; min-height: 100vh; }
-  .conversation-column { min-height: 100vh; }
-  .project-header { padding: 18px; }
-  .conversation { padding: 24px 16px; }
-  .composer { margin: 0 12px 12px; }
-}
+*{box-sizing:border-box} html,body{height:100%;margin:0} body{overflow:hidden;background:var(--bg);color:var(--ink);font:14px/1.55 var(--sans);-webkit-font-smoothing:antialiased}
+button,input,textarea,select{font:inherit;color:inherit}button{cursor:pointer}.app-shell{height:100vh;min-height:0;display:grid;grid-template-columns:238px minmax(0,1fr);overflow:hidden}
+.sidebar{min-height:0;display:flex;flex-direction:column;gap:12px;padding:16px 12px;background:#f8f6f1;border-right:1px solid var(--line);-webkit-app-region:drag}.sidebar button,.task-list{ -webkit-app-region:no-drag}.macpad{height:24px}.brand{display:flex;gap:10px;align-items:center;padding:2px 8px 6px}.mark{width:34px;height:34px;display:grid;place-items:center;border-radius:10px;background:var(--accent);color:white;font-size:18px;font-weight:800}.brand h1{margin:0;font-size:19px;letter-spacing:-.04em}.brand p{margin:0;color:var(--muted);font-size:10.5px}
+.new-task{padding:10px 12px;border:1px solid var(--strong);border-radius:10px;background:white;text-align:left;font-weight:700}.new-task:hover{border-color:var(--accent);color:var(--accent-dark)}.side-label{padding:4px 8px 0;color:var(--faint);font-size:10px;font-weight:800;letter-spacing:.12em}.task-list{min-height:0;display:grid;align-content:start;gap:3px;overflow:auto}.task-item{width:100%;display:grid;grid-template-columns:8px minmax(0,1fr);gap:9px;padding:9px 10px;border:0;border-radius:9px;background:transparent;text-align:left}.task-item:hover{background:#eeeae1}.task-item.active{background:var(--accent);color:white}.task-item b,.task-item small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.task-item b{font-size:12px}.task-item small{color:var(--faint);font-size:10px}.task-item.active small{color:#f5d8ce}.task-state{width:7px;height:7px;margin-top:6px;border-radius:50%;background:var(--faint)}.task-state.complete{background:var(--green)}.task-state.running,.task-state.awaiting-evaluation{background:var(--amber)}.task-state.failed{background:var(--red)}.empty-list{padding:14px 10px;color:var(--faint);font-size:11px}.side-bottom{margin-top:auto;display:grid;gap:8px}.safety-note{display:grid;gap:2px;padding:9px 10px;border:1px solid var(--line);border-radius:9px;background:white}.safety-note b{font-size:10.5px}.safety-note span,.mode-status{color:var(--faint);font-size:9.5px}.mode-status{display:flex;align-items:center;gap:7px;padding:6px 10px}.dot{width:7px;height:7px;border-radius:50%;background:var(--faint)}.dot.on{background:var(--green)}
+main,.workspace,.conversation-column{height:100%;min-height:0;min-width:0;overflow:hidden}.workspace{display:grid;grid-template-columns:minmax(0,1fr) 350px}.workspace.inspector-hidden{grid-template-columns:minmax(0,1fr) 0}.workspace.inspector-hidden .inspector{display:none}.conversation-column{display:grid;grid-template-rows:auto minmax(0,1fr) auto}.task-header{display:flex;justify-content:space-between;gap:20px;padding:22px 28px 18px;border-bottom:1px solid var(--line);background:rgba(255,255,255,.58)}.eyebrow,.section-head span{color:var(--accent);font-size:9px;font-weight:850;letter-spacing:.14em}.task-header h2{max-width:720px;margin:3px 0;font-size:20px;line-height:1.25;letter-spacing:-.03em}.task-header p{max-width:760px;margin:0;color:var(--muted);font-size:11.5px}.header-actions{display:flex;gap:7px;align-items:flex-start;flex-shrink:0}select,input,textarea{border:1px solid var(--strong);border-radius:8px;background:white}select,input{padding:7px 8px;font-size:11px}.ghost-btn,.primary-btn{padding:7px 10px;border-radius:8px;font-size:11px;font-weight:650}.ghost-btn{border:1px solid var(--strong);background:white;color:var(--muted)}.primary-btn{border:0;background:var(--accent);color:white}.primary-btn:hover{background:var(--accent-dark)}.wide{width:100%}
+.conversation{min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:30px max(26px,calc((100% - 940px)/2)) 60px;scrollbar-gutter:stable}.welcome{max-width:680px;margin:9vh auto 0;text-align:center}.welcome-kicker{color:var(--accent);font-size:11px;font-weight:750}.welcome h3{margin:8px 0;font-size:27px;line-height:1.24;letter-spacing:-.04em}.welcome p{color:var(--muted)}.examples{display:grid;gap:7px;margin-top:24px;text-align:left}.examples button{padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.7);color:var(--muted)}.examples button:hover{border-color:var(--accent);color:var(--ink)}
+.composer{margin:0 max(20px,calc((100% - 970px)/2)) 17px;border:1px solid var(--strong);border-radius:14px;background:white;box-shadow:var(--shadow)}.composer textarea{width:100%;min-height:68px;max-height:160px;padding:12px 14px 4px;resize:vertical;border:0;outline:0;background:transparent}.composer-foot{display:flex;justify-content:space-between;gap:14px;align-items:center;padding:7px 8px 8px 14px}.composer-foot span{color:var(--faint);font-size:10px}.composer-foot button{padding:8px 13px;border:0;border-radius:9px;background:var(--accent);color:white;font-size:11.5px;font-weight:700}.composer-foot button:disabled{opacity:.5}
+.message{display:grid;grid-template-columns:38px minmax(0,1fr);gap:11px;margin-bottom:22px}.avatar{width:34px;height:34px;display:grid;place-items:center;border-radius:10px;background:#efeae1;color:var(--muted);font-size:10px;font-weight:800}.bubble{padding:14px 16px;border:1px solid var(--line);border-radius:5px 13px 13px;background:white}.bubble h3{margin:0 0 5px;font-size:15px}.bubble p{margin:0;color:var(--muted)}.policy{margin-top:10px;padding:7px 9px;border-radius:7px;background:#eef4f8;color:var(--blue);font-size:10.5px}.policy.required{background:#fff1e7;color:#915027}.stage-action{display:flex;gap:12px;align-items:center;margin:8px 0 26px 49px;padding:13px 15px;border:1px dashed var(--strong);border-radius:11px;background:rgba(255,255,255,.55)}.stage-action span{color:var(--muted);font-size:10.5px}
+.run-board,.result-block{margin:16px 0 28px}.section-head{display:flex;justify-content:space-between;align-items:end;margin-bottom:10px}.section-head h3{margin:2px 0 0;font-size:15px}.section-head>b{color:var(--faint);font-size:10px;font-weight:550}.agent-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.agent-card{min-width:0;padding:13px;border:1px solid var(--line);border-radius:12px;background:white;box-shadow:0 2px 8px rgba(40,35,25,.03)}.agent-card.running{border-color:#d9bd87}.agent-card.eligible{border-color:#a8cbb2}.agent-card.incomplete,.agent-card.error,.agent-card.capability-limited{border-color:#e1aaa4}.agent-top{display:flex;justify-content:space-between;gap:8px}.agent-top span{color:var(--faint);font:9px var(--mono)}.agent-top h4{margin:2px 0;font-size:12.5px}.agent-top>b{height:max-content;padding:2px 6px;border-radius:5px;background:#eeeae2;color:var(--muted);font-size:9px}.eligible .agent-top>b{background:#e5f2e8;color:var(--green)}.incomplete .agent-top>b,.error .agent-top>b,.capability-limited .agent-top>b{background:#fff0ed;color:var(--red)}.metrics{display:flex;flex-wrap:wrap;gap:4px;margin:9px 0}.metrics span{padding:2px 5px;border:1px solid var(--line);border-radius:5px;color:var(--muted);font-size:9px}.incomplete-note,.run-error,.warnings{padding:7px 9px;border-radius:7px;background:#fff0ed;color:#873d36;font-size:10px}.trace-panel,.answer-panel{margin-top:9px;border-top:1px solid var(--line)}details summary{padding:8px 0;color:var(--muted);font-size:10.5px;cursor:pointer}details summary em{float:right;color:var(--faint);font-style:normal}.trace-list{max-height:290px;overflow:auto}.trace-row{display:grid;grid-template-columns:42px minmax(0,1fr);gap:6px;padding:6px 0;border-top:1px solid #f0ede7}.trace-row i{height:max-content;padding:1px 4px;border-radius:4px;background:#eeeae2;color:var(--muted);font-size:8.5px;font-style:normal;text-align:center}.trace-row.search i,.trace-row.source i,.trace-row.fetch i{background:#e8f0f7;color:var(--blue)}.trace-row.error i{background:#fff0ed;color:var(--red)}.trace-row b{font-size:10.5px}.trace-row p{margin:1px 0;color:var(--faint);font:9px/1.4 var(--mono);overflow-wrap:anywhere}.empty-trace{padding:10px;color:var(--faint);font-size:10px}.answer-panel .markdown{max-height:360px;overflow:auto;padding:4px 2px}
+.result-block{padding:16px;border:1px solid var(--line);border-radius:13px;background:white}.warnings{margin-bottom:10px}.warnings p{margin:2px 0}.scoreboard{display:grid;gap:5px;margin:10px 0 18px}.score-row{display:grid;grid-template-columns:22px minmax(0,1fr) 36px;gap:8px;align-items:center;padding:7px 9px;border-radius:7px;background:var(--soft)}.score-row strong{color:var(--faint);font-size:10px}.score-row b,.score-row span{display:block}.score-row b{font-size:11px}.score-row span{color:var(--faint);font-size:9px}.score-row em{color:var(--accent-dark);font:700 14px var(--mono);font-style:normal;text-align:right}.final-answer{padding-top:8px;border-top:1px solid var(--line)}
+.markdown{font-size:11px}.markdown h3{margin:16px 0 5px;color:var(--accent-dark);font-size:13px}.markdown h4{margin:12px 0 4px;font-size:11.5px}.markdown p{margin:4px 0 8px}.markdown ul,.markdown ol{margin:4px 0;padding-left:18px}.markdown li{margin-bottom:4px}.markdown blockquote{margin:8px 0;padding:7px 9px;border-left:3px solid var(--accent);background:var(--soft);color:var(--muted)}.markdown a{color:var(--blue);overflow-wrap:anywhere}.inline-error{margin:10px 0 20px 49px;padding:10px 13px;border-left:3px solid var(--red);border-radius:8px;background:#fff0ed;color:#873d36;font-size:11px}.empty-stage{padding:30px;color:var(--faint);text-align:center}
+.inspector{min-height:0;min-width:0;overflow-y:auto;border-left:1px solid var(--line);background:#f8f6f1}.inspector-tabs{position:sticky;top:0;z-index:3;display:grid;grid-template-columns:repeat(3,1fr);padding:12px;background:rgba(248,246,241,.95);backdrop-filter:blur(8px)}.inspector-tabs button{padding:8px;border:0;border-bottom:2px solid transparent;background:transparent;color:var(--muted);font-size:11px}.inspector-tabs button.active{border-color:var(--accent);color:var(--ink);font-weight:700}.panel{display:none;padding:10px 15px 32px}.panel.active{display:block}.panel-intro h3{margin:0;font-size:13px}.panel-intro p{margin:3px 0 14px;color:var(--muted);font-size:10.5px}.empty{padding:30px 10px;color:var(--faint);text-align:center;font-size:10.5px}.field{display:grid;gap:4px;margin-bottom:9px;color:var(--muted);font-size:10px}.field textarea{width:100%;min-height:62px;padding:7px;resize:vertical;font-size:10.5px}.runner-list{display:grid;gap:7px}.runner-option{display:grid;grid-template-columns:18px minmax(0,1fr);gap:6px;padding:9px;border:1px solid var(--line);border-radius:9px;background:white}.runner-option.disabled{opacity:.55}.runner-option b,.runner-option small,.runner-option em{display:block}.runner-option b{font-size:11px}.runner-option small{margin:1px 0 5px;color:var(--faint);font-size:9px}.runner-option em{display:flex;flex-wrap:wrap;gap:3px}.runner-option i{padding:1px 4px;border:1px solid var(--line);border-radius:4px;color:var(--muted);font-size:8px;font-style:normal}.import-box{margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}.import-box h4{margin:0 0 8px;font-size:11px}.import-box input{width:100%;margin-bottom:6px}.import-box p{color:var(--faint);font-size:9px}.rubric-list{display:grid;gap:7px}.rubric-list label{display:grid;grid-template-columns:1fr 48px 12px;gap:5px;align-items:center;padding:8px 9px;border:1px solid var(--line);border-radius:8px;background:white;font-size:10.5px}.rubric-list input{width:48px;padding:4px}.rubric-list em{color:var(--faint);font-size:9px;font-style:normal}
+code{padding:1px 3px;border-radius:4px;background:#eeeae1;font:9.5px var(--mono)}button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,summary:focus-visible{outline:2px solid var(--accent-dark);outline-offset:2px}
+@media(max-width:1100px){.workspace{grid-template-columns:minmax(0,1fr) 310px}.agent-grid{grid-template-columns:1fr}}
+@media(max-width:1050px){.workspace{grid-template-columns:minmax(0,1fr)}.inspector{display:none}.task-header{padding:18px}.conversation{padding:24px 18px 60px}.composer{margin:0 14px 12px}.app-shell{grid-template-columns:190px minmax(0,1fr)}}
+@media(max-height:700px){.task-header{padding-top:11px;padding-bottom:10px}.task-header h2{font-size:17px}.task-header p{font-size:10px}.composer textarea{min-height:48px}.composer{margin-bottom:8px}.conversation{padding-top:16px;padding-bottom:32px}}
 
 </style>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='9' fill='%23c25d3f'/><text x='16' y='23' font-size='20' fill='white' text-anchor='middle' font-family='sans-serif' font-weight='700'>A</text></svg>" />
 </head>
 <body>
-  <a href="#main" class="skip-link">跳到主内容</a>
   <div class="app-shell">
     <aside class="sidebar">
       <div class="macpad"></div>
-      <div class="brand">
-        <div class="mark">A</div>
-        <div><h1>Aker</h1><p>决策探究工作台</p></div>
-      </div>
-      <button class="new-project" id="newProject">＋ 新建探究</button>
-      <div class="side-label">决策项目</div>
-      <nav class="project-list" id="projectList" aria-label="决策项目"></nav>
+      <div class="brand"><div class="mark">A</div><div><h1>Aker</h1><p>Agent 答案融合工作台</p></div></div>
+      <button class="new-task" id="newTask">＋ 新建对比任务</button>
+      <div class="side-label">任务</div>
+      <nav class="task-list" id="taskList"></nav>
       <div class="side-bottom">
-        <button class="side-action" id="openConnections"><span>◉</span><span>运行通道</span><b id="connectionCount">0</b></button>
-        <div class="mode-status" id="modeStatus"><span class="dot"></span><span>检测中…</span></div>
+        <div class="safety-note"><b>只读执行边界</b><span>允许搜索与读取，禁止真实外部写入</span></div>
+        <div class="mode-status" id="modeStatus"><span class="dot"></span><span>检测 Runner…</span></div>
       </div>
     </aside>
 
     <main id="main">
-      <section class="view active" id="projectView">
-        <div class="project-layout">
-          <div class="conversation-column">
-            <header class="project-header">
-              <div>
-                <div class="eyebrow">DECISION PROJECT</div>
-                <h2 id="projectTitle">提出真正重要的问题</h2>
-                <p id="projectSubtitle">Aker 会在探究过程中持续审查证据、分歧与下一步，而不是最后才做评审。</p>
-              </div>
-              <div class="header-actions">
-                <select id="projectMode" aria-label="运行模式">
-                  <option value="live">Live · 使用我的通道</option>
-                  <option value="sim">Sim · 演示流程</option>
-                </select>
-                <button class="ghost-btn" id="rerunProject" hidden>再次探究</button>
-              </div>
-            </header>
-
-            <div class="conversation" id="conversation">
-              <div class="welcome">
-                <div class="welcome-kicker">从一句话开始</div>
-                <h3>你现在需要研究什么问题，或者做出什么决定？</h3>
-                <p>不需要先填写表单。Aker 会自动整理目标、约束、成功标准和关键未知项，只在真正影响结论时追问。</p>
-                <div class="examples">
-                  <button data-example="我们是否应该在未来两周上线面向现有客户的 AI 周报功能？团队只有 2 名工程师，不能新增付费基础设施。">是否应该上线一个尚未验证需求的新功能？</button>
-                  <button data-example="我们应该选择自建 AI 客服还是采购 SaaS？希望三个月内上线，最不能接受的是客户数据泄露。">自建还是采购 AI 客服？</button>
-                  <button data-example="请调研我们进入东南亚市场的可行性，并给出先进入哪个国家的建议。">应该先进入哪个新市场？</button>
-                </div>
-              </div>
+      <section class="workspace" id="workspace">
+        <div class="conversation-column">
+          <header class="task-header">
+            <div>
+              <div class="eyebrow">AGENT COMPARISON TASK</div>
+              <h2 id="taskTitle">比较多个 Agent，得到证据支持度更高的答案</h2>
+              <p id="taskSubtitle">同一任务、同一证据要求、同一只读权限；执行过程与评审依据都可见。</p>
             </div>
+            <div class="header-actions">
+              <select id="taskMode"><option value="live">Live · 真实 Runner</option><option value="sim">Sim · 流程演示</option></select>
+              <button class="ghost-btn" id="toggleInspector">隐藏配置</button>
+            </div>
+          </header>
 
-            <div class="composer">
-              <textarea id="messageInput" placeholder="提出一个重要问题，或继续补充信息…" maxlength="5000"></textarea>
-              <div class="composer-foot">
-                <span id="composerHint">Aker 会使用合理假设继续，并明确标注未知项</span>
-                <button id="sendMessage">开始探究</button>
+          <div class="conversation" id="conversation">
+            <div class="welcome">
+              <div class="welcome-kicker">从一个开放任务开始</div>
+              <h3>让不同 Agent 独立研究，再由 Judge 评审和融合</h3>
+              <p>适合调研、分析、方案设计等没有明确 GT、但可以用证据提高可靠性的任务。</p>
+              <div class="examples">
+                <button data-example="调研 DeerFlow 2.0 与 Codex CLI 在深度研究任务上的关键差异，给出带来源的完整比较。">对比两个 Agent 框架</button>
+                <button data-example="调研 2026 年主流开源深度研究 Agent 的产品能力、技术架构与局限，附完整来源。">做一份时效性行业调研</button>
+                <button data-example="分析一个本地优先、多 Agent 答案融合产品应如何设计评审机制。">比较开放方案</button>
               </div>
             </div>
           </div>
 
-          <aside class="inspector" id="inspector">
-            <div class="inspector-tabs" role="tablist">
-              <button class="active" data-inspector="brief">工作简报</button>
-              <button data-inspector="sources">证据</button>
-              <button data-inspector="package">决策包</button>
+          <div class="composer">
+            <textarea id="messageInput" placeholder="输入调研、分析或方案设计任务…" maxlength="8000"></textarea>
+            <div class="composer-foot">
+              <span id="composerHint">Aker 会自动生成任务简报与证据策略，不要求先填表</span>
+              <button id="sendMessage">创建任务</button>
             </div>
-            <section class="inspector-panel active" id="inspector-brief">
-              <div class="inspector-intro">
-                <h3>自动整理的上下文</h3>
-                <p>这是对话背后的结构化状态，不是首次使用门槛。</p>
-              </div>
-              <div id="briefSummary" class="brief-summary empty-small">提出问题后自动生成</div>
-              <details class="brief-editor" id="briefEditor">
-                <summary>编辑工作简报</summary>
-                <label>决策问题<textarea id="briefDecision"></textarea></label>
-                <label>已知背景<textarea id="briefContext"></textarea></label>
-                <label>约束与不可接受结果<textarea id="briefConstraints"></textarea></label>
-                <label>成功标准<textarea id="briefCriteria"></textarea></label>
-                <label>关键未知项<textarea id="briefUnknowns"></textarea></label>
-                <label>默认假设<textarea id="briefAssumptions"></textarea></label>
-                <button class="primary-btn" id="saveBrief">保存简报</button>
-              </details>
-            </section>
-            <section class="inspector-panel" id="inspector-sources">
-              <div class="inspector-intro">
-                <h3>用户提供的证据</h3>
-                <p>直接在对话中粘贴公开网页链接。Aker 会读取摘要、编号并交给各视角审查。</p>
-              </div>
-              <div id="sourceList" class="source-list empty-small">还没有来源</div>
-            </section>
-            <section class="inspector-panel" id="inspector-package">
-              <div class="inspector-intro">
-                <h3>当前决策包</h3>
-                <p>点击任何要点可从该主张创建新的探究分支。</p>
-              </div>
-              <div id="decisionPackage" class="decision-content empty-small">完成探究后生成</div>
-              <button class="primary-btn wide" id="copyPackage" hidden>复制决策包</button>
-            </section>
-          </aside>
-        </div>
-      </section>
-
-      <section class="view" id="connectionsView">
-        <header class="connections-header">
-          <div>
-            <div class="eyebrow">CONNECTIONS</div>
-            <h2>使用你自己的 Agent CLI 与模型 API</h2>
-            <p>本地 CLI 自动检测；API key 存入 macOS Keychain。Aker 只负责匹配、编排和审计。</p>
-          </div>
-          <button class="ghost-btn" id="closeConnections">返回项目</button>
-        </header>
-        <div class="connections-content">
-          <section>
-            <div class="section-title"><h3>本地 Agent CLI</h3><span>自动扫描当前电脑</span></div>
-            <div class="connection-grid" id="cliConnections"></div>
-          </section>
-          <section>
-            <div class="section-title"><h3>模型 API</h3><span>调用产生的费用由你的账户承担</span></div>
-            <div class="connection-grid" id="apiConnections"></div>
-          </section>
-          <div class="connection-note">
-            Aker 会优先让不同视角使用不同可运行通道。只有一个通道时仍可运行，但会明确提示相关性风险。
           </div>
         </div>
+
+        <aside class="inspector" id="inspector">
+          <div class="inspector-tabs">
+            <button class="active" data-tab="brief">任务简报</button>
+            <button data-tab="runners">Runner</button>
+            <button data-tab="rubric">评审</button>
+          </div>
+          <section class="panel active" id="panel-brief">
+            <div class="panel-intro"><h3>自动整理，可随时编辑</h3><p>调研和时效性任务会自动要求真实搜索与来源。</p></div>
+            <div id="briefEditor" class="empty">创建任务后显示</div>
+          </section>
+          <section class="panel" id="panel-runners">
+            <div class="panel-intro"><h3>选择 2–4 个独立 Agent</h3><p>能力不足的 Runner 会明确标记，不会伪装完成调研。</p></div>
+            <div id="runnerList" class="runner-list"></div>
+            <label class="field">独立 Judge<select id="judgeSelect"></select></label>
+            <div class="import-box">
+              <h4>从 GitHub 导入 Agent</h4>
+              <input id="githubUrl" placeholder="https://github.com/bytedance/deer-flow">
+              <input id="gatewayUrl" placeholder="已运行的 Gateway，例如 http://localhost:8001">
+              <button class="ghost-btn wide" id="importGithub">导入清单</button>
+              <p id="importStatus">导入只保存适配器清单；任何安装或启动命令都不会自动执行。</p>
+            </div>
+          </section>
+          <section class="panel" id="panel-rubric">
+            <div class="panel-intro"><h3>评分维度</h3><p>Judge 根据统一评分表评审；权重可编辑。</p></div>
+            <div id="rubricEditor" class="rubric-list empty">创建任务后显示</div>
+          </section>
+        </aside>
       </section>
     </main>
   </div>
   <script>
-const __ENV = {};
-function getApiKey() { return null; }
-function getApiModel(provider) { return provider === 'anthropic' ? 'claude-sonnet-4-6' : 'gpt-4.1-mini'; }
-function listConnections() { return { cli: [], api: [{ id: 'openai', type: 'api', label: 'OpenAI API', configured: false, runnable: false, model: 'gpt-4.1-mini', note: 'Web 演示不支持配置 API' }, { id: 'anthropic', type: 'api', label: 'Anthropic API', configured: false, runnable: false, model: 'claude-sonnet-4-6', note: 'Web 演示不支持配置 API' }], keychain: false }; }
 // frameworks.mjs — agent 框架图鉴
 // 每个条目除了基础信息，重点标注【trace 可得性】，因为这直接决定 aker 能否做效果评审。
 // traceability 取值：'native'(原生结构化 trace) | 'otel'(走 OpenTelemetry/callback) | 'cli-log'(只能解析 stdout/日志) | 'api-only'(只有最终响应)
@@ -353,7 +132,6 @@ const FRAMEWORKS = [
     strengths: ['工具循环与上下文管理开箱即用', '权限/hook 机制完善', 'transcript 天然就是 trace'],
     weaknesses: ['强绑定 Claude 模型', 'harness 行为不完全可控'],
     code: `// Claude Agent SDK（TS）
-import { query } from "@anthropic-ai/claude-agent-sdk";
 
 for await (const msg of query({
   prompt: "重构这个函数并加测试",
@@ -571,7 +349,9 @@ function getFramework(id) {
 // 不同框架的原始 trace 形态各异（jsonl / OTel spans / cli json / 自包），
 // adapter 负责把它们归一成下面这套 step 结构，aker 再统一分析。
 
-// step.type: 'think' | 'tool' | 'observe' | 'message' | 'handoff' | 'error'
+// Observable step types only. Private chain-of-thought is never stored or displayed.
+// step.type: 'plan' | 'search' | 'fetch' | 'tool' | 'observation' |
+//            'subagent' | 'source' | 'message' | 'error'
 function makeStep(i, type, label, extra = {}) {
   return {
     i,
@@ -579,6 +359,10 @@ function makeStep(i, type, label, extra = {}) {
     label,
     detail: extra.detail || '',
     toolName: extra.toolName || null,
+    url: extra.url || null,
+    query: extra.query || null,
+    sourceId: extra.sourceId || null,
+    at: extra.at || new Date().toISOString(),
     tokens: extra.tokens || 0,
     ms: extra.ms || 0,
   };
@@ -589,6 +373,10 @@ function summarizeTrace(steps = []) {
     steps: steps.length,
     tokens: steps.reduce((a, s) => a + (s.tokens || 0), 0),
     toolCalls: steps.filter((s) => s.type === 'tool').length,
+    searches: steps.filter((s) => s.type === 'search').length,
+    fetches: steps.filter((s) => s.type === 'fetch').length,
+    sources: steps.filter((s) => s.type === 'source').length,
+    subagents: steps.filter((s) => s.type === 'subagent').length,
     wallMs: steps.reduce((a, s) => a + (s.ms || 0), 0),
     errors: steps.filter((s) => s.type === 'error').length,
     tools: [...new Set(steps.filter((s) => s.toolName).map((s) => s.toolName))],
@@ -621,257 +409,17 @@ function agentLabel(a) {
 }
 
 
-// committee.mjs — 评审会引擎
-// 输入：一个 run 的多个 agent 输出（+各自 trace）
-// 输出：交集(共识) / 并集(全集) / 差异归因 / 更优解
-// 关键：所有分析都是“真实计算”出来的，不依赖 LLM 也能跑（Sim 模式）。
-// synthesizeBetter 生成规则式基础综合；server.mjs 会在 Live run 首次评审时
-// 调用 adapters.synthesizeReview，以真实评审团主席结果替换 betterSolution.markdown。
-
-
-// —— 评审会可调常数（CONFIG）——
-// ⚠️ 重要：以下阈值/权重均为【启发式经验值，仅供 Sim 演示】，未经任何标定或验证，
-//    不代表真实质量评估。Sim 模式下 trace（工具数/步数）由框架工具表 + rng 生成，
-//    因此“可信度”实质由框架配置预定，并非事实依据。详见 README「Sim 可信度说明」。
-const CONFIG = {
-  // 要点聚类的字面 jaccard 相似度阈值：>= 此值视为同一主张簇。
-  // 0.34 为经验取值（CJK bigram + latin 词袋下，过低会乱并、过高会过散）。
-  SIM_THRESHOLD: 0.34,
-  // 进入“共识”所需的最少 agent 覆盖数下限（再与多数票 ceil(n/2) 取较大者）。
-  MIN_CONSENSUS: 2,
-  // “推理深度差异”归因触发门槛：最大步数 - 最小步数 >= 此值才报告。
-  DEPTH_GAP: 2,
-};
-
-const ROLE_LABELS = {
-  strategist: '策略视角',
-  critic: '反方视角',
-  operator: '行动视角',
-  researcher: '证据视角',
-};
-
-// —— 文本切片：把一段输出拆成“论点/要点”单元 ——
-// P2 修复：剔除“方案标题/元信息行”，避免三家相似标题被聚成头号伪共识。
-//   命中以下任一模式即视为标题/元信息，不进入可聚类正文：
-//   - 「针对「…」的方案」开头的标题行
-//   - 含「方案（by …」「by X·Y」署名样式
-//   - 含「风格：/风格:」标注
-const TITLE_NOISE = /^#{1,6}\s|^针对「.*」的方案|方案（by\s|（by\s|风格[:：]/;
-function splitPoints(text = '') {
-  return text
-    .split(/\n+|(?<=[。！？.!?])\s+/g)
-    .map((s) => s.replace(/^[\s\-*•\d.、)）]+/, '').trim())
-    .filter((s) => s.length >= 4)
-    .filter((s) => !TITLE_NOISE.test(s));
-}
-
-// —— 归一化分词：latin 单词 + CJK 字符，用于相似度 ——
-function shingles(s) {
-  const lower = s.toLowerCase();
-  const words = lower.match(/[a-z0-9_]+/g) || [];
-  const cjk = lower.match(/[一-鿿]/g) || [];
-  const cjkBigrams = [];
-  for (let i = 0; i < cjk.length - 1; i++) cjkBigrams.push(cjk[i] + cjk[i + 1]);
-  return new Set([...words, ...cjk, ...cjkBigrams]);
-}
-
-function jaccard(a, b) {
-  if (!a.size || !b.size) return 0;
-  let inter = 0;
-  for (const x of a) if (b.has(x)) inter++;
-  return inter / (a.size + b.size - inter);
-}
-
-// 把所有 agent 的要点聚类：相似的归为同一个“主张簇”
-function clusterPoints(agents) {
-  const items = [];
-  agents.forEach((ag, ai) => {
-    for (const p of splitPoints(ag.output || '')) {
-      items.push({ ai, agentId: ag.agentId, text: p, sh: shingles(p) });
-    }
-  });
-  const clusters = [];
-  for (const it of items) {
-    let best = null, bestSim = 0;
-    for (const c of clusters) {
-      const sim = jaccard(it.sh, c.centroid);
-      if (sim > bestSim) { bestSim = sim; best = c; }
-    }
-    if (best && bestSim >= CONFIG.SIM_THRESHOLD) {
-      best.members.push(it);
-      for (const x of it.sh) best.centroid.add(x);
-      best.agents.add(it.ai);
-    } else {
-      clusters.push({ members: [it], centroid: new Set(it.sh), agents: new Set([it.ai]) });
-    }
-  }
-  return clusters;
-}
-
-function repText(cluster) {
-  // 选最短且信息量够的成员作代表
-  return cluster.members.slice().sort((a, b) => a.text.length - b.text.length)[0].text;
-}
-
-function review(run, mode = 'intersection') {
-  const agents = run.agents.filter((a) => a.status === 'done' && a.output);
-  const n = agents.length;
-  const clusters = clusterPoints(agents);
-  const majority = Math.ceil(n / 2);
-
-  // 共识(交集)：被多数 agent 覆盖的簇（覆盖数 >= max(MIN_CONSENSUS, 多数票)）
-  const consensus = clusters
-    .filter((c) => c.agents.size >= Math.max(CONFIG.MIN_CONSENSUS, majority))
-    .map((c) => ({
-      text: repText(c),
-      coverage: c.agents.size,
-      agents: [...c.agents].map((i) => agents[i].agentId),
-    }))
-    .sort((a, b) => b.coverage - a.coverage);
-
-  // 全集(并集)：所有去重后的要点
-  const union = clusters.map((c) => ({
-    text: repText(c),
-    coverage: c.agents.size,
-    agents: [...c.agents].map((i) => agents[i].agentId),
-    unique: c.agents.size === 1,
-  }));
-
-  // 分歧：只有单个 agent 提到的要点（其他人没有 = 可能是洞见，也可能是幻觉）
-  const divergence = union
-    .filter((u) => u.unique)
-    .map((u) => ({ text: u.text, by: u.agents[0] }));
-
-  // 差异归因：结合 trace 信号解释“为什么会不同”
-  const attribution = attribute(agents, divergence);
-
-  // 决策包基础版本
-  const betterSolution = synthesizeBetter(agents, consensus, union, attribution);
-
-  return {
-    mode,
-    counts: { agents: n, clusters: clusters.length, consensus: consensus.length, divergent: divergence.length },
-    consensus,
-    union,
-    divergence,
-    attribution,
-    betterSolution,
-  };
-}
-
-// —— 差异归因：用 trace 把分歧分类到可解释的原因 ——
-function attribute(agents, divergence) {
-  const reasons = [];
-  const traces = agents.map((a) => ({ a, t: summarizeTrace(a.trace?.steps || []) }));
-
-  // 1) 模型差异
-  const models = [...new Set(agents.map((a) => a.model))];
-  if (models.length > 1) {
-    reasons.push({
-      kind: '模型差异',
-      weight: 'high',
-      detail: `参与的 ${agents.length} 个视角用了 ${models.length} 种模型（${models.join('、')}）。不同模型的知识截止、对齐倾向与推理风格不同，会在措辞与取舍上分叉。`,
-    });
-  }
-
-  // 2) 工具/检索差异（trace）
-  const toolSets = traces.map((x) => x.t.tools);
-  const allTools = [...new Set(toolSets.flat())];
-  const partialTools = allTools.filter((tool) => toolSets.some((s) => s.includes(tool)) && toolSets.some((s) => !s.includes(tool)));
-  if (partialTools.length) {
-    reasons.push({
-      kind: '工具/检索差异',
-      weight: 'high',
-      detail: `工具 [${partialTools.join('、')}] 只有部分 agent 调用了。检索/执行到的事实不同 → 结论必然分叉。这类分歧通常“有据可查的一方更可信”。`,
-      evidence: traces.map((x) => ({ agentId: x.a.agentId, tools: x.t.tools })),
-    });
-  }
-
-  // 3) 步骤深度差异（trace）
-  const steps = traces.map((x) => x.t.steps);
-  const maxS = Math.max(...steps), minS = Math.min(...steps);
-  if (maxS - minS >= CONFIG.DEPTH_GAP) {
-    const deep = traces.find((x) => x.t.steps === maxS);
-    reasons.push({
-      kind: '推理深度差异',
-      weight: 'medium',
-      detail: `步骤数从 ${minS} 到 ${maxS} 不等。${deep.a.framework}·${deep.a.model} 走了更多步骤，但步骤更多不自动代表结论更可靠。`,
-    });
-  }
-
-  // 4) 表述/侧重差异（内容层，分歧但非事实冲突）
-  if (divergence.length) {
-    reasons.push({
-      kind: '侧重/表述差异',
-      weight: 'low',
-      detail: `有 ${divergence.length} 条要点仅单一视角提及。它们可能是关键少数意见，也可能缺乏依据；需要结合证据与可验证性判断，不能按人数直接剔除。`,
-    });
-  }
-
-  return reasons;
-}
-
-// —— 更优解基础综合（Sim / standalone 使用；Live server 会做真实二次综合）——
-function synthesizeBetter(agents, consensus, union, attribution) {
-  // 单一视角提出的观点必须保留给人审查，不能用步骤数或工具数自动判为更可信。
-  const adoptedUnique = union
-    .filter((u) => u.unique)
-    .slice(0, 8)
-    .map((u) => {
-      const agent = agents.find((item) => item.agentId === u.agents[0]);
-      return { text: u.text, from: ROLE_LABELS[agent?.role] || '独立视角' };
-    });
-
-  // 是否含 Sim agent：决定是否醒目标注演示边界。
-  const isSim = agents.some((a) => (a.mode || 'sim') === 'sim');
-
-  const lines = [];
-  lines.push('## 建议与置信度');
-  lines.push('');
-  if (isSim) lines.push('> Sim 模式只演示决策流程，不代表真实研究结论。请使用 Live 模式处理真实决策。');
-  lines.push('- 当前建议：在关键未知项得到验证前，优先采用可逆的小规模验证，不做不可逆承诺。');
-  lines.push(`- 置信度：${consensus.length ? '中' : '低'}。当前共同主张数量为 ${consensus.length}，但共同出现不等于事实正确。`);
-  lines.push('');
-  lines.push('## 为什么这样决定');
-  lines.push('> 以下是多个视角重复提出的主张，不等于已经核验的事实。');
-  if (consensus.length) consensus.forEach((c) => lines.push(`- ${c.text}  _(${c.coverage} 个视角覆盖)_`));
-  else lines.push('- 当前没有强共同主张，说明信息不足或视角判断明显分叉。');
-  lines.push('');
-  lines.push('## 最强反对意见');
-  lines.push('- 条件推进仍可能造成机会成本：如果验证动作过慢、结果不可判定，团队可能同时承担试点成本并错过窗口期。');
-  lines.push('');
-  lines.push('## 需保留的少数观点');
-  if (adoptedUnique.length) adoptedUnique.forEach((u) => lines.push(`- ${u.text}  _(来自单一视角 ${u.from}，需要进一步验证)_`));
-  else lines.push('- 当前没有可自动识别的少数意见；这不代表不存在共同盲区。');
-  lines.push('');
-  lines.push('## 未解决的不确定性');
-  const unknowns = union.filter((item) => /\[未知\]|证据不足|没有提供足够/.test(item.text)).slice(0, 5);
-  if (unknowns.length) unknowns.forEach((item) => lines.push(`- ${item.text}`));
-  else lines.push('- 当前材料仍不足以证明真实需求、预期收益和执行成本；这些未知项可能改变建议。');
-  lines.push('');
-  lines.push('## 最低成本验证');
-  lines.push('- 选择最可能改变结论的未知项，设计一个有明确观察指标和停止条件的小规模验证。');
-  lines.push('- 验证后重新运行 Aker，并在决策简报中补充新事实。');
-  lines.push('');
-  lines.push('## 立即行动');
-  lines.push('- 指定一名决策负责人，明确决策截止时间与不可接受结果。');
-  lines.push('- 把当前最关键假设转成未来 1-7 天内可验证的行动。');
-  lines.push('');
-  lines.push('> Sim 模式的内容用于演示工作流；处理真实决策时请使用 Live 通道并提供可核验来源。');
-
-  return {
-    credibility: {},
-    adoptedUnique,
-    markdown: lines.join('\n'),
-  };
-}
-
-
 // adapters.mjs — 可插拔 runner：每个框架一个 adapter
 // 双模式：
 //   Sim  —— 零 key 可跑，产出“可信的”差异化输出 + 归一化 trace（用于演示与离线评审）
 //   Live —— 检测到 key/CLI 时切真实调用（Anthropic/OpenAI HTTP、claude/codex CLI）
 // 设计要点：Sim 的多 agent 输出之间“有共识也有分歧”，这样评审会才有真东西可分析。
+
+
+
+
+
+
 
 
 const REVIEW_ROLES = [
@@ -939,21 +487,21 @@ function composeOutput(task, framework, model, role) {
   };
 
   const body = [
-    `## 独立判断`,
-    '建议有条件推进，置信度为低：当前信息适合设计验证，不足以支持不可逆承诺。',
+    `## 模拟研究结果`,
+    '> 这是 Sim Runner 生成的流程演示，不是真实调研结论，也不会进入事实融合。',
     '',
-    '## 关键主张',
-    '- [推断] 在关键未知项得到验证前，应优先采用可逆的小规模行动。',
+    '## 主要发现',
+    '- [未知] 当前没有真实联网检索结果，无法确认可能变化的外部事实。',
     `- ${roleSpecific.claim}`,
     '',
-    '## 最强反对意见',
+    '## 可能的分歧',
     `- ${roleSpecific.objection}`,
     '',
-    '## 会改变结论的信息',
+    '## 证据缺口',
     '- 真实用户行为、执行成本或不可接受风险与当前假设明显不符。',
     '',
-    '## 最低成本验证',
-    `- ${roleSpecific.validation}`,
+    '## 来源',
+    '- Sim 模式没有真实来源。',
   ].join('\n');
   return body;
 }
@@ -964,29 +512,30 @@ function composeTrace(task, framework, model, seed) {
   const tools = FRAMEWORK_TOOLKIT[framework] || [];
   const steps = [];
   let i = 0;
-  steps.push(makeStep(i++, 'think', '解析任务与约束', { detail: `拆解「${task}」`, tokens: 120 + Math.floor(r() * 200), ms: 300 + Math.floor(r() * 400) }));
+  steps.push(makeStep(i++, 'plan', '模拟拆解任务与约束', { detail: `拆解「${task}」`, tokens: 120 + Math.floor(r() * 200), ms: 300 + Math.floor(r() * 400) }));
   // 工具调用：每个工具 1-2 次
   for (const t of tools) {
     const times = 1 + Math.floor(r() * 2);
     for (let k = 0; k < times; k++) {
       steps.push(makeStep(i++, 'tool', `调用 ${t}`, { toolName: t, detail: `${t} 第${k + 1}次`, tokens: 40 + Math.floor(r() * 120), ms: 200 + Math.floor(r() * 900) }));
-      steps.push(makeStep(i++, 'observe', `${t} 结果`, { detail: '读取/执行结果并更新假设', tokens: 60 + Math.floor(r() * 150), ms: 100 + Math.floor(r() * 200) }));
+      steps.push(makeStep(i++, 'observation', `${t} 模拟结果`, { detail: '模拟读取结果', tokens: 60 + Math.floor(r() * 150), ms: 100 + Math.floor(r() * 200) }));
     }
   }
   // 深推理模型多走一步自审
   if (model === 'o-series' || model === 'claude-opus-4-8') {
-    steps.push(makeStep(i++, 'think', '自我验证 / 反思', { detail: '检查边界与潜在错误', tokens: 200 + Math.floor(r() * 200), ms: 500 + Math.floor(r() * 500) }));
+    steps.push(makeStep(i++, 'plan', '模拟复核计划', { detail: '检查边界与潜在错误', tokens: 200 + Math.floor(r() * 200), ms: 500 + Math.floor(r() * 500) }));
   }
   steps.push(makeStep(i++, 'message', '产出最终方案', { tokens: 300 + Math.floor(r() * 300), ms: 400 + Math.floor(r() * 400) }));
   return steps;
 }
 
 // —— Sim adapter —— //
-async function runSim(framework, model, task, agentId, role) {
+async function runSim(framework, model, task, agentId, role, onStep) {
   const seed = `${task}::${agentId}::${role || ''}`;
   const steps = composeTrace(task, framework, model, seed);
   // 模拟时延（短，便于演示并行）
   await new Promise((res) => setTimeout(res, 200 + Math.floor(rng(seed)() * 600)));
+  for (const step of steps) await onStep?.(step);
   return {
     status: 'done',
     mode: 'sim',
@@ -1028,38 +577,27 @@ function liveCapabilities() {
   };
 }
 
-function reviewerPrompt({ task, framework, model, role }) {
-  const lens = reviewRole(role);
+function reviewerPrompt({ task, framework, model }) {
   return [
-    '你是 Aker 决策委员会中的一名独立判断者。你的任务不是写一篇看起来完整的答案，而是降低用户在无标准答案场景中做错决定的风险。',
-    '你看不到其他判断者的答案。请形成自己的观点，不要猜测多数意见。',
-    '仅基于用户提供的信息分析，不要修改文件、调用工具或执行外部操作。没有证据支持的内容必须明确标成假设或推断，绝不虚构事实、数据或来源。',
-    `你的角色：${lens.label}。${lens.brief}`,
+    '你是 Aker 中独立执行开放任务的 Agent。你看不到其他 Agent 的答案，请直接完成任务。',
+    '允许联网搜索、网页读取、本地只读访问和隔离计算。禁止修改文件，禁止向真实外部系统提交、发送、创建或写入数据。',
+    '若任务要求调研或时效性信息，必须实际搜索并引用可核验 URL；绝不虚构事实、数据或来源。',
     `运行通道标识：${framework} · ${model}`,
     '',
-    '请输出一份可被决策委员会审计和合并的独立意见，使用以下结构：',
-    '## 独立判断',
-    '明确建议做、不做、延后，或满足哪些条件后再做；同时说明置信度（高/中/低）及原因。',
-    '## 关键主张',
-    '- 给出 3-6 条主张，每条以 `[事实]`、`[假设]`、`[推断]` 或 `[未知]` 开头。',
-    '## 最强反对意见',
-    '- 写出对你当前判断最有力的反驳，不要写稻草人观点。',
-    '## 会改变结论的信息',
-    '- 列出一旦获得就可能推翻或显著改变当前判断的信息。',
-    '## 最低成本验证',
-    '- 给出 1-3 个可执行验证动作，并说明观察什么结果、何时停止。',
-    '',
-    `用户决策简报：\n${task}`,
+    `用户任务：\n${task}`,
   ].join('\n');
 }
 
-async function runLive(framework, model, task, agentId, role) {
+async function runLive(framework, model, task, agentId, role, runner, onStep) {
   const caps = liveCapabilities();
   const fw = getFramework(framework);
-  const prompt = reviewerPrompt({ task, framework, model, role });
+  const prompt = reviewerPrompt({ task, framework, model });
+  if (runner?.transport?.type === 'langgraph-sse' && runner.endpoint) {
+    return await callDeerFlow(runner, prompt, onStep);
+  }
   // 选择真实通道
   if (framework === 'codex-cli' && caps.codexPath) {
-    return await callCodexCli(caps.codexPath, model, prompt);
+    return await callCodexCli(caps.codexPath, model, prompt, onStep);
   }
   if (framework === 'claude-cli' && caps.claudePath) {
     return await callClaudeCli(caps.claudePath, model, prompt);
@@ -1076,9 +614,56 @@ async function runLive(framework, model, task, agentId, role) {
   throw new Error(`live-unavailable:${framework}/${model}`);
 }
 
-async function callAnthropic() { throw new Error('Live 模式不支持浏览器内直连（避免 API key 泄露），请改用本地 server.mjs 后端代理'); }
+async function callAnthropic(model, task) {
+  const t0 = Date.now();
+  const key = getApiKey('anthropic');
+  const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01' },
+    body: JSON.stringify({ model, max_tokens: 1024, messages: [{ role: 'user', content: task }] }),
+  });
+  const j = await resp.json();
+  // C3：401/429/5xx 不能当成功——否则会 return 一个空 output 但标 status:done/mode:live，
+  // 把空串塞进评审聚类污染结果。这里如实抛错，由编排器标成失败。
+  if (!resp.ok) throw new Error(`Anthropic ${resp.status}: ${JSON.stringify(j).slice(0, 200)}`);
+  const text = (j.content || []).map((b) => b.text).join('\n');
+  const steps = [makeStep(0, 'message', 'Anthropic 响应', { tokens: j.usage?.output_tokens || 0, ms: Date.now() - t0 })];
+  return { status: 'done', mode: 'live', output: text, trace: { steps, totals: summarizeTrace(steps), source: { traceability: 'native', how: 'API usage + (可升级为 Agent SDK transcript)' } } };
+}
 
-async function callOpenAI() { throw new Error('Live 模式不支持浏览器内直连（避免 API key 泄露），请改用本地 server.mjs 后端代理'); }
+async function callOpenAI(model, task) {
+  const t0 = Date.now();
+  const key = getApiKey('openai');
+  const resp = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', authorization: `Bearer ${key}` },
+    body: JSON.stringify({ model, messages: [{ role: 'user', content: task }] }),
+  });
+  const j = await resp.json();
+  // C3：同 Anthropic——非 2xx 必须抛错，不能把 error JSON 当成空输出标成功。
+  if (!resp.ok) throw new Error(`OpenAI ${resp.status}: ${JSON.stringify(j).slice(0, 200)}`);
+  const text = j.choices?.[0]?.message?.content || '';
+  const steps = [makeStep(0, 'message', 'OpenAI 响应', { tokens: j.usage?.completion_tokens || 0, ms: Date.now() - t0 })];
+  return { status: 'done', mode: 'live', output: text, trace: { steps, totals: summarizeTrace(steps), source: { traceability: 'native', how: 'API usage' } } };
+}
+
+function normalizeCodexEvent(event, i = 0) {
+  if (event.type === 'item.started' || event.type === 'item.completed' || event.type === 'item.updated') {
+    const item = event.item || {};
+    const text = String(item.text || item.content || item.query || item.url || '');
+    if (item.type === 'agent_message') return makeStep(i, 'message', 'Codex 回答', { detail: text.slice(0, 240) });
+    if (item.type === 'command_execution') return makeStep(i, item.exit_code === 0 || item.exit_code == null ? 'tool' : 'error', 'Codex 命令执行', { toolName: 'shell', detail: String(item.command || '').slice(0, 240) });
+    if (item.type === 'file_change') return makeStep(i, 'error', 'Codex 尝试文件变更（已被只读沙箱阻止）', { toolName: 'apply_patch' });
+    if (/web_search|search_query|search/i.test(item.type || '')) return makeStep(i, 'search', 'Codex 搜索', { query: text.slice(0, 240), detail: text.slice(0, 240) });
+    if (/fetch|webpage|page|browser/i.test(item.type || '')) return makeStep(i, 'fetch', 'Codex 读取网页', { url: item.url || null, detail: text.slice(0, 240) });
+    if (/source|citation/i.test(item.type || '')) return makeStep(i, 'source', 'Codex 发现来源', { url: item.url || null, detail: text.slice(0, 240) });
+    if (/reasoning|plan/i.test(item.type || '')) return makeStep(i, 'plan', 'Codex 更新执行计划');
+    if (item.type) return makeStep(i, 'observation', `Codex 事件：${item.type}`, { detail: text.slice(0, 240) });
+  }
+  if (event.type === 'error') return makeStep(i, 'error', 'Codex 执行错误', { detail: String(event.message || '').slice(0, 240) });
+  if (event.type === 'turn.failed') return makeStep(i, 'error', 'Codex 回合失败', { detail: String(event.error?.message || 'Codex turn failed').slice(0, 240) });
+  return null;
+}
 
 function parseCodexEvents(stdout, elapsedMs = 0) {
   const events = String(stdout).split(/\r?\n/).filter(Boolean).flatMap((line) => {
@@ -1090,31 +675,19 @@ function parseCodexEvents(stdout, elapsedMs = 0) {
   const errors = [];
   let i = 0;
   for (const event of events) {
+    const step = normalizeCodexEvent(event, i);
+    if (step) { steps.push(step); i++; }
     if (event.type === 'item.completed') {
       const item = event.item || {};
       if (item.type === 'agent_message') {
         output = item.text || output;
-        steps.push(makeStep(i++, 'message', 'Codex 最终回答', { detail: 'agent_message' }));
-      } else if (item.type === 'command_execution') {
-        steps.push(makeStep(i++, item.exit_code === 0 ? 'tool' : 'error', 'Codex 命令执行', {
-          toolName: 'shell',
-          detail: String(item.command || '').slice(0, 240),
-        }));
-      } else if (item.type === 'file_change') {
-        steps.push(makeStep(i++, 'tool', 'Codex 文件变更', { toolName: 'apply_patch' }));
-      } else if (item.type === 'reasoning') {
-        steps.push(makeStep(i++, 'think', 'Codex 推理阶段'));
-      } else if (item.type) {
-        steps.push(makeStep(i++, 'observe', `Codex 事件：${item.type}`));
       }
     } else if (event.type === 'error') {
       const message = String(event.message || '');
       errors.push(message);
-      steps.push(makeStep(i++, 'error', 'Codex 执行错误', { detail: message.slice(0, 240) }));
     } else if (event.type === 'turn.failed') {
       const message = String(event.error?.message || 'Codex turn failed');
       errors.push(message);
-      steps.push(makeStep(i++, 'error', 'Codex 回合失败', { detail: message.slice(0, 240) }));
     } else if (event.type === 'turn.completed') {
       usage = event.usage || {};
     }
@@ -1127,17 +700,28 @@ function parseCodexEvents(stdout, elapsedMs = 0) {
   return { output, steps, usage, errors };
 }
 
-async function callCodexCli(codexPath, model, prompt) {
-  const workdir = mkdtempSync(join(tmpdir(), 'aker-codex-'));
+function codexExecArgs(model, workdir) {
   const args = [
-    'exec', '--json', '--sandbox', 'read-only', '--skip-git-repo-check',
+    '--search', 'exec', '--json', '--sandbox', 'read-only', '--skip-git-repo-check',
     '--ephemeral', '--ignore-rules', '--ignore-user-config', '-C', workdir,
   ];
   if (model && model !== 'codex-default') args.push('--model', model);
   args.push('-');
+  return args;
+}
+
+async function callCodexCli(codexPath, model, prompt, onStep) {
+  const workdir = mkdtempSync(join(tmpdir(), 'aker-codex-'));
+  const args = codexExecArgs(model, workdir);
   const t0 = Date.now();
   try {
-    const { stdout, stderr, code } = await spawnCollect(codexPath, args, prompt, 180_000);
+    const { stdout, stderr, code } = await spawnCollect(codexPath, args, prompt, 180_000, undefined, (line) => {
+      try {
+        const event = JSON.parse(line);
+        const step = normalizeCodexEvent(event);
+        if (step) onStep?.(step);
+      } catch {}
+    });
     const parsed = parseCodexEvents(stdout, Date.now() - t0);
     if (code !== 0 || !parsed.output) {
       const eventError = parsed.errors.at(-1);
@@ -1151,7 +735,7 @@ async function callCodexCli(codexPath, model, prompt) {
       trace: {
         steps: parsed.steps,
         totals: summarizeTrace(parsed.steps),
-        source: { traceability: 'cli-log', how: 'codex exec --json 真实事件流' },
+        source: { traceability: 'cli-log', how: 'codex --search exec --json --sandbox read-only 真实事件流' },
       },
     };
   } finally {
@@ -1207,12 +791,19 @@ async function callGeminiCli(geminiPath, model, prompt) {
   }
 }
 
-function spawnCollect(command, args, input, timeoutMs, cwd) {
+function spawnCollect(command, args, input, timeoutMs, cwd, onLine) {
   return new Promise((resolve, reject) => {
     const child = spawn(command, args, { cwd, stdio: ['pipe', 'pipe', 'pipe'] });
     let stdout = '', stderr = '';
     const append = (current, chunk) => (current + chunk).slice(-2_000_000);
-    child.stdout.on('data', (c) => { stdout = append(stdout, c); });
+    let lineBuffer = '';
+    child.stdout.on('data', (c) => {
+      stdout = append(stdout, c);
+      lineBuffer += c.toString();
+      const lines = lineBuffer.split(/\r?\n/);
+      lineBuffer = lines.pop() || '';
+      for (const line of lines.filter(Boolean)) onLine?.(line);
+    });
     child.stderr.on('data', (c) => { stderr = append(stderr, c); });
     child.on('error', (e) => {
       clearTimeout(timer);
@@ -1228,6 +819,82 @@ function spawnCollect(command, args, input, timeoutMs, cwd) {
     });
     child.stdin.end(input);
   });
+}
+
+function normalizeDeerFlowEvent(event, data, i = 0) {
+  const type = String(event || data?.event || data?.type || '');
+  const text = String(data?.query || data?.url || data?.name || data?.content || data?.message || '');
+  if (/search/i.test(type)) return makeStep(i, 'search', 'DeerFlow 搜索', { query: data?.query || text, detail: text.slice(0, 240) });
+  if (/source|citation/i.test(type)) return makeStep(i, 'source', 'DeerFlow 来源', { url: data?.url || null, detail: text.slice(0, 240) });
+  if (/fetch|browser|page/i.test(type)) return makeStep(i, 'fetch', 'DeerFlow 读取网页', { url: data?.url || null, detail: text.slice(0, 240) });
+  if (/subagent|handoff/i.test(type)) return makeStep(i, 'subagent', 'DeerFlow 子 Agent', { detail: text.slice(0, 240) });
+  if (/tool/i.test(type)) return makeStep(i, 'tool', 'DeerFlow 工具调用', { toolName: data?.name || data?.tool || 'tool', detail: text.slice(0, 240) });
+  if (/error/i.test(type)) return makeStep(i, 'error', 'DeerFlow 错误', { detail: text.slice(0, 240) });
+  if (/message|values|updates/i.test(type)) return makeStep(i, 'message', 'DeerFlow 消息', { detail: text.slice(0, 240) });
+  return makeStep(i, 'observation', `DeerFlow 事件：${type || 'event'}`, { detail: text.slice(0, 240) });
+}
+
+function lastMessageText(data) {
+  const messages = data?.messages || data?.values?.messages || [];
+  const last = Array.isArray(messages) ? messages.at(-1) : null;
+  if (typeof last?.content === 'string') return last.content;
+  if (Array.isArray(last?.content)) return last.content.map((item) => item.text || item.content || '').join('\n');
+  return typeof data?.content === 'string' ? data.content : '';
+}
+
+async function callDeerFlow(runner, prompt, onStep) {
+  const endpoint = runner.endpoint.replace(/\/$/, '');
+  const threadResponse = await fetch(`${endpoint}/threads`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({}),
+    signal: AbortSignal.timeout(20_000),
+  });
+  if (!threadResponse.ok) throw new Error(`DeerFlow 创建线程失败：HTTP ${threadResponse.status}`);
+  const thread = await threadResponse.json();
+  const threadId = thread.thread_id || thread.id;
+  const response = await fetch(`${endpoint}/threads/${encodeURIComponent(threadId)}/runs/stream`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      assistant_id: runner.transport?.assistantId || 'lead_agent',
+      input: { messages: [{ role: 'user', content: prompt }] },
+      stream_mode: ['updates', 'values', 'messages'],
+    }),
+  });
+  if (!response.ok || !response.body) throw new Error(`DeerFlow 流式运行失败：HTTP ${response.status}`);
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  const steps = [];
+  let buffer = '', eventName = '', output = '', i = 0;
+  while (true) {
+    const { value, done } = await reader.read();
+    buffer += decoder.decode(value || new Uint8Array(), { stream: !done });
+    const blocks = buffer.split('\n\n');
+    buffer = blocks.pop() || '';
+    for (const block of blocks) {
+      let data = null;
+      for (const line of block.split(/\r?\n/)) {
+        if (line.startsWith('event:')) eventName = line.slice(6).trim();
+        if (line.startsWith('data:')) {
+          try { data = JSON.parse(line.slice(5).trim()); } catch {}
+        }
+      }
+      if (!data) continue;
+      const step = normalizeDeerFlowEvent(eventName, data, i++);
+      steps.push(step);
+      await onStep?.(step);
+      output = lastMessageText(data) || output;
+    }
+    if (done) break;
+  }
+  if (!output) throw new Error('DeerFlow 未返回最终回答');
+  return {
+    status: 'done',
+    mode: 'live',
+    output,
+    trace: { steps, totals: summarizeTrace(steps), source: { traceability: 'native', how: 'DeerFlow Gateway / LangGraph SSE' } },
+  };
 }
 
 async function synthesizeReview({ task, agents, evidence }) {
@@ -1278,11 +945,11 @@ async function synthesizeReview({ task, agents, evidence }) {
 }
 
 // —— 统一入口 —— //
-async function runAgent({ framework, model, task, agentId, role, mode }) {
+async function runAgent({ runner, framework, model, task, agentId, role, mode, onStep }) {
   if (mode === 'live') {
-    return await runLive(framework, model, task, agentId, role);
+    return await runLive(framework, model, task, agentId, role, runner, onStep);
   }
-  return await runSim(framework, model, task, agentId, role);
+  return await runSim(framework, model, task, agentId, role, onStep);
 }
 
 function capabilities() {
@@ -1312,540 +979,474 @@ function capabilities() {
 }
 
 
-// orchestrator.mjs — 多 agent 并行编排
+
+
 
 let counter = 1;
-function newId(prefix) { return `${prefix}_${Date.now().toString(36)}_${(counter++).toString(36)}`; }
+const id = (prefix) => `${prefix}_${Date.now().toString(36)}_${(counter++).toString(36)}`;
+const clean = (value = '') => String(value).replace(/\s+/g, ' ').trim();
 
-// 并行跑所有 agent；任一失败不拖累其他（Promise.allSettled）
-async function runParallel({ task, agents, mode = 'sim', onAgentStart, onAgentComplete }) {
-  const runId = newId('run');
-  const specs = agents.map((a, i) => ({
-    agentId: a.agentId || `${a.framework}#${i + 1}`,
-    framework: a.framework,
-    model: a.model,
-    role: a.role || 'strategist',
-  }));
-
-  const resultAgents = [];
-  await Promise.all(specs.map(async (s) => {
-    await onAgentStart?.(s);
-    let agent;
-    try {
-      agent = { ...s, label: agentLabel(s), ...await runAgent({ ...s, task, mode }) };
-    } catch (error) {
-      agent = { ...s, label: agentLabel(s), status: 'error', output: '', error: String(error?.message || error), trace: { steps: [] } };
-    }
-    resultAgents.push(agent);
-    await onAgentComplete?.(agent, resultAgents.slice());
-  }));
-  resultAgents.sort((a, b) => specs.findIndex((s) => s.agentId === a.agentId) - specs.findIndex((s) => s.agentId === b.agentId));
-
-  return {
-    id: runId,
-    task,
-    mode,
-    createdAt: new Date().toISOString(),
-    agents: resultAgents,
-  };
-}
-
-
-
-let projectCounter = 1;
-function newProjectId(prefix) { return `${prefix}_${Date.now().toString(36)}_${(projectCounter++).toString(36)}`; }
-
-const ROLE_PLAN = [
-  { role: 'strategist', label: '策略视角', why: '比较可选路径、机会成本与可逆性' },
-  { role: 'critic', label: '反方视角', why: '构造最强反对意见与失败预演' },
-  { role: 'operator', label: '行动视角', why: '把未知项转成低成本验证行动' },
-  { role: 'researcher', label: '证据视角', why: '区分事实、假设、推断与证据缺口' },
+const DEFAULT_RUBRIC = [
+  { id: 'instruction', label: '任务遵循度', weight: 20 },
+  { id: 'coverage', label: '完整性', weight: 25 },
+  { id: 'evidence', label: '证据质量', weight: 30 },
+  { id: 'consistency', label: '事实一致性', weight: 15 },
+  { id: 'unique', label: '独有贡献', weight: 10 },
 ];
 
-function clean(text = '') { return String(text).replace(/\s+/g, ' ').trim(); }
-
-function sentenceMatches(text, pattern) {
-  return clean(text).split(/[。！？!?；;\n]+/).filter((s) => pattern.test(s)).join('；');
+function classifyTask(message) {
+  const text = clean(message);
+  const research = /调研|研究|竞品|市场|行业|趋势|现状|比较|对比|查找|搜索|资料|research|competitor|market|survey/i.test(text);
+  const freshness = /最新|目前|当前|今天|近期|近[一二三四五六七八九十\d]+|202[4-9]|latest|current|today|recent/i.test(text);
+  return { research, freshness, evidencePolicy: research || freshness ? 'required' : 'preferred' };
 }
 
-function deriveBrief(question, previous = {}) {
-  const text = clean(question);
-  const constraints = sentenceMatches(text, /不能|必须|仅|只有|预算|成本|周期|周|天|月|人|截止|风险|不可接受/i);
-  const criteria = sentenceMatches(text, /成功|目标|达到|至少|指标|意味着|验收|接受/i);
+function deriveTaskBrief(message, previous = {}) {
+  const objective = clean(message);
+  const classification = classifyTask(objective);
   return {
-    decision: previous.decision || text,
-    context: previous.context || '',
-    constraints: previous.constraints || constraints,
-    criteria: previous.criteria || criteria,
-    unknowns: previous.unknowns || '真实需求强度、执行成本、关键风险边界，以及哪些新信息会改变当前选择。',
-    assumptions: previous.assumptions || '在缺少更多信息时，优先采用可逆、低成本且能产生新证据的行动。',
+    objective: previous.objective || objective,
+    deliverable: previous.deliverable || (classification.research ? '一份覆盖主要发现、分歧、证据缺口与完整来源的研究报告。' : '一份直接回答任务、解释依据并说明局限的完整结果。'),
+    scope: previous.scope || '围绕用户给出的任务边界展开；不擅自执行外部写入操作。',
+    constraints: previous.constraints || '允许联网搜索、网页读取、本地只读访问和隔离计算；禁止提交、发送、修改或写入真实外部系统。',
+    freshness: previous.freshness || (classification.freshness ? '需要核验当前信息和日期。' : '若使用可能变化的事实，应说明信息日期。'),
+    evidencePolicy: previous.evidencePolicy || classification.evidencePolicy,
   };
 }
 
-function extractSourceLinks(text = '') {
-  const links = String(text).match(/https?:\/\/[^\s<>"'，。！？；）)]+/gi) || [];
-  return [...new Set(links.map((url) => url.replace(/[.,;:!?]+$/, '')))].slice(0, 12);
+function recommendedSelection(mode) {
+  const runners = listRunners();
+  const candidates = runners.filter((runner) => runner.runnable && (mode === 'sim' ? runner.type === 'sim' : runner.type !== 'sim'));
+  const answerers = candidates.filter((runner) => runner.id !== 'sim-judge').slice(0, 3);
+  const judge = candidates.find((runner) => !answerers.some((item) => item.id === runner.id) && runner.capabilities.judge)
+    || candidates.find((runner) => runner.capabilities.judge)
+    || null;
+  return { selectedRunnerIds: answerers.slice(0, 2).map((runner) => runner.id), judgeRunnerId: judge?.id || null };
 }
 
-function addSourceLinks(project, text) {
-  project.sources ||= [];
-  for (const url of extractSourceLinks(text)) {
-    if (project.sources.some((source) => source.url === url)) continue;
-    let host = url;
-    try { host = new URL(url).hostname; } catch {}
-    project.sources.push({
-      id: `S${project.sources.length + 1}`,
-      url,
-      title: host,
-      excerpt: '',
-      status: 'provided',
-      addedAt: new Date().toISOString(),
-    });
-  }
-}
-
-function briefToTask(brief, sources = []) {
-  const sections = [
-    ['决策问题', brief.decision],
-    ['已知背景', brief.context],
-    ['约束与不可接受结果', brief.constraints],
-    ['成功标准', brief.criteria],
-    ['关键未知项', brief.unknowns],
-    ['默认假设', brief.assumptions],
-  ];
-  const sourceText = sources.length
-    ? `## 用户提供来源\n${sources.map((source) => {
-      const status = source.status === 'ready' ? '已读取' : source.status === 'failed' ? `读取失败：${source.error}` : '仅记录链接';
-      return `### [${source.id}] ${source.title || source.url}\nURL: ${source.finalUrl || source.url}\n状态: ${status}\n摘要: ${source.excerpt || '尚无可读取摘要'}`;
-    }).join('\n\n')}\n\n引用来源时必须使用 [S1] 这类编号；没有来源支持的内容不能写成事实。`
-    : '## 用户提供来源\n当前没有用户提供的来源。不得把外部事实写成已经核验。';
-  return [...sections.filter(([, value]) => clean(value)).map(([title, value]) => `## ${title}\n${clean(value)}`), sourceText].join('\n\n');
-}
-
-function createProject({ message, mode = 'sim', parentId = null, branchFrom = null }) {
-  const question = clean(message);
+function createTask({ message, mode = 'live', selectedRunnerIds, judgeRunnerId, rubric, evidencePolicy }) {
   const now = new Date().toISOString();
-  const project = {
-    id: newProjectId('project'),
-    title: question.slice(0, 56),
+  const recommended = recommendedSelection(mode);
+  const brief = deriveTaskBrief(message);
+  if (evidencePolicy) brief.evidencePolicy = evidencePolicy;
+  return {
+    id: id('task'),
+    title: clean(message).slice(0, 64),
+    kind: 'agent-comparison',
     status: 'ready',
     mode,
-    parentId,
-    branchFrom,
     createdAt: now,
     updatedAt: now,
-    brief: deriveBrief(question),
-    messages: [
-      { id: newProjectId('msg'), role: 'user', content: question, createdAt: now },
-      {
-        id: newProjectId('msg'),
-        role: 'assistant',
-        content: '我已把问题整理成工作简报。你可以直接开始探究；缺失信息将按可逆、低成本原则作为假设处理，也可以继续补充约束。',
-        createdAt: now,
-      },
-    ],
-    timeline: [],
+    brief,
+    selectedRunnerIds: selectedRunnerIds?.length ? selectedRunnerIds.slice(0, 4) : recommended.selectedRunnerIds,
+    judgeRunnerId: judgeRunnerId || recommended.judgeRunnerId,
+    rubric: Array.isArray(rubric) && rubric.length ? rubric : DEFAULT_RUBRIC.map((item) => ({ ...item })),
     runs: [],
-    sources: [],
-    decisionPackage: null,
-    review: null,
-  };
-  addSourceLinks(project, question);
-  return project;
-}
-
-function appendProjectMessage(project, message) {
-  const content = clean(message);
-  const now = new Date().toISOString();
-  project.messages.push({ id: newProjectId('msg'), role: 'user', content, createdAt: now });
-
-  const lower = content.toLowerCase();
-  if (/成功|标准|指标|验收|达到/.test(lower)) project.brief.criteria = clean([project.brief.criteria, content].filter(Boolean).join('；'));
-  else if (/约束|不能|必须|预算|周期|截止|风险/.test(lower)) project.brief.constraints = clean([project.brief.constraints, content].filter(Boolean).join('；'));
-  else if (/未知|不确定|需要验证|假设/.test(lower)) project.brief.unknowns = clean([project.brief.unknowns, content].filter(Boolean).join('；'));
-  else if (/背景|已知|现状|客户|目前/.test(lower)) project.brief.context = clean([project.brief.context, content].filter(Boolean).join('；'));
-  else project.brief.context = clean([project.brief.context, content].filter(Boolean).join('；'));
-
-  project.messages.push({
-    id: newProjectId('msg'),
-    role: 'assistant',
-    content: '已更新工作简报。除非这条信息改变了目标，你不需要重新填写任何字段。',
-    createdAt: now,
-  });
-  addSourceLinks(project, content);
-  project.updatedAt = now;
-  return project;
-}
-
-function planProject(project, capabilities) {
-  const liveAgents = capabilities.liveAgents || [];
-  const mode = project.mode === 'live' && liveAgents.length ? 'live' : 'sim';
-  const simRunners = [
-    { framework: 'claude-code', model: 'claude-opus-4-8' },
-    { framework: 'codex-cli', model: 'gpt-x' },
-    { framework: 'langgraph', model: 'o-series' },
-    { framework: 'crewai', model: 'gemini-x' },
-  ];
-  const runners = mode === 'live' ? liveAgents : simRunners;
-  const agents = ROLE_PLAN.map((item, index) => {
-    const runner = runners[index % runners.length];
-    return { ...item, framework: runner.framework, model: runner.model };
-  });
-  const sharedRunner = new Set(agents.map((a) => `${a.framework}:${a.model}`)).size === 1;
-  return {
-    mode,
-    agents,
-    warnings: [
-      ...(project.mode === 'live' && mode === 'sim' ? ['未检测到真实运行通道，本次只能使用 Sim 演示。'] : []),
-      ...(sharedRunner ? ['所有视角将使用同一运行通道，角色独立不等于模型独立。'] : []),
+    scorecards: [],
+    finalAnswer: '',
+    evaluation: null,
+    messages: [
+      { id: id('msg'), role: 'user', content: clean(message), createdAt: now },
+      { id: id('msg'), role: 'assistant', content: `已生成任务简报。证据策略：${brief.evidencePolicy === 'required' ? '必须检索并引用来源' : '优先使用证据'}。请选择 Agent 与独立 Judge 后开始对比。`, createdAt: now },
     ],
   };
 }
 
-function timelineEvent(type, title, detail = '', extra = {}) {
-  return { id: newProjectId('event'), type, title, detail, at: new Date().toISOString(), ...extra };
+function patchTask(task, update) {
+  if (update.brief && typeof update.brief === 'object') task.brief = { ...task.brief, ...update.brief };
+  if (Array.isArray(update.selectedRunnerIds)) task.selectedRunnerIds = [...new Set(update.selectedRunnerIds)].slice(0, 4);
+  if (typeof update.judgeRunnerId === 'string') task.judgeRunnerId = update.judgeRunnerId || null;
+  if (Array.isArray(update.rubric) && update.rubric.length) task.rubric = update.rubric;
+  if (update.mode === 'live' || update.mode === 'sim') task.mode = update.mode;
+  if (clean(update.title)) task.title = clean(update.title).slice(0, 80);
+  task.updatedAt = new Date().toISOString();
+  return task;
 }
 
-async function exploreProject(project, capabilities, { onEvent, synthesize }) {
-  const emit = async (event) => {
-    const item = timelineEvent(event.type, event.title, event.detail, event);
-    project.timeline.push(item);
-    project.updatedAt = item.at;
-    await onEvent?.(item, project);
+function taskPrompt(task) {
+  const brief = task.brief;
+  return [
+    '你是 Aker 中独立执行任务的 Agent。请直接完成任务，而不是给用户布置下一步。',
+    '允许使用联网搜索、网页读取、本地只读访问和隔离计算。禁止修改文件，禁止向任何真实外部系统提交、发送、创建或写入数据。',
+    brief.evidencePolicy === 'required'
+      ? '这是证据必需任务：必须实际搜索或读取来源；重要事实附可核验 URL。若无法检索，请明确说明，不要凭记忆冒充已调研。'
+      : '优先提供可核验依据；不要虚构来源。',
+    '输出应覆盖主要发现、关键分歧、局限和来源。不要写决策建议，除非用户任务明确要求。',
+    '',
+    `## 任务目标\n${brief.objective}`,
+    `## 期望交付物\n${brief.deliverable}`,
+    `## 范围\n${brief.scope}`,
+    `## 约束\n${brief.constraints}`,
+    `## 时效性\n${brief.freshness}`,
+    `## 证据策略\n${brief.evidencePolicy}`,
+  ].join('\n\n');
+}
+
+function researchCompletion(run, task) {
+  const totals = summarizeTrace(run.trace?.steps || []);
+  const hasEvidence = totals.searches > 0 || totals.fetches > 0 || totals.sources > 0;
+  const required = task.brief.evidencePolicy === 'required';
+  return {
+    required,
+    hasEvidence,
+    complete: run.status === 'done' && (!required || hasEvidence) && !run.simulated,
+    reason: required && !hasEvidence ? '未完成调研：没有搜索、网页读取或来源 Trace' : run.simulated ? 'Sim 输出不进入事实融合' : '',
   };
+}
 
-  project.status = 'running';
-  project.timeline = [];
-  project.decisionPackage = null;
-  project.review = null;
-  const plan = planProject(project, capabilities);
-  project.mode = plan.mode;
-  const sources = project.sources || [];
-  if (sources.length) {
-    const ready = sources.filter((source) => source.status === 'ready').length;
-    await emit({
-      type: 'source_audit',
-      title: `已整理 ${sources.length} 个用户提供来源`,
-      detail: `${ready} 个已读取摘要；${sources.length - ready} 个仅记录或读取失败。来源存在不等于主张已经得到证实。`,
-    });
-  }
-  await emit({
-    type: 'plan',
-    title: `已生成 ${plan.agents.length} 个独立判断分支`,
-    detail: plan.agents.map((a) => `${a.label}：${a.why}`).join('；'),
-    plan,
-  });
-  for (const warning of plan.warnings) await emit({ type: 'warning', title: warning });
+async function runTask(task, { onEvent } = {}) {
+  if (!task.selectedRunnerIds?.length) throw new Error('至少选择 1 个 Agent');
+  task.status = 'running';
+  task.runs = [];
+  task.finalAnswer = '';
+  task.scorecards = [];
+  const prompt = taskPrompt(task);
+  const emit = async (event) => onEvent?.({ at: new Date().toISOString(), ...event }, task);
 
-  const task = briefToTask(project.brief, sources);
-  const run = await runParallel({
-    task,
-    agents: plan.agents,
-    mode: plan.mode,
-    onAgentStart: async (spec) => emit({
-      type: 'agent_start',
-      title: `${ROLE_PLAN.find((item) => item.role === spec.role)?.label || '独立视角'}开始判断`,
-      detail: ROLE_PLAN.find((item) => item.role === spec.role)?.why || '',
-      agentId: spec.agentId,
-      role: spec.role,
-    }),
-    onAgentComplete: async (agent, partialAgents) => {
-      await emit({
-        type: agent.status === 'done' ? 'agent_done' : 'agent_error',
-        title: `${ROLE_PLAN.find((item) => item.role === agent.role)?.label || '独立视角'}${agent.status === 'done' ? '已形成观点' : '运行失败'}`,
-        detail: agent.status === 'done' ? summarizeOpinion(agent.output) : agent.error,
-        agentId: agent.agentId,
-        role: agent.role,
-        agent,
-      });
-      const completed = partialAgents.filter((a) => a.status === 'done' && a.output);
-      if (completed.length >= 2) {
-        const interim = review({ agents: completed }, 'intersection');
-        await emit({
-          type: 'committee_update',
-          title: `委员会已检查 ${completed.length} 个观点`,
-          detail: `识别到 ${interim.consensus.length} 条共同主张、${interim.divergence.length} 条少数观点；共同出现不代表事实正确。`,
-          counts: interim.counts,
-        });
-      }
-    },
-  });
-  project.runs.unshift(run.id);
-
-  const completed = run.agents.filter((a) => a.status === 'done' && a.output);
-  if (completed.length < 2) {
-    project.status = 'failed';
-    await emit({ type: 'error', title: '可用观点不足，无法形成可靠决策包', detail: '至少需要两个成功完成的独立视角。' });
-    return { project, run, review: null };
-  }
-
-  await emit({ type: 'synthesis_start', title: '委员会正在处理分歧并形成决策包' });
-  const result = review(run, 'intersection');
-  if (plan.mode === 'live' && synthesize) {
-    try {
-      const live = await synthesize({ task, agents: completed, evidence: result });
-      result.betterSolution = {
-        ...result.betterSolution,
-        ruleMarkdown: result.betterSolution.markdown,
-        markdown: live.markdown,
-        synthesis: { mode: 'live', channel: live.channel },
-      };
-    } catch (error) {
-      result.betterSolution.synthesis = { mode: 'error', error: String(error?.message || error) };
-      await emit({ type: 'warning', title: '真实综合失败，保留规则式决策包', detail: result.betterSolution.synthesis.error });
+  await Promise.all(task.selectedRunnerIds.map(async (runnerId, index) => {
+    const runner = getRunner(runnerId);
+    const runId = id('agentRun');
+    const base = {
+      id: runId,
+      agentId: `${runnerId}#${index + 1}`,
+      runnerId,
+      label: runner?.label || runnerId,
+      framework: runner?.framework || runnerId,
+      model: runner?.model || 'unknown',
+      capability: runner?.capabilities || {},
+      status: 'running',
+      startedAt: new Date().toISOString(),
+      trace: { steps: [] },
+    };
+    task.runs.push(base);
+    await emit({ type: 'agent_start', runnerId, runId, run: base });
+    if (!runner?.runnable) {
+      Object.assign(base, { status: 'error', error: 'Runner 当前不可运行', completedAt: new Date().toISOString() });
+      await emit({ type: 'agent_error', runnerId, runId, run: base });
+      return;
     }
+    if (task.brief.evidencePolicy === 'required' && !runner.capabilities.search && runner.type === 'api') {
+      Object.assign(base, { status: 'capability-limited', error: '该 Direct API Runner 没有搜索能力，不能参与证据必需任务', completedAt: new Date().toISOString() });
+      await emit({ type: 'agent_error', runnerId, runId, run: base });
+      return;
+    }
+    try {
+      const result = await runAgent({
+        runner,
+        framework: runner.framework,
+        model: runner.model,
+        task: prompt,
+        agentId: base.agentId,
+        mode: runner.type === 'sim' ? 'sim' : 'live',
+        evidencePolicy: task.brief.evidencePolicy,
+        onStep: async (step) => {
+          base.trace.steps.push(step);
+          await emit({ type: 'agent_trace', runnerId, runId, step });
+        },
+      });
+      const steps = base.trace.steps.length ? base.trace.steps : result.trace?.steps || [];
+      Object.assign(base, result, {
+        trace: { ...(result.trace || {}), steps, totals: summarizeTrace(steps) },
+        completedAt: new Date().toISOString(),
+        simulated: runner.type === 'sim',
+      });
+      base.research = researchCompletion(base, task);
+      await emit({ type: 'agent_done', runnerId, runId, run: base });
+    } catch (error) {
+      base.trace.totals = summarizeTrace(base.trace.steps);
+      Object.assign(base, { status: 'error', error: String(error?.message || error), completedAt: new Date().toISOString() });
+      base.research = researchCompletion(base, task);
+      await emit({ type: 'agent_error', runnerId, runId, run: base });
+    }
+  }));
+  task.runs.sort((a, b) => task.selectedRunnerIds.indexOf(a.runnerId) - task.selectedRunnerIds.indexOf(b.runnerId));
+  task.status = 'awaiting-evaluation';
+  task.updatedAt = new Date().toISOString();
+  await emit({ type: 'run_complete', runs: task.runs });
+  return task;
+}
+
+
+
+
+
+
+const clamp = (n) => Math.max(0, Math.min(100, Math.round(n)));
+const unique = (items) => [...new Set(items.filter(Boolean))];
+
+function sourcesFrom(run) {
+  return unique((run.trace?.steps || []).filter((step) => step.type === 'source' && step.url).map((step) => step.url));
+}
+
+function scoreRun(run, task) {
+  const totals = summarizeTrace(run.trace?.steps || []);
+  const research = researchCompletion(run, task);
+  const outputLength = String(run.output || '').length;
+  const scores = {
+    instruction: clamp(run.status === 'done' ? 75 + Math.min(25, outputLength / 300) : 0),
+    coverage: clamp(Math.min(100, outputLength / 35)),
+    evidence: clamp(research.hasEvidence ? 55 + totals.sources * 8 + totals.searches * 5 + totals.fetches * 3 : 0),
+    consistency: clamp(run.status === 'done' ? 70 : 0),
+    unique: clamp(run.status === 'done' ? 65 : 0),
+  };
+  const totalWeight = task.rubric.reduce((sum, item) => sum + Number(item.weight || 0), 0) || 1;
+  const total = clamp(task.rubric.reduce((sum, item) => sum + (scores[item.id] || 0) * Number(item.weight || 0), 0) / totalWeight);
+  return {
+    runnerId: run.runnerId,
+    label: run.label,
+    eligibleForFusion: research.complete,
+    incompleteReason: research.reason,
+    scores,
+    total,
+    sources: sourcesFrom(run),
+    uniqueContribution: outputLength ? '该 Agent 的完整回答保留在下方，可与其他回答逐项比对。' : '没有可评审输出。',
+    omissions: research.reason ? [research.reason] : [],
+  };
+}
+
+function fallbackFusion(task, eligible, scorecards) {
+  const sources = unique(eligible.flatMap(sourcesFrom));
+  const lines = [
+    '## 证据加权融合答案',
+    '',
+    eligible.length
+      ? '以下融合保留了可进入事实融合的 Agent 输出。由于无 GT 场景不能宣称绝对正确，建议优先核验冲突主张与证据缺口。'
+      : '当前没有 Agent 满足事实融合条件。证据必需任务需要真实搜索、网页读取或来源 Trace；Sim 输出和无检索回答不会冒充研究结论。',
+    '',
+  ];
+  for (const run of eligible) {
+    lines.push(`### ${run.label}`);
+    lines.push(String(run.output || '').slice(0, 6000));
+    lines.push('');
   }
-  project.review = result;
-  project.decisionPackage = result.betterSolution.markdown;
-  project.status = 'complete';
-  await emit({
-    type: 'complete',
-    title: '决策包已完成',
-    detail: '你可以继续补充信息、从任意主张创建分支，或复制当前决策包。',
+  lines.push('## Agent 评分榜', '');
+  scorecards.slice().sort((a, b) => b.total - a.total).forEach((card, index) => {
+    lines.push(`${index + 1}. ${card.label}：${card.total}/100${card.eligibleForFusion ? '' : `（不进入事实融合：${card.incompleteReason}）`}`);
   });
-  return { project, run, review: result };
+  lines.push('', '## 每个 Agent 的独有贡献与遗漏', '');
+  scorecards.forEach((card) => lines.push(`- ${card.label}：${card.uniqueContribution}${card.omissions.length ? ` 遗漏：${card.omissions.join('；')}` : ''}`));
+  lines.push('', '## 冲突主张及其来源', '', '- 规则评审无法可靠判断语义冲突；请使用独立 Judge 对具体主张和来源进行复核。');
+  lines.push('', '## 未解决问题和证据缺口', '', eligible.length ? '- 对各来源的独立性、发布日期和关键数字仍需逐项核验。' : '- 缺少可进入事实融合的真实研究输出。');
+  lines.push('', '## 完整来源列表', '');
+  if (sources.length) sources.forEach((url) => lines.push(`- ${url}`));
+  else lines.push('- 暂无真实来源。');
+  return lines.join('\n');
 }
 
-function summarizeOpinion(output = '') {
-  const lines = String(output).split('\n').map((line) => line.replace(/^[-#>\s]+/, '').trim()).filter(Boolean);
-  const useful = lines.find((line) => !/^(独立判断|关键主张|最强反对意见|会改变结论的信息|最低成本验证)$/.test(line));
-  return (useful || '已完成独立判断').slice(0, 180);
+function judgePrompt(task, eligible, scorecards) {
+  return [
+    '你是 Aker 的独立 Judge。请评审多个 Agent 对同一开放任务的回答，并生成证据加权的融合答案。',
+    '不要把多数意见当成事实，不要宣称无 GT 条件下获得绝对真相。重要主张必须能追溯到 Agent 输出或来源 URL。',
+    '输出 Markdown，必须包含：',
+    '## 证据加权融合答案',
+    '## Agent 评分榜',
+    '## 每个 Agent 的独有贡献与遗漏',
+    '## 冲突主张及其来源',
+    '## 未解决问题和证据缺口',
+    '## 完整来源列表',
+    '',
+    `任务：${task.brief.objective}`,
+    `交付物：${task.brief.deliverable}`,
+    `评分表：${JSON.stringify(task.rubric)}`,
+    `基础评分：${JSON.stringify(scorecards)}`,
+    '',
+    eligible.map((run) => `### ${run.label}\n来源：${sourcesFrom(run).join(', ') || '未提取'}\n${String(run.output || '').slice(0, 10000)}`).join('\n\n'),
+  ].join('\n');
+}
+
+async function evaluateTask(task, { onEvent } = {}) {
+  const scorecards = task.runs.map((run) => scoreRun(run, task)).sort((a, b) => b.total - a.total);
+  const eligible = task.runs.filter((run) => scorecards.find((card) => card.runnerId === run.runnerId)?.eligibleForFusion);
+  const judge = getRunner(task.judgeRunnerId);
+  const warnings = [];
+  if (!judge) warnings.push('未选择可用 Judge，使用规则式融合。');
+  if (task.selectedRunnerIds.includes(task.judgeRunnerId)) warnings.push('Judge 同时参与了作答，存在自评偏差。');
+  const channels = task.runs.filter((run) => run.status === 'done').map((run) => `${run.framework}:${run.model}`);
+  if (new Set(channels).size < channels.length && channels.length > 1) warnings.push('多个回答使用相同框架与模型，存在相关性偏差。');
+  const sourceOwners = new Map();
+  for (const run of task.runs) for (const source of sourcesFrom(run)) sourceOwners.set(source, (sourceOwners.get(source) || 0) + 1);
+  if ([...sourceOwners.values()].some((count) => count > 1)) warnings.push('多个回答依赖相同来源；来源重合不等于独立验证。');
+  let finalAnswer = fallbackFusion(task, eligible, scorecards);
+  let judgeRun = null;
+  if (judge?.runnable && judge.type !== 'sim' && eligible.length) {
+    try {
+      await onEvent?.({ type: 'judge_start', runnerId: judge.id, at: new Date().toISOString() });
+      judgeRun = await runAgent({
+        runner: judge,
+        framework: judge.framework,
+        model: judge.model,
+        task: judgePrompt(task, eligible, scorecards),
+        agentId: `judge:${judge.id}`,
+        mode: 'live',
+        evidencePolicy: 'preferred',
+        onStep: async (step) => onEvent?.({ type: 'judge_trace', runnerId: judge.id, step, at: new Date().toISOString() }),
+      });
+      if (judgeRun.output) finalAnswer = judgeRun.output;
+    } catch (error) {
+      warnings.push(`独立 Judge 失败，已保留规则式融合：${String(error?.message || error)}`);
+    }
+  } else if (judge?.type === 'sim') {
+    warnings.push('当前使用 Sim Judge；结果只用于演示评审结构。');
+  }
+  task.scorecards = scorecards;
+  task.finalAnswer = finalAnswer;
+  task.evaluation = {
+    judgeRunnerId: task.judgeRunnerId,
+    judgeRun,
+    warnings,
+    eligibleRunnerIds: eligible.map((run) => run.runnerId),
+    sources: unique(eligible.flatMap(sourcesFrom)),
+    evaluatedAt: new Date().toISOString(),
+  };
+  task.status = 'complete';
+  task.updatedAt = new Date().toISOString();
+  await onEvent?.({ type: 'evaluation_complete', task, at: new Date().toISOString() });
+  return task;
 }
 
 
-// ── 浏览器 store（localStorage 持久化）──
-const __KEY = 'aker.projects.v2';
-function __load() { try { const db = JSON.parse(localStorage.getItem(__KEY)) || {}; db.runs ||= []; db.projects ||= []; return db; } catch { return { runs: [], projects: [] }; } }
-function __save(db) { localStorage.setItem(__KEY, JSON.stringify(db)); }
-function saveRun(run) { const db = __load(); const i = db.runs.findIndex(r => r.id === run.id); if (i >= 0) db.runs[i] = run; else db.runs.unshift(run); __save(db); return run; }
-function getRun(id) { return __load().runs.find(r => r.id === id) || null; }
-function listRuns() { return __load().runs.map(({ id, task, createdAt, mode, agents }) => ({ id, task, createdAt, mode, agentCount: agents.length })); }
-function saveProject(project) { const db = __load(); const i = db.projects.findIndex(p => p.id === project.id); if (i >= 0) db.projects[i] = project; else db.projects.unshift(project); __save(db); return project; }
-function getProject(id) { return __load().projects.find(p => p.id === id) || null; }
-function listProjects() { return __load().projects.map(({ id, title, status, mode, createdAt, updatedAt, parentId }) => ({ id, title, status, mode, createdAt, updatedAt, parentId })); }
-
-// ── 首次访问灌入 Sim 示例 run（模板数据，仅用于演示流程）──
-let __seeded = false;
-async function ensureSeeded() {
-  if (__seeded) return;
-  __seeded = true;
-  if (__load().runs.length) return;
-  const run = await runParallel({ task: '实现一个带缓存的并发安全计数器', mode: 'sim', agents: [
-    { role: 'strategist', framework: 'claude-code', model: 'claude-opus-4-8' },
-    { role: 'critic', framework: 'codex-cli', model: 'gpt-x' },
-    { role: 'operator', framework: 'langgraph', model: 'o-series' },
-    { role: 'researcher', framework: 'hermes', model: 'hermes-3' },
-  ]});
-  run.id = 'run_demo'; run.createdAt = '2026-06-08T00:00:00.000Z';
-  saveRun(run);
+const __ENV = {};
+const __KEY = 'aker.tasks.v05';
+const __SIM_RUNNERS = [
+  { id:'sim-research-a', label:'Sim Research A', type:'sim', framework:'sim-research', model:'sim-a', runnable:true, simulated:true, permission:'simulated-read-only', capabilities:{search:true,readOnlyTools:true,trace:true,sources:true,subagents:false,judge:true} },
+  { id:'sim-research-b', label:'Sim Research B', type:'sim', framework:'sim-research', model:'sim-b', runnable:true, simulated:true, permission:'simulated-read-only', capabilities:{search:true,readOnlyTools:true,trace:true,sources:true,subagents:false,judge:true} },
+  { id:'sim-judge', label:'Sim Judge', type:'sim', framework:'sim-judge', model:'sim-judge', runnable:true, simulated:true, permission:'simulated-read-only', capabilities:{search:true,readOnlyTools:true,trace:true,sources:true,subagents:false,judge:true} },
+];
+function listConnections(){return {cli:[],api:[],keychain:false}}
+function getApiKey(){return null}
+function getApiModel(provider){return provider==='anthropic'?'claude-sonnet-4-6':'gpt-4.1-mini'}
+function listRunners(){return __SIM_RUNNERS}
+function getRunner(id){return __SIM_RUNNERS.find(r=>r.id===id)||null}
+function loadDb(){try{const db=JSON.parse(localStorage.getItem(__KEY))||{};db.tasks||=[];return db}catch{return {tasks:[]}}}
+function saveDb(db){localStorage.setItem(__KEY,JSON.stringify(db))}
+function saveTask(task){const db=loadDb();const i=db.tasks.findIndex(x=>x.id===task.id);if(i>=0)db.tasks[i]=task;else db.tasks.unshift(task);saveDb(db);return task}
+function getTask(id){return loadDb().tasks.find(x=>x.id===id)||null}
+function listTasks(){return loadDb().tasks.map(({id,title,status,mode,createdAt,updatedAt})=>({id,title,status,mode,createdAt,updatedAt,legacy:false}))}
+async function route(method,urlString,payload){
+  const p=new URL(urlString,location.origin).pathname;
+  if(p==='/api/runners'&&method==='GET')return {status:200,body:{runners:listRunners()}};
+  if(p==='/api/tasks'&&method==='GET')return {status:200,body:{tasks:listTasks()}};
+  if(p==='/api/tasks'&&method==='POST'){const task=createTask({...payload,mode:'sim'});saveTask(task);return {status:201,body:{task}}}
+  const m=p.match(/^\/api\/tasks\/([^/]+)$/);
+  if(m&&method==='GET'){const task=getTask(decodeURIComponent(m[1]));return task?{status:200,body:{task}}:{status:404,body:{error:'task 不存在'}}}
+  if(m&&method==='PATCH'){const task=getTask(decodeURIComponent(m[1]));patchTask(task,{...payload,mode:'sim'});saveTask(task);return {status:200,body:{task}}}
+  const run=p.match(/^\/api\/tasks\/([^/]+)\/run$/);
+  if(run&&method==='POST'){const task=getTask(decodeURIComponent(run[1]));const stream=[];await runTask(task,{onEvent:async e=>{saveTask(task);stream.push(e)}});saveTask(task);stream.push({type:'complete',task});return {status:200,stream}}
+  const evaluate=p.match(/^\/api\/tasks\/([^/]+)\/evaluate$/);
+  if(evaluate&&method==='POST'){const task=getTask(decodeURIComponent(evaluate[1]));await evaluateTask(task);saveTask(task);return {status:200,body:{task}}}
+  if(p==='/api/runners/import-github')return {status:400,body:{error:'Standalone Web Demo 仅提供 Sim Runner；请使用桌面版导入 Agent。'}};
+  return {status:404,body:{error:'unknown api'}};
 }
-
-// ── 路由：复刻原 server.mjs 的 API（纯前端执行）──
-async function __handle(method, urlStr, body) {
-  const url = new URL(urlStr, location.origin);
-  const p = url.pathname;
-  await ensureSeeded();
-  if (p === '/api/health') return { status: 200, body: { ok: true, ...capabilities() } };
-  if (p === '/api/connections') return { status: 200, body: listConnections() };
-  if (p === '/api/frameworks') return { status: 200, body: { frameworks: FRAMEWORKS, matrixColumns: MATRIX_COLUMNS, traceabilityMeta: TRACEABILITY_META } };
-  if (p === '/api/runs' && method === 'GET') return { status: 200, body: { runs: listRuns() } };
-  if (p === '/api/projects' && method === 'GET') return { status: 200, body: { projects: listProjects() } };
-  if (p === '/api/projects' && method === 'POST') {
-    const project = createProject({ message: body.message, mode: 'sim' }); saveProject(project); return { status: 201, body: { project } };
+const originalFetch=window.fetch.bind(window);
+window.fetch=async(input,init={})=>{
+  const url=typeof input==='string'?input:input.url;
+  if(url&&url.includes('/api/')){
+    let result;try{result=await route((init.method||'GET').toUpperCase(),url,init.body?JSON.parse(init.body):{})}catch(error){result={status:500,body:{error:String(error.message||error)}}}
+    if(result.stream)return new Response(result.stream.map(x=>JSON.stringify(x)).join('\n')+'\n',{status:result.status,headers:{'content-type':'application/x-ndjson'}});
+    return new Response(JSON.stringify(result.body),{status:result.status,headers:{'content-type':'application/json'}});
   }
-  const projectMatch = p.match(/^\/api\/projects\/([^/]+)$/);
-  if (projectMatch && method === 'GET') { const project = getProject(decodeURIComponent(projectMatch[1])); return project ? { status: 200, body: { project } } : { status: 404, body: { error: 'project 不存在' } }; }
-  if (projectMatch && method === 'PATCH') { const project = getProject(decodeURIComponent(projectMatch[1])); if (!project) return { status: 404, body: { error: 'project 不存在' } }; if (body.brief) project.brief = { ...project.brief, ...body.brief }; project.mode = 'sim'; saveProject(project); return { status: 200, body: { project } }; }
-  const messageMatch = p.match(/^\/api\/projects\/([^/]+)\/messages$/);
-  if (messageMatch && method === 'POST') { const project = getProject(decodeURIComponent(messageMatch[1])); appendProjectMessage(project, body.message); saveProject(project); return { status: 200, body: { project } }; }
-  const branchMatch = p.match(/^\/api\/projects\/([^/]+)\/branches$/);
-  if (branchMatch && method === 'POST') { const parent = getProject(decodeURIComponent(branchMatch[1])); const project = createProject({ message: body.prompt || ('请验证：' + body.claim), mode: 'sim', parentId: parent.id, branchFrom: body.claim }); saveProject(project); return { status: 201, body: { project } }; }
-  const exploreMatch = p.match(/^\/api\/projects\/([^/]+)\/explore$/);
-  if (exploreMatch && method === 'POST') {
-    const project = getProject(decodeURIComponent(exploreMatch[1])); const stream = [];
-    const result = await exploreProject(project, capabilities(), { onEvent: async event => { saveProject(project); stream.push({ type: 'event', event }); } });
-    saveRun(result.run); saveProject(result.project); stream.push({ type: 'complete', project: result.project, run: result.run, review: result.review });
-    return { status: 200, stream };
-  }
-  if (p === '/api/run' && method === 'POST') {
-    const { task, agents, mode } = body || {};
-    if (!task || !Array.isArray(agents) || !agents.length) return { status: 400, body: { error: 'task 与 agents 必填' } };
-    const run = await runParallel({ task, agents, mode: mode || 'sim' });
-    saveRun(run);
-    return { status: 200, body: { run } };
-  }
-  if (p.startsWith('/api/runs/') && method === 'GET') {
-    const run = getRun(decodeURIComponent(p.split('/').pop()));
-    return run ? { status: 200, body: { run } } : { status: 404, body: { error: 'run 不存在' } };
-  }
-  if (p === '/api/review' && method === 'POST') {
-    const run = getRun(body.runId);
-    if (!run) return { status: 404, body: { error: 'run 不存在' } };
-    return { status: 200, body: { review: review(run, body.mode || 'intersection') } };
-  }
-  if (p === '/api/trace/diff' && method === 'GET') {
-    const run = getRun(url.searchParams.get('runId'));
-    if (!run) return { status: 404, body: { error: 'run 不存在' } };
-    const a = run.agents.find(x => x.agentId === url.searchParams.get('a'));
-    const b = run.agents.find(x => x.agentId === url.searchParams.get('b'));
-    if (!a || !b) return { status: 400, body: { error: 'a/b agent 不存在' } };
-    return { status: 200, body: { diff: diffTraces(a, b) } };
-  }
-  return { status: 404, body: { error: 'unknown api' } };
-}
-
-// ── 拦截 fetch：/api/* 走本地路由，其余放行 ──
-const __origFetch = window.fetch.bind(window);
-window.fetch = async (input, init = {}) => {
-  const urlStr = typeof input === 'string' ? input : input.url;
-  if (urlStr && urlStr.includes('/api/')) {
-    const method = (init.method || 'GET').toUpperCase();
-    const body = init.body ? JSON.parse(init.body) : null;
-    let r;
-    try { r = await __handle(method, urlStr, body); }
-    catch (e) { r = { status: 500, body: { error: String(e && e.message || e) } }; }
-    if (r.stream) return new Response(r.stream.map(x => JSON.stringify(x)).join('\n') + '\n', { status: r.status, headers: { 'content-type': 'application/x-ndjson' } });
-    return new Response(JSON.stringify(r.body), { status: r.status, headers: { 'content-type': 'application/json' } });
-  }
-  return __origFetch(input, init);
+  return originalFetch(input,init);
 };
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
+const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
 const api = async (path, options = {}) => {
   const response = await fetch(path, options);
   const payload = await response.json();
   if (!response.ok || payload.error) throw new Error(payload.error || `HTTP ${response.status}`);
   return payload;
 };
-const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-const STATE = {
-  health: null,
-  projects: [],
-  project: null,
-  connections: null,
-  exploring: false,
-};
-
-const EVENT_META = {
-  plan: ['计划', 'plan'],
-  source_audit: ['证据', 'committee'],
-  warning: ['提醒', 'warning'],
-  agent_start: ['进行中', 'running'],
-  agent_done: ['观点', 'done'],
-  agent_error: ['失败', 'error'],
-  committee_update: ['委员会', 'committee'],
-  synthesis_start: ['综合', 'running'],
-  complete: ['完成', 'done'],
-  error: ['错误', 'error'],
+const STATE = { tasks: [], task: null, runners: [], running: false };
+const TRACE_LABEL = {
+  plan: '计划', search: '搜索', fetch: '读取', tool: '工具', observation: '观察',
+  subagent: '子 Agent', source: '来源', message: '消息', error: '错误',
 };
 
 document.addEventListener('DOMContentLoaded', init);
 
 async function init() {
-  bindStaticControls();
-  const [health, projectData, connections] = await Promise.all([
-    api('/api/health'),
-    api('/api/projects').catch(() => ({ projects: [] })),
-    api('/api/connections').catch(() => ({ cli: [], api: [], keychain: false })),
+  bindControls();
+  const [{ tasks }, { runners }] = await Promise.all([
+    api('/api/tasks').catch(() => ({ tasks: [] })),
+    api('/api/runners').catch(() => ({ runners: [] })),
   ]);
-  STATE.health = health;
-  STATE.projects = projectData.projects || [];
-  STATE.connections = connections;
-  $('#projectMode').value = health.live ? 'live' : 'sim';
-  renderConnectionStatus();
-  renderProjectList();
-  renderConnections();
-  if (STATE.projects[0]) await openProject(STATE.projects[0].id);
+  STATE.tasks = tasks;
+  STATE.runners = runners;
+  renderTaskList();
+  renderModeStatus();
+  renderRunnerConfig();
+  if (tasks[0]) await openTask(tasks[0].id);
 }
 
-function bindStaticControls() {
-  $('#newProject').addEventListener('click', newProject);
-  $('#sendMessage').addEventListener('click', submitMessage);
-  $('#rerunProject').addEventListener('click', exploreCurrentProject);
-  $('#openConnections').addEventListener('click', () => showView('connections'));
-  $('#closeConnections').addEventListener('click', () => showView('project'));
-  $('#saveBrief').addEventListener('click', saveBrief);
-  $('#copyPackage').addEventListener('click', copyDecisionPackage);
-  $('#projectMode').addEventListener('change', updateProjectMode);
+function bindControls() {
+  $('#newTask').addEventListener('click', resetTask);
+  $('#sendMessage').addEventListener('click', submitTask);
   $('#messageInput').addEventListener('keydown', (event) => {
-    if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') { event.preventDefault(); submitMessage(); }
+    if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') { event.preventDefault(); submitTask(); }
+  });
+  $('#taskMode').addEventListener('change', changeMode);
+  $('#toggleInspector').addEventListener('click', () => {
+    $('#workspace').classList.toggle('inspector-hidden');
+    $('#toggleInspector').textContent = $('#workspace').classList.contains('inspector-hidden') ? '显示配置' : '隐藏配置';
   });
   $$('.examples button').forEach((button) => button.addEventListener('click', () => {
     $('#messageInput').value = button.dataset.example;
     $('#messageInput').focus();
   }));
-  $$('.inspector-tabs button').forEach((button) => button.addEventListener('click', () => activateInspector(button.dataset.inspector)));
-  $('#decisionPackage').addEventListener('click', (event) => {
-    const button = event.target.closest('[data-branch-claim]');
-    if (button) createBranch(button.dataset.branchClaim);
-  });
+  $$('.inspector-tabs button').forEach((button) => button.addEventListener('click', () => activateTab(button.dataset.tab)));
+  $('#judgeSelect').addEventListener('change', saveRunnerSelection);
+  $('#runnerList').addEventListener('change', saveRunnerSelection);
+  $('#briefEditor').addEventListener('change', saveBrief);
+  $('#rubricEditor').addEventListener('change', saveRubric);
+  $('#importGithub').addEventListener('click', importGithub);
   $('#conversation').addEventListener('click', (event) => {
-    if (event.target.closest('[data-open-package]')) activateInspector('package');
+    if (event.target.closest('[data-run-task]')) runCurrentTask();
+    if (event.target.closest('[data-evaluate-task]')) evaluateCurrentTask();
   });
 }
 
-function showView(name) {
-  $('#projectView').classList.toggle('active', name === 'project');
-  $('#connectionsView').classList.toggle('active', name === 'connections');
+function activateTab(name) {
+  $$('.inspector-tabs button').forEach((button) => button.classList.toggle('active', button.dataset.tab === name));
+  $$('.panel').forEach((panel) => panel.classList.toggle('active', panel.id === `panel-${name}`));
 }
 
-function activateInspector(name) {
-  $$('.inspector-tabs button').forEach((button) => button.classList.toggle('active', button.dataset.inspector === name));
-  $$('.inspector-panel').forEach((panel) => panel.classList.toggle('active', panel.id === `inspector-${name}`));
+function renderModeStatus() {
+  const live = STATE.runners.filter((runner) => runner.runnable && runner.type !== 'sim').length;
+  $('#modeStatus').innerHTML = `<span class="dot ${live ? 'on' : ''}"></span><span>${live ? `${live} 个真实 Runner 可用` : '当前仅 Sim 演示'}</span>`;
 }
 
-function renderConnectionStatus() {
-  const usable = [
-    ...(STATE.connections?.cli || []).filter((item) => item.runnable),
-    ...(STATE.connections?.api || []).filter((item) => item.runnable),
-  ];
-  $('#connectionCount').textContent = usable.length;
-  $('#modeStatus').innerHTML = `<span class="dot ${usable.length ? 'on' : ''}"></span><span>${usable.length ? `${usable.length} 条通道可运行` : '仅 Sim 演示'}</span>`;
+function renderTaskList() {
+  $('#taskList').innerHTML = STATE.tasks.length ? STATE.tasks.map((task) => `
+    <button class="task-item ${STATE.task?.id === task.id ? 'active' : ''}" data-task-id="${esc(task.id)}">
+      <span class="task-state ${esc(task.status)}"></span>
+      <span><b>${esc(task.title)}</b><small>${task.legacy ? 'v0.4 历史 · ' : ''}${formatDate(task.updatedAt || task.createdAt)}</small></span>
+    </button>`).join('') : '<div class="empty-list">还没有任务<br>从一个开放问题开始</div>';
+  $$('#taskList [data-task-id]').forEach((button) => button.addEventListener('click', () => openTask(button.dataset.taskId)));
 }
 
-function renderProjectList() {
-  $('#projectList').innerHTML = STATE.projects.length
-    ? STATE.projects.map((project) => `
-      <button class="project-item ${STATE.project?.id === project.id ? 'active' : ''}" data-project-id="${esc(project.id)}">
-        <span class="project-state ${esc(project.status)}"></span>
-        <span><b>${esc(project.title)}</b><small>${project.parentId ? '分支探究 · ' : ''}${formatDate(project.updatedAt || project.createdAt)}</small></span>
-      </button>`).join('')
-    : '<div class="empty-projects">还没有项目<br>从一个重要问题开始</div>';
-  $$('#projectList [data-project-id]').forEach((button) => button.addEventListener('click', () => openProject(button.dataset.projectId)));
-}
-
-function newProject() {
-  STATE.project = null;
-  STATE.exploring = false;
-  $('#projectTitle').textContent = '提出真正重要的问题';
-  $('#projectSubtitle').textContent = 'Aker 会在探究过程中持续审查证据、分歧与下一步，而不是最后才做评审。';
+function resetTask() {
+  STATE.task = null;
+  STATE.running = false;
+  $('#taskTitle').textContent = '比较多个 Agent，得到证据支持度更高的答案';
+  $('#taskSubtitle').textContent = '同一任务、同一证据要求、同一只读权限；执行过程与评审依据都可见。';
   $('#conversation').innerHTML = welcomeHtml();
   bindExamples();
   $('#messageInput').value = '';
-  $('#messageInput').placeholder = '提出一个重要问题，或继续补充信息…';
-  $('#sendMessage').textContent = '开始探究';
-  $('#rerunProject').hidden = true;
-  renderBrief(null);
-  renderSources([]);
-  renderPackage(null);
-  renderProjectList();
-  showView('project');
-  $('#messageInput').focus();
+  $('#messageInput').disabled = false;
+  $('#sendMessage').textContent = '创建任务';
+  $('#sendMessage').disabled = false;
+  $('#briefEditor').className = 'empty';
+  $('#briefEditor').innerHTML = '创建任务后显示';
+  $('#rubricEditor').className = 'rubric-list empty';
+  $('#rubricEditor').innerHTML = '创建任务后显示';
+  renderRunnerConfig();
+  renderTaskList();
 }
 
 function welcomeHtml() {
-  return `<div class="welcome">
-    <div class="welcome-kicker">从一句话开始</div>
-    <h3>你现在需要研究什么问题，或者做出什么决定？</h3>
-    <p>不需要先填写表单。Aker 会自动整理目标、约束、成功标准和关键未知项，只在真正影响结论时追问。</p>
-    <div class="examples">
-      <button data-example="我们是否应该在未来两周上线面向现有客户的 AI 周报功能？团队只有 2 名工程师，不能新增付费基础设施。">是否应该上线一个尚未验证需求的新功能？</button>
-      <button data-example="我们应该选择自建 AI 客服还是采购 SaaS？希望三个月内上线，最不能接受的是客户数据泄露。">自建还是采购 AI 客服？</button>
-      <button data-example="请调研我们进入东南亚市场的可行性，并给出先进入哪个国家的建议。">应该先进入哪个新市场？</button>
-    </div>
-  </div>`;
+  return `<div class="welcome"><div class="welcome-kicker">从一个开放任务开始</div><h3>让不同 Agent 独立研究，再由 Judge 评审和融合</h3><p>适合调研、分析、方案设计等没有明确 GT、但可以用证据提高可靠性的任务。</p><div class="examples"><button data-example="调研 DeerFlow 2.0 与 Codex CLI 在深度研究任务上的关键差异，给出带来源的完整比较。">对比两个 Agent 框架</button><button data-example="调研 2026 年主流开源深度研究 Agent 的产品能力、技术架构与局限，附完整来源。">做一份时效性行业调研</button><button data-example="分析一个本地优先、多 Agent 答案融合产品应如何设计评审机制。">比较开放方案</button></div></div>`;
 }
 
 function bindExamples() {
@@ -1855,123 +1456,196 @@ function bindExamples() {
   }));
 }
 
-async function openProject(id) {
-  const { project } = await api(`/api/projects/${encodeURIComponent(id)}`);
-  STATE.project = project;
-  STATE.exploring = project.status === 'running';
-  renderProject();
-  renderProjectList();
-  showView('project');
+async function submitTask() {
+  const message = $('#messageInput').value.trim();
+  if (!message || STATE.running) return;
+  setBusy(true, '正在生成任务简报…');
+  try {
+    const { task } = await api('/api/tasks', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ message, mode: $('#taskMode').value }),
+    });
+    STATE.task = task;
+    STATE.tasks = (await api('/api/tasks')).tasks;
+    $('#messageInput').value = '';
+    renderTask();
+    renderTaskList();
+    activateTab('runners');
+  } catch (error) {
+    showError(error.message);
+  } finally {
+    setBusy(false);
+  }
 }
 
-function renderProject() {
-  const project = STATE.project;
-  if (!project) return newProject();
-  $('#projectTitle').textContent = project.title;
-  $('#projectSubtitle').textContent = project.parentId
-    ? '这是从已有结论创建的分支探究。它拥有独立上下文和决策包。'
-    : '对话、执行过程与决策包都保存在这个项目中，可以持续补充和重新探究。';
-  $('#projectMode').value = project.mode;
-  $('#rerunProject').hidden = STATE.exploring;
-  $('#sendMessage').textContent = '补充信息';
-  $('#messageInput').placeholder = '继续补充约束、证据或追问…';
-  $('#conversation').innerHTML = [
-    ...(project.messages || []).map(messageHtml),
-    timelineHtml(project.timeline || []),
-    project.decisionPackage ? packageNoticeHtml(project) : '',
-  ].join('');
+async function openTask(id) {
+  const { task } = await api(`/api/tasks/${encodeURIComponent(id)}`);
+  STATE.task = task;
+  STATE.running = task.status === 'running';
+  renderTask();
+  renderTaskList();
+}
+
+function renderTask() {
+  const task = STATE.task;
+  if (!task) return resetTask();
+  $('#taskTitle').textContent = task.title;
+  $('#taskSubtitle').textContent = task.legacy ? 'v0.4 历史项目只读展示，原始数据不会被修改。' : evidenceText(task);
+  $('#taskMode').value = task.mode || 'live';
+  $('#taskMode').disabled = !!task.legacy;
+  $('#sendMessage').textContent = '创建新任务';
+  $('#conversation').innerHTML = taskHtml(task);
+  renderBrief(task);
+  renderRunnerConfig();
+  renderRubric(task);
   scrollConversation();
-  renderBrief(project.brief);
-  renderSources(project.sources || []);
-  renderPackage(project.decisionPackage);
 }
 
-function messageHtml(message) {
-  return `<article class="message ${esc(message.role)}">
-    <div class="message-role">${message.role === 'user' ? '你' : 'Aker'}</div>
-    <div class="message-body">${renderMarkdown(message.content)}</div>
+function evidenceText(task) {
+  return task.brief?.evidencePolicy === 'required'
+    ? '证据策略：必须检索。无搜索、读取或来源 Trace 的回答会被标记未完成，并排除出事实融合。'
+    : '证据策略：优先。所有 Agent 仍受只读权限边界约束。';
+}
+
+function taskHtml(task) {
+  const intro = `<article class="message user"><div class="avatar">你</div><div class="bubble"><h3>${esc(task.brief?.objective || task.title)}</h3><p>${esc(task.brief?.deliverable || '')}</p><div class="policy ${task.brief?.evidencePolicy === 'required' ? 'required' : ''}">${esc(evidenceText(task))}</div></div></article>`;
+  if (task.legacy) return `${intro}${task.finalAnswer ? resultHtml(task) : '<div class="empty-stage">该历史项目没有可展示的决策包。</div>'}`;
+  const controls = task.status === 'ready' || task.status === 'failed'
+    ? `<div class="stage-action"><button class="primary-btn" data-run-task>${task.status === 'failed' ? '重新运行 Agent' : '开始并行运行'}</button><span>先在右侧选择 Runner 与 Judge</span></div>`
+    : '';
+  const runs = task.runs?.length ? runBoardHtml(task.runs) : '';
+  const evaluate = task.status === 'awaiting-evaluation' ? '<div class="stage-action"><button class="primary-btn" data-evaluate-task>让 Judge 评审并融合</button><span>只有满足证据要求的回答进入事实融合</span></div>' : '';
+  const result = task.finalAnswer ? resultHtml(task) : '';
+  return `${intro}${controls}${runs}${evaluate}${result}`;
+}
+
+function runBoardHtml(runs) {
+  return `<section class="run-board"><div class="section-head"><div><span>PARALLEL RUNS</span><h3>Agent 独立执行与行动链路</h3></div><b>${runs.length} 个 Agent</b></div><div class="agent-grid">${runs.map(runCardHtml).join('')}</div></section>`;
+}
+
+function runCardHtml(run) {
+  const totals = run.trace?.totals || {};
+  const state = run.status === 'done' ? (run.research?.complete ? 'eligible' : 'incomplete') : run.status;
+  const trace = run.trace?.steps || [];
+  return `<article class="agent-card ${esc(state)}" id="run-${esc(run.id)}">
+    <div class="agent-top"><div><span>${esc(run.framework)} · ${esc(run.model)}</span><h4>${esc(run.label)}</h4></div><b>${statusLabel(run)}</b></div>
+    <div class="metrics"><span>${totals.searches || 0} 搜索</span><span>${totals.sources || 0} 来源</span><span>${totals.toolCalls || 0} 工具</span><span>${totals.errors || 0} 错误</span></div>
+    ${run.research?.reason ? `<div class="incomplete-note">${esc(run.research.reason)}</div>` : ''}
+    ${run.error ? `<div class="run-error">${esc(run.error)}</div>` : ''}
+    <details class="trace-panel" ${run.status === 'running' ? 'open' : ''}><summary>行动链路 <em>${trace.length} 事件</em></summary><div class="trace-list">${trace.map(traceHtml).join('') || '<div class="empty-trace">等待事件…</div>'}</div></details>
+    ${run.output ? `<details class="answer-panel"><summary>查看完整回答</summary><div class="markdown">${renderMarkdown(run.output)}</div></details>` : ''}
   </article>`;
 }
 
-function timelineHtml(events) {
-  if (!events.length) return '';
-  return `<section class="timeline-block">
-    <div class="timeline-head"><span>实时执行与持续评审</span><b>${events.length} 个事件</b></div>
-    <div class="timeline" id="timeline">${events.map(eventHtml).join('')}</div>
+function statusLabel(run) {
+  if (run.status === 'running') return '运行中';
+  if (run.status === 'capability-limited') return '能力不足';
+  if (run.status === 'error') return '失败';
+  if (run.research?.complete) return '可进入融合';
+  if (run.status === 'done') return '未完成调研';
+  return run.status;
+}
+
+function traceHtml(step) {
+  const content = step.query || step.url || step.detail || '';
+  return `<div class="trace-row ${esc(step.type)}"><i>${esc(TRACE_LABEL[step.type] || step.type)}</i><div><b>${esc(step.label)}</b>${content ? `<p>${esc(content)}</p>` : ''}</div></div>`;
+}
+
+function resultHtml(task) {
+  const cards = task.scorecards || [];
+  return `<section class="result-block"><div class="section-head"><div><span>JUDGE RESULT</span><h3>证据加权融合结果</h3></div><b>${cards.filter((card) => card.eligibleForFusion).length} 个回答进入融合</b></div>
+    ${task.evaluation?.warnings?.length ? `<div class="warnings">${task.evaluation.warnings.map((item) => `<p>${esc(item)}</p>`).join('')}</div>` : ''}
+    ${cards.length ? `<div class="scoreboard">${cards.map((card, index) => `<div class="score-row"><strong>${index + 1}</strong><div><b>${esc(card.label)}</b><span>${card.eligibleForFusion ? '进入事实融合' : esc(card.incompleteReason || '仅展示')}</span></div><em>${card.total}</em></div>`).join('')}</div>` : ''}
+    <div class="final-answer markdown">${renderMarkdown(task.finalAnswer)}</div>
   </section>`;
 }
 
-function eventHtml(event) {
-  const [label, kind] = EVENT_META[event.type] || ['事件', ''];
-  return `<div class="timeline-event ${kind}">
-    <span class="event-dot"></span>
-    <div><div class="event-title"><b>${esc(event.title)}</b><span>${label}</span></div>${event.detail ? `<p>${esc(event.detail)}</p>` : ''}</div>
-    <time>${formatTime(event.at)}</time>
-  </div>`;
-}
-
-function packageNoticeHtml(project) {
-  return `<article class="message assistant package-notice">
-    <div class="message-role">Aker</div>
-    <div class="message-body"><h3>决策包已完成</h3><p>建议、最强反对意见、未解决的不确定性和最低成本验证已整理到右侧。点击任意要点可以创建分支探究。</p><button class="inline-action" data-open-package>查看决策包</button></div>
-  </article>`;
-}
-
-async function submitMessage() {
-  const input = $('#messageInput');
-  const message = input.value.trim();
-  if (!message || STATE.exploring) return;
-  input.value = '';
-  if (!STATE.project) {
-    setComposerBusy(true, '正在建立决策项目…');
-    try {
-      const { project } = await api('/api/projects', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ message, mode: $('#projectMode').value }),
-      });
-      STATE.project = project;
-      STATE.projects = (await api('/api/projects')).projects;
-      renderProject();
-      renderProjectList();
-      await exploreCurrentProject();
-    } catch (error) {
-      showComposerError(error.message);
-    } finally {
-      if (!STATE.exploring) setComposerBusy(false);
-    }
+function renderBrief(task) {
+  if (!task || task.legacy) {
+    $('#briefEditor').className = 'empty';
+    $('#briefEditor').innerHTML = task?.legacy ? '历史任务只读' : '创建任务后显示';
     return;
   }
-  setComposerBusy(true, '正在更新工作简报…');
-  try {
-    const { project } = await api(`/api/projects/${encodeURIComponent(STATE.project.id)}/messages`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ message }),
-    });
-    STATE.project = project;
-    STATE.projects = (await api('/api/projects')).projects;
-    renderProject();
-    renderProjectList();
-  } catch (error) {
-    showComposerError(error.message);
-  } finally {
-    setComposerBusy(false);
-  }
+  const fields = [['objective', '任务目标'], ['deliverable', '期望交付物'], ['scope', '范围'], ['constraints', '约束'], ['freshness', '时效性']];
+  $('#briefEditor').className = 'brief-editor';
+  $('#briefEditor').innerHTML = fields.map(([key, label]) => `<label class="field">${label}<textarea data-brief="${key}">${esc(task.brief?.[key] || '')}</textarea></label>`).join('') + `<label class="field">证据策略<select data-brief="evidencePolicy"><option value="required" ${task.brief?.evidencePolicy === 'required' ? 'selected' : ''}>required · 必须搜索与引用来源</option><option value="preferred" ${task.brief?.evidencePolicy === 'preferred' ? 'selected' : ''}>preferred · 优先使用证据</option></select></label>`;
 }
 
-async function exploreCurrentProject() {
-  if (!STATE.project || STATE.exploring) return;
-  STATE.exploring = true;
-  STATE.project.status = 'running';
-  STATE.project.timeline = [];
-  STATE.project.decisionPackage = null;
-  renderProject();
-  setComposerBusy(true, '探究进行中，可实时查看上方过程…');
-  $('#rerunProject').hidden = true;
+function renderRunnerConfig() {
+  const task = STATE.task;
+  const mode = task?.mode || $('#taskMode').value;
+  const visible = STATE.runners.filter((runner) => mode === 'sim' ? runner.type === 'sim' : runner.type !== 'sim');
+  $('#runnerList').innerHTML = visible.map((runner) => `
+    <label class="runner-option ${runner.runnable ? '' : 'disabled'}">
+      <input type="checkbox" data-runner-id="${esc(runner.id)}" ${task?.selectedRunnerIds?.includes(runner.id) ? 'checked' : ''} ${!runner.runnable || task?.legacy ? 'disabled' : ''}>
+      <span><b>${esc(runner.label)}</b><small>${esc(runner.note || runner.permission || '')}</small><em>${capabilityTags(runner)}</em></span>
+    </label>`).join('');
+  const judges = visible.filter((runner) => runner.runnable && runner.capabilities?.judge);
+  $('#judgeSelect').innerHTML = `<option value="">选择独立 Judge</option>${judges.map((runner) => `<option value="${esc(runner.id)}" ${task?.judgeRunnerId === runner.id ? 'selected' : ''}>${esc(runner.label)}</option>`).join('')}`;
+  $('#judgeSelect').disabled = !task || !!task.legacy;
+}
+
+function capabilityTags(runner) {
+  const caps = runner.capabilities || {};
+  return [caps.search ? '可搜索' : '无搜索', caps.trace ? 'Trace' : '仅结果', caps.subagents ? '子 Agent' : '', runner.simulated ? '模拟' : ''].filter(Boolean).map((item) => `<i>${item}</i>`).join('');
+}
+
+function renderRubric(task) {
+  if (!task || task.legacy) {
+    $('#rubricEditor').className = 'rubric-list empty';
+    $('#rubricEditor').innerHTML = task?.legacy ? '历史任务只读' : '创建任务后显示';
+    return;
+  }
+  $('#rubricEditor').className = 'rubric-list';
+  $('#rubricEditor').innerHTML = task.rubric.map((item) => `<label><span>${esc(item.label)}</span><input type="number" min="0" max="100" data-rubric="${esc(item.id)}" value="${Number(item.weight)}"><em>%</em></label>`).join('');
+}
+
+async function saveBrief() {
+  if (!STATE.task || STATE.task.legacy) return;
+  const brief = { ...STATE.task.brief };
+  $$('[data-brief]').forEach((field) => { brief[field.dataset.brief] = field.value.trim(); });
+  await patchCurrent({ brief });
+}
+
+async function saveRunnerSelection() {
+  if (!STATE.task || STATE.task.legacy) return;
+  const selectedRunnerIds = $$('[data-runner-id]:checked').map((input) => input.dataset.runnerId).slice(0, 4);
+  const judgeRunnerId = $('#judgeSelect').value;
+  await patchCurrent({ selectedRunnerIds, judgeRunnerId });
+}
+
+async function saveRubric() {
+  if (!STATE.task || STATE.task.legacy) return;
+  const rubric = STATE.task.rubric.map((item) => ({ ...item, weight: Number($(`[data-rubric="${item.id}"]`).value || 0) }));
+  await patchCurrent({ rubric });
+}
+
+async function changeMode() {
+  if (!STATE.task) { renderRunnerConfig(); return; }
+  await patchCurrent({ mode: $('#taskMode').value, selectedRunnerIds: [], judgeRunnerId: '' });
+  renderRunnerConfig();
+}
+
+async function patchCurrent(update) {
+  const { task } = await api(`/api/tasks/${encodeURIComponent(STATE.task.id)}`, {
+    method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify(update),
+  });
+  STATE.task = task;
+  STATE.tasks = (await api('/api/tasks')).tasks;
+  renderTaskList();
+}
+
+async function runCurrentTask() {
+  if (!STATE.task || STATE.running) return;
+  if (!STATE.task.selectedRunnerIds?.length) { activateTab('runners'); return showError('请先选择至少一个可运行 Agent。'); }
+  STATE.running = true;
+  STATE.task.status = 'running';
+  STATE.task.runs = [];
+  renderTask();
+  setBusy(true, 'Agent 正在并行执行；行动链路会实时出现…');
   try {
-    const response = await fetch(`/api/projects/${encodeURIComponent(STATE.project.id)}/explore`, { method: 'POST' });
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const response = await fetch(`/api/tasks/${encodeURIComponent(STATE.task.id)}/run`, { method: 'POST' });
+    if (!response.ok || !response.body) throw new Error(`HTTP ${response.status}`);
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
     let buffer = '';
@@ -1980,277 +1654,111 @@ async function exploreCurrentProject() {
       buffer += decoder.decode(value || new Uint8Array(), { stream: !done });
       const lines = buffer.split('\n');
       buffer = lines.pop() || '';
-      for (const line of lines.filter(Boolean)) handleStreamEvent(JSON.parse(line));
+      for (const line of lines.filter(Boolean)) handleRunEvent(JSON.parse(line));
       if (done) break;
     }
   } catch (error) {
-    showComposerError(`探究失败：${error.message}`);
+    showError(error.message);
   } finally {
-    STATE.exploring = false;
-    setComposerBusy(false);
-    $('#rerunProject').hidden = false;
-    STATE.projects = (await api('/api/projects')).projects;
-    renderProjectList();
+    STATE.running = false;
+    setBusy(false);
+    STATE.tasks = (await api('/api/tasks')).tasks;
+    renderTaskList();
   }
 }
 
-function handleStreamEvent(payload) {
-  if (payload.type === 'event') {
-    STATE.project.timeline ||= [];
-    STATE.project.timeline.push(payload.event);
-    const timeline = $('#timeline');
-    if (timeline) timeline.insertAdjacentHTML('beforeend', eventHtml(payload.event));
-    else {
-      $('#conversation').insertAdjacentHTML('beforeend', timelineHtml([payload.event]));
+function handleRunEvent(event) {
+  if (event.type === 'agent_start') {
+    STATE.task.runs.push(event.run);
+    renderTask();
+  } else if (event.type === 'agent_trace') {
+    const run = STATE.task.runs.find((item) => item.id === event.runId);
+    if (run) {
+      run.trace ||= { steps: [] };
+      run.trace.steps.push(event.step);
+      renderTask();
     }
-    scrollConversation();
-  } else if (payload.type === 'complete') {
-    STATE.project = payload.project;
-    renderProject();
-    activateInspector('package');
-  } else if (payload.type === 'error') {
-    STATE.project = payload.project || STATE.project;
-    showComposerError(payload.error);
+  } else if (event.type === 'agent_done' || event.type === 'agent_error') {
+    const index = STATE.task.runs.findIndex((item) => item.id === event.runId);
+    if (index >= 0) STATE.task.runs[index] = event.run;
+    renderTask();
+  } else if (event.type === 'complete') {
+    STATE.task = event.task;
+    renderTask();
+  } else if (event.type === 'error') {
+    STATE.task = event.task || STATE.task;
+    showError(event.error);
   }
 }
 
-function renderBrief(brief) {
-  if (!brief) {
-    $('#briefSummary').innerHTML = '提出问题后自动生成';
-    $('#briefSummary').classList.add('empty-small');
-    for (const id of ['briefDecision', 'briefContext', 'briefConstraints', 'briefCriteria', 'briefUnknowns', 'briefAssumptions']) $(`#${id}`).value = '';
-    return;
-  }
-  $('#briefSummary').classList.remove('empty-small');
-  const entries = [
-    ['决策问题', brief.decision],
-    ['已知背景', brief.context],
-    ['约束', brief.constraints],
-    ['成功标准', brief.criteria],
-    ['关键未知项', brief.unknowns],
-    ['默认假设', brief.assumptions],
-  ];
-  $('#briefSummary').innerHTML = entries.map(([label, value]) => `<div class="brief-item"><span>${label}</span><p>${esc(value || '尚未明确')}</p></div>`).join('');
-  $('#briefDecision').value = brief.decision || '';
-  $('#briefContext').value = brief.context || '';
-  $('#briefConstraints').value = brief.constraints || '';
-  $('#briefCriteria').value = brief.criteria || '';
-  $('#briefUnknowns').value = brief.unknowns || '';
-  $('#briefAssumptions').value = brief.assumptions || '';
-}
-
-async function saveBrief() {
-  if (!STATE.project) return;
-  const brief = {
-    decision: $('#briefDecision').value.trim(),
-    context: $('#briefContext').value.trim(),
-    constraints: $('#briefConstraints').value.trim(),
-    criteria: $('#briefCriteria').value.trim(),
-    unknowns: $('#briefUnknowns').value.trim(),
-    assumptions: $('#briefAssumptions').value.trim(),
-  };
-  const { project } = await api(`/api/projects/${encodeURIComponent(STATE.project.id)}`, {
-    method: 'PATCH',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ brief }),
-  });
-  STATE.project = project;
-  renderBrief(project.brief);
-  $('#briefEditor').open = false;
-}
-
-async function updateProjectMode() {
-  if (!STATE.project) return;
-  const { project } = await api(`/api/projects/${encodeURIComponent(STATE.project.id)}`, {
-    method: 'PATCH',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ mode: $('#projectMode').value }),
-  });
-  STATE.project = project;
-}
-
-function renderPackage(markdown) {
-  const container = $('#decisionPackage');
-  if (!markdown) {
-    container.className = 'decision-content empty-small';
-    container.innerHTML = '完成探究后生成';
-    $('#copyPackage').hidden = true;
-    return;
-  }
-  container.className = 'decision-content';
-  container.innerHTML = renderMarkdown(markdown, true);
-  $('#copyPackage').hidden = false;
-}
-
-function renderSources(sources) {
-  const container = $('#sourceList');
-  if (!sources?.length) {
-    container.className = 'source-list empty-small';
-    container.innerHTML = '在对话中粘贴公开网页链接，Aker 会自动整理';
-    return;
-  }
-  container.className = 'source-list';
-  container.innerHTML = sources.map((source) => {
-    const state = source.status === 'ready' ? '已读取' : source.status === 'failed' ? '读取失败' : '已记录';
-    return `<article class="source-card">
-      <div class="source-head"><b>${esc(source.id)}</b><span class="${esc(source.status)}">${state}</span></div>
-      <a href="${esc(source.finalUrl || source.url)}" target="_blank" rel="noreferrer">${esc(source.title || source.url)}</a>
-      <p>${esc(source.excerpt ? `${source.excerpt.slice(0, 240)}${source.excerpt.length > 240 ? '…' : ''}` : source.error || 'Aker 已记录链接；当前没有可读取摘要。')}</p>
-    </article>`;
-  }).join('');
-}
-
-async function copyDecisionPackage() {
-  if (!STATE.project?.decisionPackage) return;
-  await navigator.clipboard.writeText(STATE.project.decisionPackage);
-  const button = $('#copyPackage');
-  button.textContent = '已复制';
-  setTimeout(() => { button.textContent = '复制决策包'; }, 1200);
-}
-
-async function createBranch(claim) {
-  if (!STATE.project) return;
-  const { project } = await api(`/api/projects/${encodeURIComponent(STATE.project.id)}/branches`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ claim, prompt: `请挑战并进一步验证这个主张：${claim}` }),
-  });
-  STATE.projects = (await api('/api/projects')).projects;
-  STATE.project = project;
-  renderProject();
-  renderProjectList();
-  activateInspector('brief');
-  await exploreCurrentProject();
-}
-
-function renderConnections() {
-  const cli = STATE.connections?.cli || [];
-  const apis = STATE.connections?.api || [];
-  $('#cliConnections').innerHTML = cli.map((item) => connectionCard(item)).join('');
-  $('#apiConnections').innerHTML = apis.map((item) => apiCard(item)).join('');
-  $$('[data-test-connection]').forEach((button) => button.addEventListener('click', () => testConnection(button.dataset.testConnection, button)));
-  $$('[data-save-api]').forEach((button) => button.addEventListener('click', () => saveApi(button.dataset.saveApi, button)));
-  $$('[data-remove-api]').forEach((button) => button.addEventListener('click', () => removeApi(button.dataset.removeApi)));
-}
-
-function connectionCard(item) {
-  const state = item.runnable ? '可运行' : item.detected ? '已检测' : '未安装';
-  return `<article class="connection-card">
-    <div class="connection-top"><span class="connection-icon">⌘</span><div><h4>${esc(item.label)}</h4><p>${esc(item.note)}</p></div><span class="connection-state ${item.runnable ? 'ready' : ''}">${state}</span></div>
-    <div class="capabilities">${(item.capabilities || []).map((cap) => `<span>${esc(cap)}</span>`).join('')}</div>
-    <div class="connection-path">${esc(item.version || '')}<br>${esc(item.path || '未找到可执行文件')}</div>
-    <button class="ghost-btn wide" data-test-connection="${esc(item.id)}">测试检测</button>
-  </article>`;
-}
-
-function apiCard(item) {
-  return `<article class="connection-card">
-    <div class="connection-top"><span class="connection-icon">API</span><div><h4>${esc(item.label)}</h4><p>${esc(item.note)}</p></div><span class="connection-state ${item.configured ? 'ready' : ''}">${item.configured ? '已配置' : '未配置'}</span></div>
-    <label class="connection-field">模型<input data-api-model="${esc(item.id)}" value="${esc(item.model)}"></label>
-    <label class="connection-field">API Key<input data-api-key="${esc(item.id)}" type="password" placeholder="${item.configured ? `已存储于 ${esc(item.secretStore)}` : '输入后保存到 macOS Keychain'}"></label>
-    <div class="connection-actions">
-      <button class="primary-btn" data-save-api="${esc(item.id)}">保存</button>
-      <button class="ghost-btn" data-test-connection="${esc(item.id)}">测试连接</button>
-      ${item.configured && item.secretStore !== 'environment' ? `<button class="text-btn danger" data-remove-api="${esc(item.id)}">移除</button>` : ''}
-    </div>
-  </article>`;
-}
-
-async function saveApi(provider, button) {
-  button.disabled = true;
+async function evaluateCurrentTask() {
+  if (!STATE.task || STATE.running) return;
+  setBusy(true, 'Judge 正在评审与融合…');
   try {
-    STATE.connections = await api('/api/connections/api', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        provider,
-        model: $(`[data-api-model="${provider}"]`).value,
-        key: $(`[data-api-key="${provider}"]`).value,
-      }),
-    });
-    STATE.health = await api('/api/health');
-    renderConnections();
-    renderConnectionStatus();
-  } finally { button.disabled = false; }
-}
-
-async function removeApi(provider) {
-  STATE.connections = await api('/api/connections/api', {
-    method: 'DELETE',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ provider }),
-  });
-  STATE.health = await api('/api/health');
-  renderConnections();
-  renderConnectionStatus();
-}
-
-async function testConnection(id, button) {
-  const old = button.textContent;
-  button.disabled = true;
-  button.textContent = '测试中…';
-  try {
-    const result = await api('/api/connections/test', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ id }),
-    });
-    button.textContent = result.ok ? '连接正常' : result.message;
+    const { task } = await api(`/api/tasks/${encodeURIComponent(STATE.task.id)}/evaluate`, { method: 'POST' });
+    STATE.task = task;
+    renderTask();
   } catch (error) {
-    button.textContent = error.message;
+    showError(error.message);
+  } finally {
+    setBusy(false);
   }
-  setTimeout(() => { button.textContent = old; button.disabled = false; }, 2200);
 }
 
-function setComposerBusy(busy, hint) {
-  STATE.exploring = busy && STATE.exploring;
+async function importGithub() {
+  const button = $('#importGithub');
+  button.disabled = true;
+  $('#importStatus').textContent = '正在读取适配器清单…';
+  try {
+    const result = await api('/api/runners/import-github', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ url: $('#githubUrl').value.trim(), endpoint: $('#gatewayUrl').value.trim() }),
+    });
+    $('#importStatus').textContent = `${result.message}${result.confirmationRequired ? ' 已列出命令，但尚未执行。' : ''}`;
+    STATE.runners = (await api('/api/runners')).runners;
+    renderRunnerConfig();
+    renderModeStatus();
+  } catch (error) {
+    $('#importStatus').textContent = error.message;
+  } finally {
+    button.disabled = false;
+  }
+}
+
+function setBusy(busy, hint) {
   $('#sendMessage').disabled = busy;
   $('#messageInput').disabled = busy;
-  if (hint) $('#composerHint').textContent = hint;
-  else $('#composerHint').textContent = 'Aker 会使用合理假设继续，并明确标注未知项';
+  $('#composerHint').textContent = hint || 'Aker 会自动生成任务简报与证据策略，不要求先填表';
 }
 
-function showComposerError(message) {
+function showError(message) {
   $('#conversation').insertAdjacentHTML('beforeend', `<div class="inline-error">${esc(message)}</div>`);
   scrollConversation();
 }
 
 function scrollConversation() {
-  const conversation = $('#conversation');
-  requestAnimationFrame(() => { conversation.scrollTop = conversation.scrollHeight; });
+  const container = $('#conversation');
+  requestAnimationFrame(() => { container.scrollTop = container.scrollHeight; });
 }
 
 function formatDate(value) {
-  if (!value) return '';
-  return new Intl.DateTimeFormat('zh-CN', { month: 'numeric', day: 'numeric' }).format(new Date(value));
+  return value ? new Intl.DateTimeFormat('zh-CN', { month: 'numeric', day: 'numeric' }).format(new Date(value)) : '';
 }
 
-function formatTime(value) {
-  if (!value) return '';
-  return new Intl.DateTimeFormat('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }).format(new Date(value));
-}
-
-function renderMarkdown(markdown = '', branchable = false) {
-  const lines = String(markdown).split('\n');
-  let html = '';
-  let list = null;
-  const inline = (text) => esc(text).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/_(.+?)_/g, '<i>$1</i>').replace(/`(.+?)`/g, '<code>$1</code>');
-  const closeList = () => { if (list) { html += `</${list}>`; list = null; } };
-  for (const line of lines) {
-    if (/^### /.test(line)) { closeList(); html += `<h4>${inline(line.slice(4))}</h4>`; }
-    else if (/^## /.test(line)) { closeList(); html += `<h3>${inline(line.slice(3))}</h3>`; }
-    else if (/^> /.test(line)) { closeList(); html += `<blockquote>${inline(line.slice(2))}</blockquote>`; }
-    else if (/^- /.test(line)) {
-      if (list !== 'ul') { closeList(); html += '<ul>'; list = 'ul'; }
-      const claim = line.slice(2);
-      html += `<li>${inline(claim)}${branchable ? `<button class="branch-button" data-branch-claim="${esc(claim)}">分支探究</button>` : ''}</li>`;
-    } else if (/^\d+\.\s/.test(line)) {
-      if (list !== 'ol') { closeList(); html += '<ol>'; list = 'ol'; }
-      html += `<li>${inline(line.replace(/^\d+\.\s+/, ''))}</li>`;
-    } else if (!line.trim()) closeList();
-    else { closeList(); html += `<p>${inline(line)}</p>`; }
+function renderMarkdown(markdown = '') {
+  const inline = (text) => esc(text).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/`(.+?)`/g, '<code>$1</code>').replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noreferrer">$1</a>');
+  let html = '', list = null;
+  const close = () => { if (list) { html += `</${list}>`; list = null; } };
+  for (const line of String(markdown).split('\n')) {
+    if (/^### /.test(line)) { close(); html += `<h4>${inline(line.slice(4))}</h4>`; }
+    else if (/^## /.test(line)) { close(); html += `<h3>${inline(line.slice(3))}</h3>`; }
+    else if (/^> /.test(line)) { close(); html += `<blockquote>${inline(line.slice(2))}</blockquote>`; }
+    else if (/^- /.test(line)) { if (list !== 'ul') { close(); html += '<ul>'; list = 'ul'; } html += `<li>${inline(line.slice(2))}</li>`; }
+    else if (/^\d+\.\s/.test(line)) { if (list !== 'ol') { close(); html += '<ol>'; list = 'ol'; } html += `<li>${inline(line.replace(/^\d+\.\s+/, ''))}</li>`; }
+    else if (!line.trim()) close();
+    else { close(); html += `<p>${inline(line)}</p>`; }
   }
-  closeList();
+  close();
   return html;
 }
 

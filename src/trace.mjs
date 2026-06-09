@@ -2,7 +2,9 @@
 // 不同框架的原始 trace 形态各异（jsonl / OTel spans / cli json / 自包），
 // adapter 负责把它们归一成下面这套 step 结构，aker 再统一分析。
 
-// step.type: 'think' | 'tool' | 'observe' | 'message' | 'handoff' | 'error'
+// Observable step types only. Private chain-of-thought is never stored or displayed.
+// step.type: 'plan' | 'search' | 'fetch' | 'tool' | 'observation' |
+//            'subagent' | 'source' | 'message' | 'error'
 export function makeStep(i, type, label, extra = {}) {
   return {
     i,
@@ -10,6 +12,10 @@ export function makeStep(i, type, label, extra = {}) {
     label,
     detail: extra.detail || '',
     toolName: extra.toolName || null,
+    url: extra.url || null,
+    query: extra.query || null,
+    sourceId: extra.sourceId || null,
+    at: extra.at || new Date().toISOString(),
     tokens: extra.tokens || 0,
     ms: extra.ms || 0,
   };
@@ -20,6 +26,10 @@ export function summarizeTrace(steps = []) {
     steps: steps.length,
     tokens: steps.reduce((a, s) => a + (s.tokens || 0), 0),
     toolCalls: steps.filter((s) => s.type === 'tool').length,
+    searches: steps.filter((s) => s.type === 'search').length,
+    fetches: steps.filter((s) => s.type === 'fetch').length,
+    sources: steps.filter((s) => s.type === 'source').length,
+    subagents: steps.filter((s) => s.type === 'subagent').length,
     wallMs: steps.reduce((a, s) => a + (s.ms || 0), 0),
     errors: steps.filter((s) => s.type === 'error').length,
     tools: [...new Set(steps.filter((s) => s.toolName).map((s) => s.toolName))],

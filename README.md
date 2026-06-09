@@ -1,79 +1,72 @@
 # Aker
 
-> A conversation-first decision workbench for consequential questions without an immediate ground truth.
+> Compare independent Agents on the same open task, inspect what they actually did, and fuse the best-supported answer.
 
 [Download the latest macOS app](https://github.com/wuyuyang001-oss/aker/releases/latest/download/Aker-mac-arm64.zip) · [Try the Sim-only web demo](https://wuyuyang001-oss.github.io/aker/) · [View releases](https://github.com/wuyuyang001-oss/aker/releases)
 
-Aker helps a user move from an ambiguous question to an auditable decision and a concrete next action. The user starts with one natural-language message. Aker builds a working brief behind the conversation, dispatches independent strategy, counterargument, action, and evidence perspectives, reviews disagreement while they run, and produces one decision package.
+Aker is a local-first Agent comparison, evaluation, and answer-fusion workbench for research, analysis, and solution-design tasks without an immediate ground truth. It does not claim that a majority vote reveals absolute truth. It helps users obtain an answer with stronger source support, broader coverage, explicit disagreements, and visible evidence gaps.
 
-Aker is not a model leaderboard, a generic chat wrapper, or a majority-vote machine. It is designed for one-off product, market, vendor, architecture, rollout, and operating decisions where plausible answers are easy to produce but costly to trust blindly.
+## How It Works
 
-## What The User Gets
+1. Start with one natural-language task. No intake form is required.
+2. Aker generates an editable brief: objective, deliverable, scope, constraints, freshness, evidence policy, and rubric.
+3. Select 2–4 independent Agents and a Judge.
+4. Each Agent receives the same task and read-only permission boundary.
+5. Inspect each Agent's observable action chain: searches, fetched pages, tools, sources, subagents, errors, and answer.
+6. The Judge scores answers and produces an evidence-weighted fused answer.
 
-- No required intake form. Start with one question and refine it through conversation.
-- A persistent decision project containing the brief, messages, evidence, execution timeline, and result.
-- Continuous review during execution, not a hidden evaluation step after the answer.
-- A decision package with a recommendation, confidence, conditions, strongest objection, unresolved unknowns, validation steps, and immediate actions.
-- Branch exploration from any important claim.
-- Local-first execution through the user's own Agent CLIs or model API accounts.
+Research and freshness-sensitive tasks automatically use `required` evidence policy. An Agent that does not search, read a page, or report a source remains visible but is marked **incomplete research** and excluded from factual fusion.
 
 ## Five-Minute Acceptance Tour
 
 1. Download and open Aker.
-2. Ask a consequential question, including any constraints that already matter.
-3. Use **Sim** to learn the workflow or **Live** to use a detected local/API channel.
-4. Watch independent perspectives and committee checks arrive in the execution timeline.
-5. Paste a public source URL into the conversation. Confirm it appears under **Evidence** with an `[S1]` identifier and readable status.
-6. Open the decision package and create a branch from one claim.
-7. Open **Connections** to verify which local CLIs and APIs are actually runnable.
-
-The product is usable when a first-time user can complete that tour without reading source code, obtain a decision package, and identify the next validation action.
+2. Enter: `调研 DeerFlow 2.0 与 Codex CLI 在深度研究任务上的关键差异，给出带来源的完整比较。`
+3. Confirm that Aker sets the evidence policy to `required`.
+4. Select two available Agents and an independent Judge. Use Sim only to learn the workflow.
+5. Start the run and expand each Agent card. Confirm that its searches, sources, tools, errors, and full answer are visible.
+6. Scroll the main conversation to the bottom; the composer must remain visible.
+7. Run the Judge. Confirm that the result includes a scoreboard, fused answer, contributions and omissions, conflicts, evidence gaps, and sources.
 
 ## Desktop Install
 
-### Requirements
+Requirements:
 
 - Apple Silicon Mac
-- For Live mode, at least one supported channel:
-  - signed-in Codex CLI, Claude Code, or Gemini CLI;
-  - OpenAI API; or
-  - Anthropic API.
+- Node.js 20+ only when running from source
+- For real runs, at least one supported local CLI, model API, or connected DeerFlow Gateway
 
-Aker does not bundle models, credentials, or API quota. It detects local executables and lets the user configure API keys in the Connections screen. API keys entered in the desktop app are stored in macOS Keychain.
-
-### Run
+Download and open:
 
 1. Download [`Aker-mac-arm64.zip`](https://github.com/wuyuyang001-oss/aker/releases/latest/download/Aker-mac-arm64.zip).
 2. Optionally verify [`Aker-mac-arm64.zip.sha256`](https://github.com/wuyuyang001-oss/aker/releases/latest/download/Aker-mac-arm64.zip.sha256).
 3. Unzip and open `Aker.app`.
 4. If macOS blocks the unsigned app, use **Control-click → Open** or approve it under **System Settings → Privacy & Security**.
 
-```bash
-cd ~/Downloads
-shasum -a 256 -c Aker-mac-arm64.zip.sha256
-```
-
 The app is currently unsigned, not notarized, and does not auto-update.
 
-## Connection Support
+## Runner Support
 
-| Channel | Current behavior |
-|---|---|
-| Codex CLI | Runnable; read-only sandbox; real JSON event trace |
-| Claude Code | Runnable when detected; non-interactive JSON; tools disabled |
-| Gemini CLI | Runnable when detected; headless JSON; plan approval mode |
-| OpenAI API | Runnable when configured; final answer and usage |
-| Anthropic API | Runnable when configured; final answer and usage |
-| Aider | Detection only; intentionally not used for general decision work |
-| Sim | Deterministic workflow demonstration; never presented as real research |
+| Runner | Answer tasks | Search/read | Observable trace | Judge |
+|---|---:|---:|---:|---:|
+| Codex CLI | Yes | Yes | JSONL events | Yes |
+| DeerFlow 2.0 Gateway | Yes | Yes | LangGraph-compatible SSE | Yes |
+| Claude Code / Gemini CLI | Yes | Adapter-dependent | Limited | Yes |
+| OpenAI / Anthropic Direct API | Non-research tasks | No built-in search | Final response + usage | Yes |
+| Sim | Workflow demonstration only | Simulated | Simulated | Simulated |
 
-Detection confirms that an executable or credential exists. It does not guarantee provider reachability, authentication health, quota, or model access. Live failures remain explicit and are never silently replaced with Sim output.
+Codex runs in read-only research mode:
 
-## Evidence Model
+```bash
+codex --search exec --json --sandbox read-only
+```
 
-Public HTTP/HTTPS links pasted into the conversation become numbered user-provided sources. The desktop server reads a bounded text excerpt, blocks local/private-network targets, and passes the resulting source dossier to each perspective. A source being present does not prove a claim; reviewers are instructed to cite `[S1]`-style identifiers and label unsupported statements as assumptions, inferences, or unknowns.
+Aker allows search, browsing, local read-only access, and isolated computation. It prohibits real external writes, submissions, sends, and modifications.
 
-Aker does not yet autonomously search the public web. It audits sources supplied by the user and makes evidence gaps visible.
+### DeerFlow 2.0
+
+Paste `https://github.com/bytedance/deer-flow` in the Runner panel. Aker recognizes the official repository and can connect to an already-running Gateway, commonly `http://localhost:8001`.
+
+For safety, GitHub import only stores an adapter manifest and previews declared installation/start commands. Aker never executes those commands without explicit confirmation. Other repositories must provide a valid `aker-agent.json` at the repository root.
 
 ## Run From Source
 
@@ -84,37 +77,37 @@ npm install
 npm start
 ```
 
-Open <http://127.0.0.1:5178>. Node.js 20 or newer is required.
+Open <http://127.0.0.1:5178>.
 
 ```bash
 npm run app        # Electron app from source
 npm test           # unit and server smoke tests
-npm run check      # tests plus standalone Web build
-npm run build:web  # build the Sim-only single-file Web demo
-npm run pack       # build macOS app, zip, and checksum on Desktop
+npm run check      # tests plus Sim-only standalone build
+npm run pack       # build macOS app, zip, checksum, and Desktop Aker.app
 ```
 
-Optional environment-based API configuration remains supported:
+## API
 
-```bash
-export OPENAI_API_KEY="..."
-export ANTHROPIC_API_KEY="..."
-export AKER_OPENAI_MODEL="gpt-4.1-mini"
-export AKER_ANTHROPIC_MODEL="claude-sonnet-4-6"
-npm start
-```
+- `GET /api/runners`
+- `POST /api/runners/import-github`
+- `POST /api/runners/:id/test`
+- `GET|POST /api/tasks`
+- `GET|PATCH /api/tasks/:id`
+- `POST /api/tasks/:id/run` (NDJSON event stream)
+- `POST /api/tasks/:id/evaluate`
+
+Legacy `/api/projects` endpoints and v0.4 project data remain available. The v0.5 UI opens old projects as read-only legacy tasks and does not delete or rewrite them.
 
 ## Important Boundaries
 
-- Sim output, traces, latency, and token values are generated demonstrations.
-- Shared models, prompts, and sources can create correlated errors even when roles differ.
-- Common-claim clustering is lexical, so paraphrases may appear as disagreement.
-- Direct API runners expose final responses and usage; Codex CLI exposes richer event-level traces.
-- Each Live perspective and Live synthesis consumes the user's provider quota.
-- Aker sends the decision brief and supplied source excerpts to the selected Live provider.
-- Aker supports decision work; the accountable human still owns the decision.
+- No-GT evaluation can improve support and coverage; it cannot guarantee absolute correctness.
+- A Judge can share model, provider, prompt, or sources with answerers; Aker warns about obvious self-review.
+- Observable traces contain tool activity and results, never private chain-of-thought.
+- Sim output, searches, sources, latency, and tokens are demonstrations and never enter factual fusion.
+- Standalone Web Demo is Sim-only. Real runners and secrets stay behind the local desktop server.
+- Each Live run consumes the user's provider quota.
 
-Decision projects and runs are stored locally:
+Local data:
 
 - source/server: `data/runs.json`
 - packaged app: `~/Library/Application Support/Aker/runs.json`
@@ -124,18 +117,15 @@ Aker has no first-party telemetry service.
 ## Architecture
 
 ```text
-server.mjs             loopback HTTP API and streaming orchestration
-src/projects.mjs       conversational project, brief, branch, and timeline model
-src/sources.mjs        bounded public-source intake with private-network blocking
-src/connections.mjs    local CLI detection and macOS Keychain-backed API settings
-src/adapters.mjs       CLI, API, and Sim runners
-src/orchestrator.mjs   parallel dispatch and failure isolation
-src/committee.mjs      claim clustering, disagreement audit, and decision package
-src/store.mjs          local project and run persistence
-web/                   dependency-free desktop/Web interface
+server.mjs             loopback API, streaming task orchestration, legacy compatibility
+src/tasks.mjs          task brief, evidence policy, runner selection, parallel execution
+src/runners.mjs        local/API runner registry, DeerFlow and GitHub manifest import
+src/adapters.mjs       Codex JSONL, DeerFlow SSE, API, CLI, and Sim adapters
+src/evaluator.mjs      evidence gate, scorecards, Judge prompt, and answer fusion
+src/trace.mjs          normalized observable action-chain schema
+src/store.mjs          local task, project, and run persistence
+web/                   dependency-free Electron/Web interface
 ```
-
-See [docs/PRODUCT_DIRECTION.md](docs/PRODUCT_DIRECTION.md) for the product thesis and roadmap.
 
 ## License
 

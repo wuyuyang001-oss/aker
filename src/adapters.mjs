@@ -77,21 +77,21 @@ function composeOutput(task, framework, model, role) {
   };
 
   const body = [
-    `## 独立判断`,
-    '建议有条件推进，置信度为低：当前信息适合设计验证，不足以支持不可逆承诺。',
+    `## 模拟研究结果`,
+    '> 这是 Sim Runner 生成的流程演示，不是真实调研结论，也不会进入事实融合。',
     '',
-    '## 关键主张',
-    '- [推断] 在关键未知项得到验证前，应优先采用可逆的小规模行动。',
+    '## 主要发现',
+    '- [未知] 当前没有真实联网检索结果，无法确认可能变化的外部事实。',
     `- ${roleSpecific.claim}`,
     '',
-    '## 最强反对意见',
+    '## 可能的分歧',
     `- ${roleSpecific.objection}`,
     '',
-    '## 会改变结论的信息',
+    '## 证据缺口',
     '- 真实用户行为、执行成本或不可接受风险与当前假设明显不符。',
     '',
-    '## 最低成本验证',
-    `- ${roleSpecific.validation}`,
+    '## 来源',
+    '- Sim 模式没有真实来源。',
   ].join('\n');
   return body;
 }
@@ -102,29 +102,30 @@ function composeTrace(task, framework, model, seed) {
   const tools = FRAMEWORK_TOOLKIT[framework] || [];
   const steps = [];
   let i = 0;
-  steps.push(makeStep(i++, 'think', '解析任务与约束', { detail: `拆解「${task}」`, tokens: 120 + Math.floor(r() * 200), ms: 300 + Math.floor(r() * 400) }));
+  steps.push(makeStep(i++, 'plan', '模拟拆解任务与约束', { detail: `拆解「${task}」`, tokens: 120 + Math.floor(r() * 200), ms: 300 + Math.floor(r() * 400) }));
   // 工具调用：每个工具 1-2 次
   for (const t of tools) {
     const times = 1 + Math.floor(r() * 2);
     for (let k = 0; k < times; k++) {
       steps.push(makeStep(i++, 'tool', `调用 ${t}`, { toolName: t, detail: `${t} 第${k + 1}次`, tokens: 40 + Math.floor(r() * 120), ms: 200 + Math.floor(r() * 900) }));
-      steps.push(makeStep(i++, 'observe', `${t} 结果`, { detail: '读取/执行结果并更新假设', tokens: 60 + Math.floor(r() * 150), ms: 100 + Math.floor(r() * 200) }));
+      steps.push(makeStep(i++, 'observation', `${t} 模拟结果`, { detail: '模拟读取结果', tokens: 60 + Math.floor(r() * 150), ms: 100 + Math.floor(r() * 200) }));
     }
   }
   // 深推理模型多走一步自审
   if (model === 'o-series' || model === 'claude-opus-4-8') {
-    steps.push(makeStep(i++, 'think', '自我验证 / 反思', { detail: '检查边界与潜在错误', tokens: 200 + Math.floor(r() * 200), ms: 500 + Math.floor(r() * 500) }));
+    steps.push(makeStep(i++, 'plan', '模拟复核计划', { detail: '检查边界与潜在错误', tokens: 200 + Math.floor(r() * 200), ms: 500 + Math.floor(r() * 500) }));
   }
   steps.push(makeStep(i++, 'message', '产出最终方案', { tokens: 300 + Math.floor(r() * 300), ms: 400 + Math.floor(r() * 400) }));
   return steps;
 }
 
 // —— Sim adapter —— //
-async function runSim(framework, model, task, agentId, role) {
+async function runSim(framework, model, task, agentId, role, onStep) {
   const seed = `${task}::${agentId}::${role || ''}`;
   const steps = composeTrace(task, framework, model, seed);
   // 模拟时延（短，便于演示并行）
   await new Promise((res) => setTimeout(res, 200 + Math.floor(rng(seed)() * 600)));
+  for (const step of steps) await onStep?.(step);
   return {
     status: 'done',
     mode: 'sim',
@@ -166,38 +167,27 @@ function liveCapabilities() {
   };
 }
 
-function reviewerPrompt({ task, framework, model, role }) {
-  const lens = reviewRole(role);
+function reviewerPrompt({ task, framework, model }) {
   return [
-    '你是 Aker 决策委员会中的一名独立判断者。你的任务不是写一篇看起来完整的答案，而是降低用户在无标准答案场景中做错决定的风险。',
-    '你看不到其他判断者的答案。请形成自己的观点，不要猜测多数意见。',
-    '仅基于用户提供的信息分析，不要修改文件、调用工具或执行外部操作。没有证据支持的内容必须明确标成假设或推断，绝不虚构事实、数据或来源。',
-    `你的角色：${lens.label}。${lens.brief}`,
+    '你是 Aker 中独立执行开放任务的 Agent。你看不到其他 Agent 的答案，请直接完成任务。',
+    '允许联网搜索、网页读取、本地只读访问和隔离计算。禁止修改文件，禁止向真实外部系统提交、发送、创建或写入数据。',
+    '若任务要求调研或时效性信息，必须实际搜索并引用可核验 URL；绝不虚构事实、数据或来源。',
     `运行通道标识：${framework} · ${model}`,
     '',
-    '请输出一份可被决策委员会审计和合并的独立意见，使用以下结构：',
-    '## 独立判断',
-    '明确建议做、不做、延后，或满足哪些条件后再做；同时说明置信度（高/中/低）及原因。',
-    '## 关键主张',
-    '- 给出 3-6 条主张，每条以 `[事实]`、`[假设]`、`[推断]` 或 `[未知]` 开头。',
-    '## 最强反对意见',
-    '- 写出对你当前判断最有力的反驳，不要写稻草人观点。',
-    '## 会改变结论的信息',
-    '- 列出一旦获得就可能推翻或显著改变当前判断的信息。',
-    '## 最低成本验证',
-    '- 给出 1-3 个可执行验证动作，并说明观察什么结果、何时停止。',
-    '',
-    `用户决策简报：\n${task}`,
+    `用户任务：\n${task}`,
   ].join('\n');
 }
 
-async function runLive(framework, model, task, agentId, role) {
+async function runLive(framework, model, task, agentId, role, runner, onStep) {
   const caps = liveCapabilities();
   const fw = getFramework(framework);
-  const prompt = reviewerPrompt({ task, framework, model, role });
+  const prompt = reviewerPrompt({ task, framework, model });
+  if (runner?.transport?.type === 'langgraph-sse' && runner.endpoint) {
+    return await callDeerFlow(runner, prompt, onStep);
+  }
   // 选择真实通道
   if (framework === 'codex-cli' && caps.codexPath) {
-    return await callCodexCli(caps.codexPath, model, prompt);
+    return await callCodexCli(caps.codexPath, model, prompt, onStep);
   }
   if (framework === 'claude-cli' && caps.claudePath) {
     return await callClaudeCli(caps.claudePath, model, prompt);
@@ -247,6 +237,24 @@ async function callOpenAI(model, task) {
   return { status: 'done', mode: 'live', output: text, trace: { steps, totals: summarizeTrace(steps), source: { traceability: 'native', how: 'API usage' } } };
 }
 
+export function normalizeCodexEvent(event, i = 0) {
+  if (event.type === 'item.started' || event.type === 'item.completed' || event.type === 'item.updated') {
+    const item = event.item || {};
+    const text = String(item.text || item.content || item.query || item.url || '');
+    if (item.type === 'agent_message') return makeStep(i, 'message', 'Codex 回答', { detail: text.slice(0, 240) });
+    if (item.type === 'command_execution') return makeStep(i, item.exit_code === 0 || item.exit_code == null ? 'tool' : 'error', 'Codex 命令执行', { toolName: 'shell', detail: String(item.command || '').slice(0, 240) });
+    if (item.type === 'file_change') return makeStep(i, 'error', 'Codex 尝试文件变更（已被只读沙箱阻止）', { toolName: 'apply_patch' });
+    if (/web_search|search_query|search/i.test(item.type || '')) return makeStep(i, 'search', 'Codex 搜索', { query: text.slice(0, 240), detail: text.slice(0, 240) });
+    if (/fetch|webpage|page|browser/i.test(item.type || '')) return makeStep(i, 'fetch', 'Codex 读取网页', { url: item.url || null, detail: text.slice(0, 240) });
+    if (/source|citation/i.test(item.type || '')) return makeStep(i, 'source', 'Codex 发现来源', { url: item.url || null, detail: text.slice(0, 240) });
+    if (/reasoning|plan/i.test(item.type || '')) return makeStep(i, 'plan', 'Codex 更新执行计划');
+    if (item.type) return makeStep(i, 'observation', `Codex 事件：${item.type}`, { detail: text.slice(0, 240) });
+  }
+  if (event.type === 'error') return makeStep(i, 'error', 'Codex 执行错误', { detail: String(event.message || '').slice(0, 240) });
+  if (event.type === 'turn.failed') return makeStep(i, 'error', 'Codex 回合失败', { detail: String(event.error?.message || 'Codex turn failed').slice(0, 240) });
+  return null;
+}
+
 export function parseCodexEvents(stdout, elapsedMs = 0) {
   const events = String(stdout).split(/\r?\n/).filter(Boolean).flatMap((line) => {
     try { return [JSON.parse(line)]; } catch { return []; }
@@ -257,31 +265,19 @@ export function parseCodexEvents(stdout, elapsedMs = 0) {
   const errors = [];
   let i = 0;
   for (const event of events) {
+    const step = normalizeCodexEvent(event, i);
+    if (step) { steps.push(step); i++; }
     if (event.type === 'item.completed') {
       const item = event.item || {};
       if (item.type === 'agent_message') {
         output = item.text || output;
-        steps.push(makeStep(i++, 'message', 'Codex 最终回答', { detail: 'agent_message' }));
-      } else if (item.type === 'command_execution') {
-        steps.push(makeStep(i++, item.exit_code === 0 ? 'tool' : 'error', 'Codex 命令执行', {
-          toolName: 'shell',
-          detail: String(item.command || '').slice(0, 240),
-        }));
-      } else if (item.type === 'file_change') {
-        steps.push(makeStep(i++, 'tool', 'Codex 文件变更', { toolName: 'apply_patch' }));
-      } else if (item.type === 'reasoning') {
-        steps.push(makeStep(i++, 'think', 'Codex 推理阶段'));
-      } else if (item.type) {
-        steps.push(makeStep(i++, 'observe', `Codex 事件：${item.type}`));
       }
     } else if (event.type === 'error') {
       const message = String(event.message || '');
       errors.push(message);
-      steps.push(makeStep(i++, 'error', 'Codex 执行错误', { detail: message.slice(0, 240) }));
     } else if (event.type === 'turn.failed') {
       const message = String(event.error?.message || 'Codex turn failed');
       errors.push(message);
-      steps.push(makeStep(i++, 'error', 'Codex 回合失败', { detail: message.slice(0, 240) }));
     } else if (event.type === 'turn.completed') {
       usage = event.usage || {};
     }
@@ -294,17 +290,28 @@ export function parseCodexEvents(stdout, elapsedMs = 0) {
   return { output, steps, usage, errors };
 }
 
-async function callCodexCli(codexPath, model, prompt) {
-  const workdir = mkdtempSync(join(tmpdir(), 'aker-codex-'));
+export function codexExecArgs(model, workdir) {
   const args = [
-    'exec', '--json', '--sandbox', 'read-only', '--skip-git-repo-check',
+    '--search', 'exec', '--json', '--sandbox', 'read-only', '--skip-git-repo-check',
     '--ephemeral', '--ignore-rules', '--ignore-user-config', '-C', workdir,
   ];
   if (model && model !== 'codex-default') args.push('--model', model);
   args.push('-');
+  return args;
+}
+
+async function callCodexCli(codexPath, model, prompt, onStep) {
+  const workdir = mkdtempSync(join(tmpdir(), 'aker-codex-'));
+  const args = codexExecArgs(model, workdir);
   const t0 = Date.now();
   try {
-    const { stdout, stderr, code } = await spawnCollect(codexPath, args, prompt, 180_000);
+    const { stdout, stderr, code } = await spawnCollect(codexPath, args, prompt, 180_000, undefined, (line) => {
+      try {
+        const event = JSON.parse(line);
+        const step = normalizeCodexEvent(event);
+        if (step) onStep?.(step);
+      } catch {}
+    });
     const parsed = parseCodexEvents(stdout, Date.now() - t0);
     if (code !== 0 || !parsed.output) {
       const eventError = parsed.errors.at(-1);
@@ -318,7 +325,7 @@ async function callCodexCli(codexPath, model, prompt) {
       trace: {
         steps: parsed.steps,
         totals: summarizeTrace(parsed.steps),
-        source: { traceability: 'cli-log', how: 'codex exec --json 真实事件流' },
+        source: { traceability: 'cli-log', how: 'codex --search exec --json --sandbox read-only 真实事件流' },
       },
     };
   } finally {
@@ -374,12 +381,19 @@ async function callGeminiCli(geminiPath, model, prompt) {
   }
 }
 
-function spawnCollect(command, args, input, timeoutMs, cwd) {
+function spawnCollect(command, args, input, timeoutMs, cwd, onLine) {
   return new Promise((resolve, reject) => {
     const child = spawn(command, args, { cwd, stdio: ['pipe', 'pipe', 'pipe'] });
     let stdout = '', stderr = '';
     const append = (current, chunk) => (current + chunk).slice(-2_000_000);
-    child.stdout.on('data', (c) => { stdout = append(stdout, c); });
+    let lineBuffer = '';
+    child.stdout.on('data', (c) => {
+      stdout = append(stdout, c);
+      lineBuffer += c.toString();
+      const lines = lineBuffer.split(/\r?\n/);
+      lineBuffer = lines.pop() || '';
+      for (const line of lines.filter(Boolean)) onLine?.(line);
+    });
     child.stderr.on('data', (c) => { stderr = append(stderr, c); });
     child.on('error', (e) => {
       clearTimeout(timer);
@@ -395,6 +409,82 @@ function spawnCollect(command, args, input, timeoutMs, cwd) {
     });
     child.stdin.end(input);
   });
+}
+
+export function normalizeDeerFlowEvent(event, data, i = 0) {
+  const type = String(event || data?.event || data?.type || '');
+  const text = String(data?.query || data?.url || data?.name || data?.content || data?.message || '');
+  if (/search/i.test(type)) return makeStep(i, 'search', 'DeerFlow 搜索', { query: data?.query || text, detail: text.slice(0, 240) });
+  if (/source|citation/i.test(type)) return makeStep(i, 'source', 'DeerFlow 来源', { url: data?.url || null, detail: text.slice(0, 240) });
+  if (/fetch|browser|page/i.test(type)) return makeStep(i, 'fetch', 'DeerFlow 读取网页', { url: data?.url || null, detail: text.slice(0, 240) });
+  if (/subagent|handoff/i.test(type)) return makeStep(i, 'subagent', 'DeerFlow 子 Agent', { detail: text.slice(0, 240) });
+  if (/tool/i.test(type)) return makeStep(i, 'tool', 'DeerFlow 工具调用', { toolName: data?.name || data?.tool || 'tool', detail: text.slice(0, 240) });
+  if (/error/i.test(type)) return makeStep(i, 'error', 'DeerFlow 错误', { detail: text.slice(0, 240) });
+  if (/message|values|updates/i.test(type)) return makeStep(i, 'message', 'DeerFlow 消息', { detail: text.slice(0, 240) });
+  return makeStep(i, 'observation', `DeerFlow 事件：${type || 'event'}`, { detail: text.slice(0, 240) });
+}
+
+function lastMessageText(data) {
+  const messages = data?.messages || data?.values?.messages || [];
+  const last = Array.isArray(messages) ? messages.at(-1) : null;
+  if (typeof last?.content === 'string') return last.content;
+  if (Array.isArray(last?.content)) return last.content.map((item) => item.text || item.content || '').join('\n');
+  return typeof data?.content === 'string' ? data.content : '';
+}
+
+async function callDeerFlow(runner, prompt, onStep) {
+  const endpoint = runner.endpoint.replace(/\/$/, '');
+  const threadResponse = await fetch(`${endpoint}/threads`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({}),
+    signal: AbortSignal.timeout(20_000),
+  });
+  if (!threadResponse.ok) throw new Error(`DeerFlow 创建线程失败：HTTP ${threadResponse.status}`);
+  const thread = await threadResponse.json();
+  const threadId = thread.thread_id || thread.id;
+  const response = await fetch(`${endpoint}/threads/${encodeURIComponent(threadId)}/runs/stream`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      assistant_id: runner.transport?.assistantId || 'lead_agent',
+      input: { messages: [{ role: 'user', content: prompt }] },
+      stream_mode: ['updates', 'values', 'messages'],
+    }),
+  });
+  if (!response.ok || !response.body) throw new Error(`DeerFlow 流式运行失败：HTTP ${response.status}`);
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  const steps = [];
+  let buffer = '', eventName = '', output = '', i = 0;
+  while (true) {
+    const { value, done } = await reader.read();
+    buffer += decoder.decode(value || new Uint8Array(), { stream: !done });
+    const blocks = buffer.split('\n\n');
+    buffer = blocks.pop() || '';
+    for (const block of blocks) {
+      let data = null;
+      for (const line of block.split(/\r?\n/)) {
+        if (line.startsWith('event:')) eventName = line.slice(6).trim();
+        if (line.startsWith('data:')) {
+          try { data = JSON.parse(line.slice(5).trim()); } catch {}
+        }
+      }
+      if (!data) continue;
+      const step = normalizeDeerFlowEvent(eventName, data, i++);
+      steps.push(step);
+      await onStep?.(step);
+      output = lastMessageText(data) || output;
+    }
+    if (done) break;
+  }
+  if (!output) throw new Error('DeerFlow 未返回最终回答');
+  return {
+    status: 'done',
+    mode: 'live',
+    output,
+    trace: { steps, totals: summarizeTrace(steps), source: { traceability: 'native', how: 'DeerFlow Gateway / LangGraph SSE' } },
+  };
 }
 
 export async function synthesizeReview({ task, agents, evidence }) {
@@ -445,11 +535,11 @@ export async function synthesizeReview({ task, agents, evidence }) {
 }
 
 // —— 统一入口 —— //
-export async function runAgent({ framework, model, task, agentId, role, mode }) {
+export async function runAgent({ runner, framework, model, task, agentId, role, mode, onStep }) {
   if (mode === 'live') {
-    return await runLive(framework, model, task, agentId, role);
+    return await runLive(framework, model, task, agentId, role, runner, onStep);
   }
-  return await runSim(framework, model, task, agentId, role);
+  return await runSim(framework, model, task, agentId, role, onStep);
 }
 
 export function capabilities() {

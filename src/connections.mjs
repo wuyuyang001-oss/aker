@@ -16,7 +16,7 @@ const CLI_DEFS = [
     command: 'codex',
     extraPaths: ['/Applications/Codex.app/Contents/Resources/codex', join(homedir(), '.local', 'bin', 'codex')],
     versionArgs: ['--version'],
-    capabilities: ['independent-judgment', 'json-event-trace'],
+    capabilities: ['web-search', 'read-only-tools', 'json-event-trace', 'judge'],
   },
   {
     id: 'claude-cli',
@@ -24,7 +24,7 @@ const CLI_DEFS = [
     command: 'claude',
     extraPaths: [join(homedir(), '.local', 'bin', 'claude')],
     versionArgs: ['--version'],
-    capabilities: ['independent-judgment', 'tool-use'],
+    capabilities: ['answer', 'limited-trace', 'judge'],
   },
   {
     id: 'gemini-cli',
@@ -32,7 +32,7 @@ const CLI_DEFS = [
     command: 'gemini',
     extraPaths: [join(homedir(), '.local', 'bin', 'gemini')],
     versionArgs: ['--version'],
-    capabilities: ['independent-judgment', 'tool-use'],
+    capabilities: ['answer', 'limited-trace', 'judge'],
   },
   {
     id: 'aider',
@@ -137,7 +137,7 @@ export function listConnections() {
       version: path ? getVersion(path, def.versionArgs) : null,
       capabilities: def.capabilities,
       runnable: ['codex-cli', 'claude-cli', 'gemini-cli'].includes(def.id) && !!path,
-      note: ['codex-cli', 'claude-cli', 'gemini-cli'].includes(def.id) && path ? '已实现 Aker 只读判断适配器' : path ? '已检测到；不适合当前通用决策流程' : '未检测到',
+      note: def.id === 'codex-cli' && path ? '已实现只读搜索与 JSONL Trace' : ['claude-cli', 'gemini-cli'].includes(def.id) && path ? '已实现只读回答适配器；搜索能力取决于通道配置' : path ? '已检测到；暂无通用任务适配器' : '未检测到',
     };
   });
   const api = API_DEFS.map((def) => {
@@ -150,7 +150,7 @@ export function listConnections() {
       model: settings.apis?.[def.id]?.model || def.defaultModel,
       secretStore: process.env[def.env] ? 'environment' : configured ? 'macOS Keychain' : null,
       runnable: configured,
-      capabilities: ['independent-judgment', 'synthesis'],
+      capabilities: ['answer', 'judge', 'no-built-in-search'],
       note: configured ? '已配置；实际调用仍取决于额度、权限与网络' : '未配置',
     };
   });
