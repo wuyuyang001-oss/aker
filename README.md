@@ -1,10 +1,12 @@
 # Aker
 
-> Run the same decision through independent reviewer roles, then synthesize their findings into one actionable plan.
+> A multi-perspective decision workbench for important questions that do not have an immediate ground truth.
 
 [Try the Sim-only web demo](https://wuyuyang001-oss.github.io/aker/) · [Download the latest macOS app](https://github.com/wuyuyang001-oss/aker/releases/latest/download/Aker-mac-arm64.zip) · [View releases](https://github.com/wuyuyang001-oss/aker/releases)
 
-Aker is a local-first review workbench for product decisions, technical proposals, rollout plans, and risk reviews. It runs strategy, critic, and operator reviewers in parallel, preserves their outputs and traces, and uses a final Live model call to produce a concrete recommendation.
+Aker helps you make a better decision when there is no test suite, obvious correct answer, or reliable single expert. You provide a structured decision brief; independent strategy, counterargument, action, and evidence perspectives examine it separately; a final committee chair produces one decision package with conditions, objections, uncertainties, and low-cost validation steps.
+
+Aker is not a model leaderboard and does not treat majority agreement as truth. Its purpose is to reduce decision risk by exposing assumptions and preserving meaningful disagreement.
 
 ## Current Status
 
@@ -13,12 +15,16 @@ Aker is a local-first review workbench for product decisions, technical proposal
 | macOS desktop app | Available for Apple Silicon (`arm64`) |
 | Codex CLI Live runner | Implemented with real `codex exec --json` events and token usage |
 | OpenAI / Anthropic API runners | Implemented with final response and usage data |
-| Live committee-chair synthesis | Implemented |
+| Structured decision brief | Implemented |
+| Four independent decision perspectives | Implemented |
+| Live decision-package synthesis | Implemented |
 | Browser demo | Sim only; it never calls a real model |
 | Windows / Linux / Intel Mac packages | Not currently published |
 | Code signing / Apple notarization | Not currently configured |
 
-The default Live setup uses three reviewer roles backed by separate calls to the same available runner. Those roles provide different review lenses, but they are **not automatically independent model providers**.
+The default Live setup uses four separate calls to the first available runner. The perspectives do not see one another's answers, but they may still share the same model and information source. Role separation reduces omissions; it does **not** guarantee true multi-model independence.
+
+Current Aker reviews the information you provide. It does not yet perform source-backed external research, so an evidence perspective identifies missing evidence and unsupported claims rather than inventing or retrieving sources.
 
 ## Fastest Path: Desktop App
 
@@ -36,9 +42,10 @@ Aker does not bundle a model, Codex credentials, or API keys. The desktop app de
 1. Download [`Aker-mac-arm64.zip`](https://github.com/wuyuyang001-oss/aker/releases/latest/download/Aker-mac-arm64.zip).
 2. Optionally verify it using [`Aker-mac-arm64.zip.sha256`](https://github.com/wuyuyang001-oss/aker/releases/latest/download/Aker-mac-arm64.zip.sha256).
 3. Unzip it and move `Aker.app` to Applications or another local folder.
-4. Open Aker. The sidebar should show **Live available** and `Codex CLI · current login`.
-5. Enter a real task, keep Live mode selected, and run the default strategy / critic / operator reviewers.
-6. Open Review Committee to generate and copy the final plan.
+4. Open Aker. The sidebar should show **Live channel detected** and `Codex CLI · current login`. Detection confirms configuration, not provider reachability, quota, or account health.
+5. Describe the decision, known context, constraints, success criteria, and the unknowns most likely to change your mind.
+6. Keep Live mode selected and run the default strategy / counterargument / action / evidence perspectives.
+7. Open **Decision Package** to generate and copy the final recommendation.
 
 The app is not signed or notarized yet. On first launch, macOS may require **Control-click → Open** or approval under **System Settings → Privacy & Security**. Only run binaries downloaded from this repository, and verify the checksum when provenance matters.
 
@@ -84,36 +91,40 @@ API-key configuration is documented for source/server usage. A Finder-launched d
 
 ## What a Successful Run Produces
 
-1. Independent reviewer outputs for the same task.
-2. A stored run with status, latency, token usage, and available trace events.
-3. A rule-based view of lexical consensus and divergence.
-4. A Live committee-chair synthesis containing:
-   - final decision;
-   - recommended plan;
-   - risks and validation criteria;
-   - immediate next actions.
+1. Independent judgments that explicitly separate facts, assumptions, inferences, and unknowns.
+2. The strongest objection and the information that would change each judgment.
+3. A decision package containing:
+   - recommendation, confidence, and conditions;
+   - key reasons and their epistemic status;
+   - strongest counterargument;
+   - unresolved uncertainty;
+   - lowest-cost validation steps;
+   - immediate actions.
+4. A local audit record with status, latency, token usage, and available process events.
 
 Live failures are explicit and are **never silently replaced with Sim output**.
 
-## Live, Sim, and the Framework Gallery
+## Live, Sim, and Method Transparency
 
 | Mode | Data source | Intended use |
 |---|---|---|
-| Live · Codex CLI | Real answers, JSONL events, and token usage from `codex exec --json` | Actual review, synthesis, and trace comparison |
-| Live · OpenAI / Anthropic API | Real final answers and usage | Actual review and synthesis |
+| Live · Codex CLI | Real answers, JSONL events, and token usage from `codex exec --json` | Actual independent judgment, synthesis, and process audit |
+| Live · OpenAI / Anthropic API | Real final answers and usage | Actual independent judgment and synthesis |
 | Sim | Deterministic template outputs and generated trace values | Learning the interface without model access |
 
 Sim runs demonstrate the workflow only. Their outputs, tokens, latency, and traces are not real model measurements.
 
-The Framework Gallery is a reference catalog describing possible trace integration strategies. It does **not** mean every listed framework currently has a runnable Aker adapter. The implemented Live channels are the ones reported by the app's health indicator.
+The **Method Transparency** screen is a reference catalog describing possible integration and audit strategies. It does **not** mean every listed framework has a runnable Aker adapter. The implemented Live channels are the ones reported by the app's health indicator.
 
 ## Important Limitations
 
-- Consensus clustering uses lexical Jaccard similarity, not semantic embeddings. Paraphrases may be reported as divergence.
-- A majority is not proof of correctness, especially when reviewers share the same underlying model.
+- Current reviewers analyze only the submitted brief. Aker does not yet retrieve and cite external evidence.
+- Shared models and shared source information create correlated errors even when roles differ.
+- Common-claim clustering uses lexical Jaccard similarity, not semantic embeddings. Paraphrases may be reported as divergence.
+- A majority is not proof of correctness.
 - Codex CLI exposes real event-level trace data; direct OpenAI and Anthropic API runners currently expose only final response and usage.
-- Each reviewer and the committee chair is a real model call in Live mode and consumes provider time and quota.
-- Aker sends the submitted task and synthesis context to the selected model provider.
+- Each perspective and the committee chair is a real model call in Live mode and consumes provider time and quota.
+- Aker sends the submitted decision brief and synthesis context to the selected model provider.
 
 Runs are stored locally:
 
@@ -122,7 +133,7 @@ Runs are stored locally:
 
 Aker does not implement its own telemetry service. Model-provider behavior and data handling remain subject to the provider and account configuration you use.
 
-For the full critique log and roadmap, see [docs/CRITICISMS.md](docs/CRITICISMS.md).
+For the product thesis and prioritized roadmap, see [docs/PRODUCT_DIRECTION.md](docs/PRODUCT_DIRECTION.md). For the detailed critique log, see [docs/CRITICISMS.md](docs/CRITICISMS.md).
 
 ## Development
 

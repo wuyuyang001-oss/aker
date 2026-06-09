@@ -29,13 +29,14 @@ test('server supports the first-use Sim run and review flow', async (t) => {
   }
   assert.equal(health?.ok, true, 'server should become healthy');
   assert.ok(Array.isArray(health.reviewRoles), 'health should expose reviewer roles');
+  assert.ok(health.reviewRoles.some((role) => role.id === 'researcher'), 'health should expose an evidence perspective');
   assert.ok(Array.isArray(health.liveAgents), 'health should expose actual live runners');
 
   const runResponse = await fetch(`${base}/api/run`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({
-      task: '评估一个两周内可验证的功能方案',
+      task: '## 决策问题\n是否应该在两周内上线功能？\n\n## 关键未知项\n用户是否会持续使用。',
       mode: 'sim',
       agents: [
         { role: 'strategist', framework: 'claude-code', model: 'claude-opus-4-8' },
@@ -55,4 +56,7 @@ test('server supports the first-use Sim run and review flow', async (t) => {
   const payload = await reviewResponse.json();
   assert.ok(Array.isArray(payload.review.consensus));
   assert.equal(typeof payload.review.betterSolution.markdown, 'string');
+  for (const heading of ['## 建议与置信度', '## 最强反对意见', '## 最低成本验证', '## 立即行动']) {
+    assert.ok(payload.review.betterSolution.markdown.includes(heading), `decision package should include ${heading}`);
+  }
 });

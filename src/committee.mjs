@@ -19,9 +19,6 @@ const CONFIG = {
   MIN_CONSENSUS: 2,
   // “推理深度差异”归因触发门槛：最大步数 - 最小步数 >= 此值才报告。
   DEPTH_GAP: 2,
-  // 过程可信度（cred）启发式打分权重（仅 Sim 演示，非真实质量）：
-  //   cred = tools*toolW + min(steps, stepCap) - errors*errPenalty
-  CRED: { toolW: 2, stepCap: 6, errPenalty: 3 },
 };
 
 // —— 文本切片：把一段输出拆成“论点/要点”单元 ——
@@ -119,7 +116,7 @@ export function review(run, mode = 'intersection') {
   // 差异归因：结合 trace 信号解释“为什么会不同”
   const attribution = attribute(agents, divergence);
 
-  // 更优解
+  // 决策包基础版本
   const betterSolution = synthesizeBetter(agents, consensus, union, attribution);
 
   return {
@@ -144,7 +141,7 @@ function attribute(agents, divergence) {
     reasons.push({
       kind: '模型差异',
       weight: 'high',
-      detail: `参与的 ${agents.length} 个 agent 用了 ${models.length} 种模型（${models.join('、')}）。不同模型的知识截止、对齐倾向与推理风格不同，会在措辞与取舍上分叉。`,
+      detail: `参与的 ${agents.length} 个视角用了 ${models.length} 种模型（${models.join('、')}）。不同模型的知识截止、对齐倾向与推理风格不同，会在措辞与取舍上分叉。`,
     });
   }
 
@@ -169,7 +166,7 @@ function attribute(agents, divergence) {
     reasons.push({
       kind: '推理深度差异',
       weight: 'medium',
-      detail: `步骤数从 ${minS} 到 ${maxS} 不等。${deep.a.framework}·${deep.a.model} 走了更多步（更多自我验证/迭代），更可能覆盖边角，但也更贵。`,
+      detail: `步骤数从 ${minS} 到 ${maxS} 不等。${deep.a.framework}·${deep.a.model} 走了更多步骤，但步骤更多不自动代表结论更可靠。`,
     });
   }
 
@@ -178,7 +175,7 @@ function attribute(agents, divergence) {
     reasons.push({
       kind: '侧重/表述差异',
       weight: 'low',
-      detail: `有 ${divergence.length} 条要点仅单一 agent 提及。需人工判断：是独到洞见（保留）还是无依据发挥（剔除）。aker 在“更优解”里默认对“有 trace 工具支撑的一方”加权。`,
+      detail: `有 ${divergence.length} 条要点仅单一视角提及。它们可能是关键少数意见，也可能缺乏依据；需要结合证据与可验证性判断，不能按人数直接剔除。`,
     });
   }
 
@@ -187,48 +184,49 @@ function attribute(agents, divergence) {
 
 // —— 更优解基础综合（Sim / standalone 使用；Live server 会做真实二次综合）——
 function synthesizeBetter(agents, consensus, union, attribution) {
-  const traces = agents.map((a) => summarizeTrace(a.trace?.steps || []));
-  // 给每个 agent 一个“过程可信度”分（启发式：有工具、步骤适中、无错误）
-  // ⚠️ Sim 下 trace 由框架工具表 + rng 生成、errors 恒 0，该分数无事实依据。
-  const { toolW, stepCap, errPenalty } = CONFIG.CRED;
-  const cred = {};
-  agents.forEach((a, i) => {
-    const t = traces[i];
-    cred[a.agentId] = (t.tools.length * toolW) + Math.min(t.steps, stepCap) - t.errors * errPenalty;
-  });
-
-  // 采纳的独有要点：来自可信度高于中位数的 agent
-  const credVals = Object.values(cred).sort((x, y) => x - y);
-  const med = credVals[Math.floor(credVals.length / 2)] ?? 0;
+  // 单一视角提出的观点必须保留给人审查，不能用步骤数或工具数自动判为更可信。
   const adoptedUnique = union
-    .filter((u) => u.unique && (cred[u.agents[0]] ?? 0) >= med)
+    .filter((u) => u.unique)
+    .slice(0, 8)
     .map((u) => ({ text: u.text, from: u.agents[0] }));
 
-  // 是否含 Sim agent：决定要不要在文案里醒目标注“可信度基于模拟 trace”。
+  // 是否含 Sim agent：决定是否醒目标注演示边界。
   const isSim = agents.some((a) => (a.mode || 'sim') === 'sim');
-  const credNote = isSim ? '（Sim：可信度基于模拟 trace，无事实依据）' : '';
 
   const lines = [];
-  lines.push('## 综合最优解（aker 评审会）');
+  lines.push('## 建议与置信度');
   lines.push('');
-  if (isSim) lines.push('> ⚠️ Sim 模式：以下“可信度/采纳依据”均基于**模拟 trace**（工具数/步数由框架表生成），不代表真实质量。');
+  if (isSim) lines.push('> Sim 模式只演示决策流程，不代表真实研究结论。请使用 Live 模式处理真实决策。');
+  lines.push('- 当前建议：在关键未知项得到验证前，优先采用可逆的小规模验证，不做不可逆承诺。');
+  lines.push(`- 置信度：${consensus.length ? '中' : '低'}。当前共同主张数量为 ${consensus.length}，但共同出现不等于事实正确。`);
   lines.push('');
-  lines.push('### 已确立的共识（多数 agent 覆盖）');
-  lines.push('> 注：“多数 agent 覆盖”≠ 绝对正确——同源模型可能共同偏见，相关性一起错。');
-  if (consensus.length) consensus.forEach((c) => lines.push(`- ${c.text}  _(${c.coverage} 个 agent 覆盖)_`));
-  else lines.push('- （本次无强共识——说明任务发散或 agent 配置差异大，建议增加一致性约束或换更同质的模型组）');
+  lines.push('## 为什么这样决定');
+  lines.push('> 以下是多个视角重复提出的主张，不等于已经核验的事实。');
+  if (consensus.length) consensus.forEach((c) => lines.push(`- ${c.text}  _(${c.coverage} 个视角覆盖)_`));
+  else lines.push('- 当前没有强共同主张，说明信息不足或视角判断明显分叉。');
   lines.push('');
-  lines.push(`### 选择性纳入的独有洞见（过程可信度更高的一方提出）${credNote}`);
-  if (adoptedUnique.length) adoptedUnique.forEach((u) => lines.push(`- ${u.text}  _(来自 ${u.from}，其 trace 有工具/验证支撑${isSim ? '；Sim 模拟' : ''})_`));
-  else lines.push('- （无满足采纳门槛的独有要点）');
+  lines.push('## 最强反对意见');
+  lines.push('- 条件推进仍可能造成机会成本：如果验证动作过慢、结果不可判定，团队可能同时承担试点成本并错过窗口期。');
   lines.push('');
-  lines.push('### 评审会判断');
+  lines.push('## 需保留的少数观点');
+  if (adoptedUnique.length) adoptedUnique.forEach((u) => lines.push(`- ${u.text}  _(来自单一视角 ${u.from}，需要进一步验证)_`));
+  else lines.push('- 当前没有可自动识别的少数意见；这不代表不存在共同盲区。');
+  lines.push('');
+  lines.push('## 未解决的不确定性');
   attribution.forEach((r) => lines.push(`- **${r.kind}**（权重 ${r.weight}）：${r.detail}`));
   lines.push('');
-  lines.push('> 当前显示规则式启发综合。通过本地 server 运行 Live 时，评审会会调用真实评审团主席替换本段内容。');
+  lines.push('## 最低成本验证');
+  lines.push('- 选择最可能改变结论的未知项，设计一个有明确观察指标和停止条件的小规模验证。');
+  lines.push('- 验证后重新运行 Aker，并在决策简报中补充新事实。');
+  lines.push('');
+  lines.push('## 立即行动');
+  lines.push('- 指定一名决策负责人，明确决策截止时间与不可接受结果。');
+  lines.push('- 把当前最关键假设转成未来 1-7 天内可验证的行动。');
+  lines.push('');
+  lines.push('> 当前显示规则式基础决策包。Live 模式会调用真实委员会主席进行二次综合。');
 
   return {
-    credibility: cred,
+    credibility: {},
     adoptedUnique,
     markdown: lines.join('\n'),
   };

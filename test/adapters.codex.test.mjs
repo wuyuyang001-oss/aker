@@ -15,6 +15,7 @@ test('parseCodexEvents extracts the final answer, usage, and real event steps', 
   assert.equal(parsed.output, 'final answer');
   assert.deepEqual(parsed.usage, { input_tokens: 100, output_tokens: 20 });
   assert.deepEqual(parsed.steps.map((s) => s.type), ['think', 'tool', 'error', 'message']);
+  assert.deepEqual(parsed.errors, ['temporary reconnect']);
   assert.equal(parsed.steps.at(-1).tokens, 120);
   assert.equal(parsed.steps.at(-1).ms, 1234);
 });
