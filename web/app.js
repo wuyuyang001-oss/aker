@@ -12,6 +12,7 @@ const DEFAULT_SIM_AGENTS = [
   { role: 'strategist', framework: 'claude-code', model: 'claude-opus-4-8' },
   { role: 'critic', framework: 'codex-cli', model: 'gpt-x' },
   { role: 'operator', framework: 'langgraph', model: 'o-series' },
+  { role: 'researcher', framework: 'crewai', model: 'gemini-x' },
 ];
 
 // ───────── tabs ─────────
@@ -52,22 +53,25 @@ $$('#tabs button').forEach((b) => {
   ];
   STATE.mode = health.live ? 'live' : 'sim';
   $('#modedot').classList.toggle('on', health.live);
-  $('#modetext').textContent = health.live ? 'Live 可用' : '仅 Sim 演示';
+  $('#modetext').textContent = health.live ? 'Live 通道已检测' : '仅 Sim 演示';
   $('#modepill').title = health.note || '';
   $('#capabilityText').innerHTML = health.live
-    ? `<b class="ok">已就绪：</b>${esc(health.note)}。默认使用真实评审，运行失败会明确报错，不会降级成模拟结果。`
+    ? `<b class="ok">已检测：</b>${esc(health.note)}。默认尝试真实判断；失败会明确报错，不会降级成模拟结果。`
     : `<b class="warn-text">尚无真实通道：</b>${esc(health.note)}。可先体验 Sim；要产生真实效果，请安装并登录 Codex CLI，或设置 OPENAI_API_KEY / ANTHROPIC_API_KEY 后重启。`;
   $$('#modeSeg button').forEach((b) => b.classList.toggle('active', b.dataset.mode === STATE.mode));
   renderAgentRows(defaultAgentsForMode());
   renderFrameworks();
   bindRunControls();
   $('#loadExample').addEventListener('click', () => {
-    $('#task').value = '我们计划在两周内上线一个面向现有客户的 AI 周报功能。团队只有 2 名工程师，不能新增付费基础设施。请评估是否值得做，并给出可验证的最小上线方案。';
-    $('#task').focus();
+    $('#decision').value = '我们是否应该在未来两周上线面向现有客户的 AI 周报功能？';
+    $('#context').value = '已有客户持续反馈周报整理耗时，但尚未验证他们是否愿意使用 AI 自动生成内容。';
+    $('#constraints').value = '团队只有 2 名工程师，周期 2 周，不能新增付费基础设施；不能向客户展示未经确认的事实。';
+    $('#criteria').value = '至少 5 名现有客户真实试用；其中 3 名愿意连续使用；人工校对时间低于 10 分钟。';
+    $('#unknowns').value = '客户真实使用频率、可接受的错误率、是否愿意授权所需数据。';
+    $('#decision').focus();
   });
-  // 评审会 / Trace 首屏空态引导（U2）
-  $('#committeeOut').innerHTML = '<div class="card empty">选择一个 run 并点击「评审」，查看交集/并集、差异归因与更优解。</div>';
-  $('#traceOut').innerHTML = '<div class="card empty">选择一个 run 与两个 agent，点击「对比」，查看过程差异与效果评审。</div>';
+  $('#committeeOut').innerHTML = '<div class="card empty">完成一次独立判断后，在这里生成建议、条件、反对意见与验证动作完整的决策包。</div>';
+  $('#traceOut').innerHTML = '<div class="card empty">选择一次决策与两个视角，检查它们的过程支撑是否存在明显差异。</div>';
   // 无 key 时锁定 Sim：禁用 Live 按钮（U1 / H6 —— Pages 在线版永远走这里）
   if (!health.live) {
     const lb = $('#modeSeg [data-mode="live"]');
@@ -85,7 +89,7 @@ $$('#tabs button').forEach((b) => {
 function defaultAgentsForMode() {
   if (STATE.mode !== 'live' || !STATE.liveAgents.length) return DEFAULT_SIM_AGENTS.map((a) => ({ ...a }));
   const runner = STATE.liveAgents[0];
-  return ['strategist', 'critic', 'operator'].map((role) => ({ role, framework: runner.framework, model: runner.model }));
+  return ['strategist', 'critic', 'operator', 'researcher'].map((role) => ({ role, framework: runner.framework, model: runner.model }));
 }
 function availableFrameworks() {
   if (STATE.mode !== 'live') return STATE.frameworks.map((f) => ({ id: f.id, label: f.name }));
@@ -107,10 +111,10 @@ function roleOptions(sel) {
 function renderAgentRows(agents) {
   $('#agentRows').innerHTML = agents.map((a, i) => `
     <div class="agent-row" data-i="${i}">
-      <select class="role" aria-label="第 ${i + 1} 个评审的角色">${roleOptions(a.role)}</select>
-      <select class="fw" aria-label="第 ${i + 1} 个 agent 的框架">${fwOptions(a.framework)}</select>
-      <select class="ml" aria-label="第 ${i + 1} 个 agent 的模型">${modelOptions(a.model, a.framework)}</select>
-      <button class="icon-btn rm" title="移除该 agent" aria-label="移除第 ${i + 1} 个 agent"><span aria-hidden="true">×</span></button>
+      <select class="role" aria-label="第 ${i + 1} 个判断视角">${roleOptions(a.role)}</select>
+      <select class="fw" aria-label="第 ${i + 1} 个视角的运行通道">${fwOptions(a.framework)}</select>
+      <select class="ml" aria-label="第 ${i + 1} 个视角的模型">${modelOptions(a.model, a.framework)}</select>
+      <button class="icon-btn rm" title="移除该视角" aria-label="移除第 ${i + 1} 个视角"><span aria-hidden="true">×</span></button>
     </div>`).join('');
   $$('#agentRows .fw').forEach((select) => select.addEventListener('change', (e) => {
     const row = e.target.closest('.agent-row');
@@ -137,17 +141,33 @@ function bindRunControls() {
     renderAgentRows(defaultAgentsForMode());
   }));
   $('#runBtn').addEventListener('click', submitRun);
-  // Cmd/Ctrl + Enter 提交（X8）
-  $('#task').addEventListener('keydown', (e) => {
+  $$('.brief-input').forEach((input) => input.addEventListener('keydown', (e) => {
     if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); submitRun(); }
-  });
+  }));
+}
+
+function composeDecisionBrief() {
+  const sections = [
+    ['决策问题', $('#decision').value.trim()],
+    ['已知背景', $('#context').value.trim()],
+    ['约束与不可接受结果', $('#constraints').value.trim()],
+    ['成功标准', $('#criteria').value.trim()],
+    ['关键未知项', $('#unknowns').value.trim()],
+  ];
+  return sections.filter(([, value]) => value).map(([title, value]) => `## ${title}\n${value}`).join('\n\n');
 }
 
 async function submitRun() {
-  const task = $('#task').value.trim();
+  const decision = $('#decision').value.trim();
+  const task = composeDecisionBrief();
   const agents = collectAgents();
-  if (!task || !agents.length) return;
-  const btn = $('#runBtn'); btn.disabled = true; btn.textContent = '运行中…'; btn.setAttribute('aria-busy', 'true');
+  if (!decision) {
+    $('#runStatus').innerHTML = '<div class="card warn" role="alert">请先写清楚要做的决定。一个好的问题通常可以用“是否应该……”或“应选择哪种方案……”表达。</div>';
+    $('#decision').focus();
+    return;
+  }
+  if (!agents.length) return;
+  const btn = $('#runBtn'); btn.disabled = true; btn.textContent = '判断中…'; btn.setAttribute('aria-busy', 'true');
   // 先渲染 running 占位卡
   $('#results').innerHTML = agents.map((a, i) => agentCardShell(a, i)).join('');
   // 等待期计时指示（U4：真正逐个流式落地需后端 SSE，记入 CRITICISMS.md）
@@ -155,7 +175,7 @@ async function submitRun() {
   const hint = STATE.mode === 'live' ? ' · Live 模式下单个 agent 可能需要数十秒' : '';
   const tick = () => {
     const s = ((Date.now() - t0) / 1000).toFixed(1);
-    $('#runStatus').innerHTML = `<div class="card"><div class="metrics"><span class="spin" aria-hidden="true"></span><span>并行运行中 <b>${s}s</b> · 派发 <b>${agents.length}</b> 个 agent · 模式 <b>${esc(STATE.mode)}</b>${hint}</span></div></div>`;
+    $('#runStatus').innerHTML = `<div class="card"><div class="metrics"><span class="spin" aria-hidden="true"></span><span>独立判断中 <b>${s}s</b> · <b>${agents.length}</b> 个视角互不查看彼此答案 · 模式 <b>${esc(STATE.mode)}</b>${hint}</span></div></div>`;
   };
   tick();
   const timer = setInterval(tick, 100);
@@ -169,14 +189,14 @@ async function submitRun() {
     const done = run.agents.filter((a) => a.status === 'done').length;
     const failed = run.agents.length - done;
     const simNote = run.mode === 'sim' ? ' · <b>Sim 模拟数据</b>（非真实模型）' : ' · <b>真实运行</b>';
-    const next = done >= 2 ? '<button class="btn sm" id="openCommittee">进入评审会，生成最终方案</button>' : '';
-    $('#runStatus').innerHTML = `<div class="card run-complete"><div class="metrics"><span class="status ${failed ? 'error' : 'done'}" role="img" aria-label="已完成"></span><span>完成 <b>${done}</b> 个${failed ? ` · 失败 <b>${failed}</b> 个` : ''} · 用时 <b>${dur}s</b>${simNote} · 已存档</span></div>${next}</div>`;
+    const next = done >= 2 ? '<button class="btn sm" id="openCommittee">生成最终决策包</button>' : '';
+    $('#runStatus').innerHTML = `<div class="card run-complete"><div class="metrics"><span class="status ${failed ? 'error' : 'done'}" role="img" aria-label="已完成"></span><span>完成 <b>${done}</b> 个独立视角${failed ? ` · 失败 <b>${failed}</b> 个` : ''} · 用时 <b>${dur}s</b>${simNote} · 已存档</span></div>${next}</div>`;
     $('#openCommittee')?.addEventListener('click', () => activateTab($('#tab-committee')));
     refreshRunPickers(run.id);
   } catch (e) {
     clearInterval(timer);
     $('#runStatus').innerHTML = `<div class="card warn" role="alert"><span style="color:var(--red)">运行失败：${esc(e.message)}</span></div>`;
-  } finally { clearInterval(timer); btn.disabled = false; btn.textContent = '▶ 并行运行'; btn.removeAttribute('aria-busy'); }
+  } finally { clearInterval(timer); btn.disabled = false; btn.textContent = '▶ 开始独立判断'; btn.removeAttribute('aria-busy'); }
 }
 
 const STATUS_LABEL = { running: '执行中', done: '已完成', error: '失败' };
@@ -222,10 +242,15 @@ async function refreshRunPickers(selectId) {
   const { runs } = await api('/api/runs');
   const opts = runs.map((r) => {
     const tag = r.mode === 'sim' ? ' · [Sim]' : ' · [Live]';
-    return `<option value="${esc(r.id)}">${esc(r.task.slice(0, 28))} · ${r.agentCount}agent${tag}</option>`;
+    return `<option value="${esc(r.id)}">${esc(decisionTitle(r.task).slice(0, 38))} · ${r.agentCount}视角${tag}</option>`;
   }).join('');
   for (const sel of ['#reviewRun', '#traceRun']) { const el = $(sel); if (el) { el.innerHTML = opts; if (selectId) el.value = selectId; } }
   await onTraceRunChange();
+}
+
+function decisionTitle(task = '') {
+  const match = task.match(/## 决策问题\s*\n([^\n]+)/);
+  return match?.[1]?.trim() || task.replace(/^#+\s*/gm, '').trim();
 }
 
 // ───────── 评审会 ─────────
@@ -237,7 +262,7 @@ async function doReview() {
   const runId = $('#reviewRun').value;
   const mode = $('#reviewMode button.active').dataset.mode;
   if (!runId) return;
-  $('#committeeOut').innerHTML = '<div class="card empty">评审中…</div>';
+  $('#committeeOut').innerHTML = '<div class="card empty">正在综合决策包…</div>';
   // 取回完整 run，判断是否含模拟 agent —— 用于「基于模拟 trace」告警。
   const [{ run }, { review, error }] = await Promise.all([
     api(`/api/runs/${encodeURIComponent(runId)}`),
@@ -249,9 +274,9 @@ async function doReview() {
 }
 function renderReview(r, mode, isSim) {
   const list = mode === 'intersection' ? r.consensus : r.union;
-  const listTitle = mode === 'intersection' ? `共识 / 交集 (${r.consensus.length})` : `全集 / 并集 (${r.union.length})`;
+  const listTitle = mode === 'intersection' ? `共同主张 (${r.consensus.length})` : `全部观点 (${r.union.length})`;
   const listHtml = list.length ? list.map((c) => `
-    <div class="consensus-item">${esc(c.text)} <span class="cov">· ${c.coverage} agent${c.unique ? ' · 仅此一家' : ''}</span></div>`).join('')
+    <div class="consensus-item">${esc(c.text)} <span class="cov">· ${c.coverage} 个视角${c.unique ? ' · 仅此视角提出' : ''}</span></div>`).join('')
     : '<div class="empty">无</div>';
 
   const divHtml = r.divergence.length ? r.divergence.map((d) => `<div class="div-item">${esc(d.text)} <span class="cov">· 来自 ${esc(d.by)}</span></div>`).join('') : '<div class="empty">无显著分歧</div>';
@@ -265,8 +290,8 @@ function renderReview(r, mode, isSim) {
     : '';
   // H5：sim 下分歧来自固定模板差异化句式，不存在「幻觉」，故切换中性文案
   const divHint = isSim
-    ? '仅单一 agent 提出 —— Sim 模式下这些来自模板的固定差异化句式（既非洞见也非幻觉）'
-    : '仅单一 agent 提出 —— 可能是独到洞见，也可能是无依据发挥';
+    ? '仅单一视角提出；Sim 模式下这些来自固定模板，只用于演示流程'
+    : '仅单一视角提出；它可能是关键少数意见，也可能缺乏依据，不能因人数少而直接丢弃';
   const attrHint = isSim
     ? '结合 trace 解释「为什么会不同」（注意：基于模拟 trace，仅示意算法形态）'
     : '结合 trace 解释「为什么会不同」';
@@ -282,30 +307,29 @@ function renderReview(r, mode, isSim) {
 
   $('#committeeOut').innerHTML = `
     ${simBanner}
+    <div class="card decision-package">
+      <div class="section-head"><h2 class="section">最终决策包</h2><button class="btn sm copy" id="copyBetter">复制 Markdown</button></div>
+      <p class="section-hint">${synthHint}</p>
+      <div class="markdown">${renderMarkdown(r.betterSolution.markdown)}</div>
+    </div>
+    <div style="height:16px"></div>
     <div class="two-col">
       <div class="card">
         <h2 class="section">${esc(listTitle)}</h2>
-        <p class="section-hint">${mode === 'intersection' ? '多数 agent 都提到的要点；仍需警惕共同偏见' : '去重后的全部要点，含仅单一 agent 提出的'}</p>
+        <p class="section-hint">${mode === 'intersection' ? '多个视角都提出的主张；共同出现不等于事实正确' : '去重后的全部观点，包含少数但可能关键的意见'}</p>
         ${listHtml}
       </div>
       <div class="card">
-        <h2 class="section">分歧点 (${r.divergence.length})</h2>
+        <h2 class="section">少数观点与盲区 (${r.divergence.length})</h2>
         <p class="section-hint">${divHint}</p>
         ${divHtml}
       </div>
     </div>
     <div style="height:16px"></div>
-    <div class="two-col">
-      <div class="card">
-        <h2 class="section">差异归因</h2>
-        <p class="section-hint">${attrHint}</p>
-        ${attrHtml}
-      </div>
-      <div class="card">
-        <div class="section-head"><h2 class="section">更优解</h2><button class="btn sm copy" id="copyBetter">复制 Markdown</button></div>
-        <p class="section-hint">${synthHint}</p>
-        <div class="markdown">${renderMarkdown(r.betterSolution.markdown)}</div>
-      </div>
+    <div class="card">
+      <h2 class="section">为什么视角会不同</h2>
+      <p class="section-hint">${attrHint}</p>
+      ${attrHtml}
     </div>`;
   const cb = $('#copyBetter');
   if (cb) cb.addEventListener('click', () => copyToClipboard(STATE.betterMd, cb));

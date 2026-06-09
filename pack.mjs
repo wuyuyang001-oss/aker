@@ -18,7 +18,7 @@ const appPaths = await packager({
   overwrite: true,
   appBundleId: 'com.aker.desktop',
   appVersion: version,
-  appCategoryType: 'public.app-category.developer-tools',
+  appCategoryType: 'public.app-category.productivity',
   icon: 'build/icon',
   prune: true,                         // 移除 devDeps（aker 零运行时依赖 → 体积小）
   ignore: [

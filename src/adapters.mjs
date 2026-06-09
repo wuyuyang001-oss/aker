@@ -12,10 +12,10 @@ import { makeStep, summarizeTrace } from './trace.mjs';
 import { getFramework, TRACEABILITY_META } from './frameworks.mjs';
 
 export const REVIEW_ROLES = [
-  { id: 'strategist', label: '策略评审', brief: '从目标、取舍和长期影响出发，给出方向性判断。' },
-  { id: 'critic', label: '反方评审', brief: '主动寻找失败模式、反例、风险和被忽略的约束。' },
-  { id: 'operator', label: '执行评审', brief: '把建议落到可操作步骤、验证方式和完成标准。' },
-  { id: 'researcher', label: '证据评审', brief: '区分事实、假设与未知项，指出需要补充的证据。' },
+  { id: 'strategist', label: '策略视角', brief: '比较可选路径、机会成本、可逆性和长期影响，给出有条件的方向判断。' },
+  { id: 'critic', label: '反方视角', brief: '构造最强反对意见和失败预演，主动寻找共同盲区与不可接受结果。' },
+  { id: 'operator', label: '行动视角', brief: '把建议变成低成本验证、明确负责人、停止条件和下一步行动。' },
+  { id: 'researcher', label: '证据视角', brief: '区分事实、假设与推断，检查证据质量；绝不虚构来源或把未知项写成事实。' },
 ];
 
 function reviewRole(id) {
@@ -55,32 +55,50 @@ const FRAMEWORK_TOOLKIT = {
 };
 
 // —— 生成差异化但有共识的输出 —— //
-function composeOutput(task, framework, model) {
-  const persona = MODEL_PERSONA[model] || MODEL_PERSONA.default;
-  const fw = getFramework(framework);
-  const tools = FRAMEWORK_TOOLKIT[framework] || [];
-
-  // 三条“共识要点”——所有 agent 都会给（关键词一致，便于聚类成共识）
-  const shared = [
-    `先明确「${task}」的输入输出与边界条件，再动手实现。`,
-    `把核心逻辑与 I/O 解耦，便于测试与替换。`,
-    `补充针对「${task}」的单元测试，覆盖正常与异常路径。`,
-  ];
-
-  // 模型相关的独有取向
-  const modelUnique = `${persona.bias}（${model} 的取向）。`;
-
-  // 框架相关的独有做法（与其工具/范式挂钩）
-  const fwUnique = tools.length
-    ? `用 ${fw?.name || framework} 时，可借助 [${tools.join('、')}] 在过程中验证假设，降低返工。`
-    : `${fw?.name || framework} 无内置工具，建议外包一层执行环境来验证中间结果。`;
+function composeOutput(task, framework, model, role) {
+  const roleSpecific = {
+    strategist: {
+      claim: '[推断] 当前机会的可逆性高于一次性全面投入，先试点能保留后续选择权。',
+      objection: '如果窗口期很短，过度验证可能让团队错过先发优势。',
+      validation: '比较“小规模试点”和“立即全面投入”的机会成本，并明确决策截止时间。',
+    },
+    critic: {
+      claim: '[假设] 最大风险不是实现失败，而是在缺乏真实需求时投入并形成维护负担。',
+      objection: '过度强调风险可能让团队持续延后，错失本可快速验证的机会。',
+      validation: '做一次失败预演，写出三个不可接受结果及其最早预警信号。',
+    },
+    operator: {
+      claim: '[推断] 只有把成功标准、负责人和停止条件写清，验证结果才会真正改变决策。',
+      objection: '如果验证周期和正式实施成本接近，小试点可能只是额外工作。',
+      validation: '把一个关键未知项转成 1-7 天可完成的实验，预先约定通过与停止阈值。',
+    },
+    researcher: {
+      claim: '[未知] 当前简报没有提供足够的外部证据，不能把需求强度和预期收益视为事实。',
+      objection: '等待完美证据既不现实，也可能比小规模行动更昂贵。',
+      validation: '列出会改变结论的三项证据，优先获取成本最低且影响最大的那一项。',
+    },
+  }[role] || {
+    claim: '[推断] 当前最稳妥的路径是先验证关键未知项。',
+    objection: '验证本身也有成本，不能无限延后决定。',
+    validation: '选择影响最大且最容易验证的未知项先行动。',
+  };
 
   const body = [
-    `针对「${task}」的方案（by ${fw?.name || framework} · ${model}，风格：${persona.style}）：`,
+    `## 独立判断`,
+    '建议有条件推进，置信度为低：当前信息适合设计验证，不足以支持不可逆承诺。',
     '',
-    ...shared.map((s, i) => `${i + 1}. ${s}`),
-    `4. ${modelUnique}`,
-    `5. ${fwUnique}`,
+    '## 关键主张',
+    '- [推断] 在关键未知项得到验证前，应优先采用可逆的小规模行动。',
+    `- ${roleSpecific.claim}`,
+    '',
+    '## 最强反对意见',
+    `- ${roleSpecific.objection}`,
+    '',
+    '## 会改变结论的信息',
+    '- 真实用户行为、执行成本或不可接受风险与当前假设明显不符。',
+    '',
+    '## 最低成本验证',
+    `- ${roleSpecific.validation}`,
   ].join('\n');
   return body;
 }
@@ -117,7 +135,7 @@ async function runSim(framework, model, task, agentId, role) {
   return {
     status: 'done',
     mode: 'sim',
-    output: composeOutput(task, framework, model),
+    output: composeOutput(task, framework, model, role),
     // 诚实性（H2）：Sim 模式没有真实采集任何 trace——没有 jsonl/transcript/OTel span，
     // step 全是 composeTrace 用模板拼出来的。因此这里固定标 'sim'，**不**复用框架图鉴里
     // 该框架在真实环境下能达到的 traceability 等级（native/otel/cli-log），避免在 UI 上
@@ -166,21 +184,25 @@ function liveCapabilities() {
 function reviewerPrompt({ task, framework, model, role }) {
   const lens = reviewRole(role);
   return [
-    '你是 Aker 评审团中的一名独立评审。请直接分析用户任务，不要修改文件、调用工具或执行外部操作。',
+    '你是 Aker 决策委员会中的一名独立判断者。你的任务不是写一篇看起来完整的答案，而是降低用户在无标准答案场景中做错决定的风险。',
+    '你看不到其他判断者的答案。请形成自己的观点，不要猜测多数意见。',
+    '仅基于用户提供的信息分析，不要修改文件、调用工具或执行外部操作。没有证据支持的内容必须明确标成假设或推断，绝不虚构事实、数据或来源。',
     `你的角色：${lens.label}。${lens.brief}`,
     `运行通道标识：${framework} · ${model}`,
     '',
-    '请输出一份可被其他评审合并的独立意见，使用以下结构：',
-    '## 结论',
-    '用 2-4 句给出明确判断。',
-    '## 关键建议',
-    '- 3-6 条具体建议，每条只表达一个主张。',
-    '## 风险与未知项',
-    '- 列出重要风险、假设或需要验证的事项。',
-    '## 下一步',
-    '- 给出最值得立刻执行的 1-3 步。',
+    '请输出一份可被决策委员会审计和合并的独立意见，使用以下结构：',
+    '## 独立判断',
+    '明确建议做、不做、延后，或满足哪些条件后再做；同时说明置信度（高/中/低）及原因。',
+    '## 关键主张',
+    '- 给出 3-6 条主张，每条以 `[事实]`、`[假设]`、`[推断]` 或 `[未知]` 开头。',
+    '## 最强反对意见',
+    '- 写出对你当前判断最有力的反驳，不要写稻草人观点。',
+    '## 会改变结论的信息',
+    '- 列出一旦获得就可能推翻或显著改变当前判断的信息。',
+    '## 最低成本验证',
+    '- 给出 1-3 个可执行验证动作，并说明观察什么结果、何时停止。',
     '',
-    `用户任务：\n${task}`,
+    `用户决策简报：\n${task}`,
   ].join('\n');
 }
 
@@ -239,6 +261,7 @@ export function parseCodexEvents(stdout, elapsedMs = 0) {
   const steps = [];
   let output = '';
   let usage = {};
+  const errors = [];
   let i = 0;
   for (const event of events) {
     if (event.type === 'item.completed') {
@@ -259,7 +282,13 @@ export function parseCodexEvents(stdout, elapsedMs = 0) {
         steps.push(makeStep(i++, 'observe', `Codex 事件：${item.type}`));
       }
     } else if (event.type === 'error') {
-      steps.push(makeStep(i++, 'error', 'Codex 执行错误', { detail: String(event.message || '').slice(0, 240) }));
+      const message = String(event.message || '');
+      errors.push(message);
+      steps.push(makeStep(i++, 'error', 'Codex 执行错误', { detail: message.slice(0, 240) }));
+    } else if (event.type === 'turn.failed') {
+      const message = String(event.error?.message || 'Codex turn failed');
+      errors.push(message);
+      steps.push(makeStep(i++, 'error', 'Codex 回合失败', { detail: message.slice(0, 240) }));
     } else if (event.type === 'turn.completed') {
       usage = event.usage || {};
     }
@@ -269,7 +298,7 @@ export function parseCodexEvents(stdout, elapsedMs = 0) {
   const last = steps.at(-1);
   last.tokens = tokens;
   last.ms = elapsedMs;
-  return { output, steps, usage };
+  return { output, steps, usage, errors };
 }
 
 async function callCodexCli(codexPath, model, prompt) {
@@ -285,7 +314,8 @@ async function callCodexCli(codexPath, model, prompt) {
     const { stdout, stderr, code } = await spawnCollect(codexPath, args, prompt, 180_000);
     const parsed = parseCodexEvents(stdout, Date.now() - t0);
     if (code !== 0 || !parsed.output) {
-      throw new Error(`Codex CLI ${code || '无输出'}: ${stderr.slice(-400) || '未产生最终回答'}`);
+      const eventError = parsed.errors.at(-1);
+      throw new Error(`Codex CLI ${code || '无输出'}: ${eventError || stderr.slice(-400) || '未产生最终回答'}`);
     }
     return {
       status: 'done',
@@ -333,13 +363,20 @@ export async function synthesizeReview({ task, agents, evidence }) {
     `### 评审 ${i + 1}：${a.label || `${a.framework} · ${a.model}`}\n${a.output.slice(0, 6000)}`
   )).join('\n\n');
   const prompt = [
-    '你是 Aker 评审团主席。请综合多名独立评审的真实输出，给出一份可以直接执行的最终答复。',
-    '不要机械投票；明确处理冲突，区分共识、少数重要意见、风险和未知项。',
-    '输出 Markdown，结构必须包含：`## 最终判断`、`## 推荐方案`、`## 风险与验证`、`## 立即行动`。',
+    '你是 Aker 决策委员会主席。请把多名独立判断者的真实输出综合成一份可直接用于做决定的决策包。',
+    '不要机械投票，也不要把共识当成事实。应评估主张依据、保留可能关键的少数意见、明确共同盲区，并指出当前信息是否足以做决定。',
+    '不要虚构事实、证据、数据或来源。缺乏依据的主张必须明确标成假设、推断或未知。',
+    '输出 Markdown，结构必须包含：',
+    '`## 建议与置信度`：明确建议、置信度以及建议成立的条件；',
+    '`## 为什么这样决定`：列出最关键依据，并标明事实/假设/推断；',
+    '`## 最强反对意见`：呈现最可能推翻建议的观点，而不是弱化它；',
+    '`## 未解决的不确定性`：说明哪些未知项仍然重要；',
+    '`## 最低成本验证`：按优先级给出验证动作、观察指标和停止条件；',
+    '`## 立即行动`：给出未来 1-7 天内可以执行的具体步骤。',
     '',
-    `用户任务：\n${task.slice(0, 4000)}`,
+    `用户决策简报：\n${task.slice(0, 8000)}`,
     '',
-    `规则聚类得到的共识：\n${evidence.consensus.map((x) => `- ${x.text}`).join('\n') || '- 无强共识'}`,
+    `规则聚类识别出的共同主张（只表示文字相近，不代表正确）：\n${evidence.consensus.map((x) => `- ${x.text}`).join('\n') || '- 无强共同主张'}`,
     '',
     agentText,
   ].join('\n');
@@ -383,6 +420,8 @@ export function capabilities() {
     codex: !!caps.codexPath,
     liveAgents,
     reviewRoles: REVIEW_ROLES,
-    note: channels.length ? `可用真实通道：${channels.join('、')}` : '未检测到 Codex CLI 或 API key，只能使用 Sim 演示模式',
+    note: channels.length
+      ? `检测到真实通道：${channels.join('、')}。实际调用仍取决于登录状态、额度与网络`
+      : '未检测到 Codex CLI 或 API key，只能使用 Sim 演示模式',
   };
 }

@@ -71,10 +71,10 @@ code, pre { font-family: var(--mono); }
 .onboarding .btn { background: transparent; color: #fff; border-color: #777268; white-space: nowrap; }
 .onboarding .btn:hover { border-color: #e7a88e; color: #f4c0a9; }
 .steps { list-style: none; padding: 0; margin: 0; display: grid; gap: 7px; counter-reset: steps; }
-.steps li { display: grid; grid-template-columns: 22px 1fr; gap: 7px; color: #d7d2c7; font-size: 11.5px; }
-.steps li::before { counter-increment: steps; content: counter(steps); width: 18px; height: 18px; border-radius: 50%; background: var(--accent); color: #fff; display: grid; place-items: center; font-weight: 700; }
+.steps li { display: grid; grid-template-columns: 22px 1fr; grid-template-rows: auto auto; column-gap: 7px; row-gap: 0; color: #d7d2c7; font-size: 11.5px; }
+.steps li::before { counter-increment: steps; content: counter(steps); width: 18px; height: 18px; border-radius: 50%; background: var(--accent); color: #fff; display: grid; place-items: center; font-weight: 700; grid-row: 1 / span 2; }
 .steps b, .steps span { grid-column: 2; }
-.steps b { color: #fff; margin-top: -24px; }
+.steps b { color: #fff; line-height: 18px; }
 .ok { color: #91d2a5; }
 .warn-text { color: #f0c77a; }
 
@@ -89,8 +89,14 @@ h2.section { font-size: 16px; margin: 0 0 4px; letter-spacing: -.01em; }
 /* ── run form ── */
 .runbar { display: grid; gap: 14px; }
 .field label { display: block; font-size: 12.5px; color: var(--muted); margin-bottom: 6px; font-weight: 600; }
+.field-note { color: var(--faint); font-size: 11.5px; margin: 8px 0 0; }
+.required { color: var(--accent-ink); font-size: 10.5px; margin-left: 4px; }
+.label-hint { color: var(--faint); font-size: 11px; font-weight: 400; margin-left: 6px; }
 textarea.task { width: 100%; min-height: 70px; resize: vertical; padding: 12px 14px; border: 1px solid var(--border-strong); border-radius: 10px; font: inherit; background: var(--surface-2); }
 textarea.task:focus { border-color: var(--accent); background: #fff; }
+.brief-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+textarea.brief-input.compact { width: 100%; min-height: 84px; resize: vertical; padding: 10px 12px; border: 1px solid var(--border-strong); border-radius: 10px; font: inherit; background: var(--surface-2); }
+textarea.brief-input:focus { border-color: var(--accent); background: #fff; }
 .agent-rows { display: grid; gap: 8px; }
 .agent-row { display: grid; grid-template-columns: .9fr 1fr 1.15fr auto; gap: 8px; align-items: center; }
 select, .agent-row input { padding: 9px 11px; border: 1px solid var(--border-strong); border-radius: 9px; font: inherit; background: var(--surface-2); color: var(--ink); }
@@ -146,6 +152,8 @@ select, .agent-row input { padding: 9px 11px; border: 1px solid var(--border-str
 .markdown th, .markdown td { border: 1px solid var(--border); padding: 7px 9px; text-align: left; vertical-align: top; }
 .markdown th { background: var(--surface-2); color: var(--muted); }
 .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.decision-package { border-top: 4px solid var(--accent); padding-top: 15px; }
+.decision-package .markdown { max-width: 860px; }
 @media (max-width: 820px) { .two-col, .trace-cmp { grid-template-columns: 1fr; } }
 
 /* ── trace ── */
@@ -229,6 +237,7 @@ a:focus-visible, button:focus-visible, select:focus-visible, textarea:focus-visi
   .side-foot { margin-top: 0; flex-direction: row; align-items: center; }
   .content { height: auto; }
   .onboarding { grid-template-columns: 1fr; }
+  .brief-grid { grid-template-columns: 1fr; }
   .agent-row { grid-template-columns: 1fr; }
   .deltas { flex-direction: column; }
   .delta { width: 100%; }
@@ -247,20 +256,20 @@ a:focus-visible, button:focus-visible, select:focus-visible, textarea:focus-visi
         <div class="mark">A</div>
         <div class="brand-text">
           <h1>Aker</h1>
-          <div class="sub">多 agent 并行评审</div>
+          <div class="sub">多视角决策工作台</div>
         </div>
       </div>
 
       <nav class="side-nav" id="tabs" role="tablist" aria-label="主导航">
-        <button data-tab="run" class="active" role="tab" id="tab-run" aria-controls="panel-run" aria-selected="true"><span class="ni" aria-hidden="true">▶</span><span>运行台</span></button>
-        <button data-tab="committee" role="tab" id="tab-committee" aria-controls="panel-committee" aria-selected="false" tabindex="-1"><span class="ni" aria-hidden="true">⚖</span><span>评审会</span></button>
-        <button data-tab="trace" role="tab" id="tab-trace" aria-controls="panel-trace" aria-selected="false" tabindex="-1"><span class="ni" aria-hidden="true">◫</span><span>Trace 对比</span></button>
-        <button data-tab="frameworks" role="tab" id="tab-frameworks" aria-controls="panel-frameworks" aria-selected="false" tabindex="-1"><span class="ni" aria-hidden="true">▤</span><span>框架图鉴</span></button>
+        <button data-tab="run" class="active" role="tab" id="tab-run" aria-controls="panel-run" aria-selected="true"><span class="ni" aria-hidden="true">▶</span><span>决策台</span></button>
+        <button data-tab="committee" role="tab" id="tab-committee" aria-controls="panel-committee" aria-selected="false" tabindex="-1"><span class="ni" aria-hidden="true">⚖</span><span>决策包</span></button>
+        <button data-tab="trace" role="tab" id="tab-trace" aria-controls="panel-trace" aria-selected="false" tabindex="-1"><span class="ni" aria-hidden="true">◫</span><span>过程审计</span></button>
+        <button data-tab="frameworks" role="tab" id="tab-frameworks" aria-controls="panel-frameworks" aria-selected="false" tabindex="-1"><span class="ni" aria-hidden="true">▤</span><span>方法透明度</span></button>
       </nav>
 
       <div class="side-foot">
         <div class="modepill" id="modepill"><span class="dot" id="modedot" aria-hidden="true"></span><span id="modetext">检测中…</span></div>
-        <div class="side-tag">适配器架构 · Sim/Live 双模式</div>
+        <div class="side-tag">独立视角 · 分歧保留 · 可验证行动</div>
       </div>
     </aside>
 
@@ -268,38 +277,57 @@ a:focus-visible, button:focus-visible, select:focus-visible, textarea:focus-visi
     <main class="content" id="main" aria-label="主内容">
     <!-- 运行台 -->
     <section class="panel active" id="panel-run" role="tabpanel" aria-labelledby="tab-run" tabindex="0">
-      <div class="page-head"><h2 class="page-title">并行运行台</h2><p class="page-sub">让不同角色独立评审同一个问题，再合并成一份可执行方案。</p></div>
+      <div class="page-head"><h2 class="page-title">决策台</h2><p class="page-sub">把一个没有标准答案的重要问题，变成经过独立判断、反方审查和证据校准的决策。</p></div>
       <div class="onboarding" id="welcome">
         <div>
-          <div class="eyebrow">首次使用 · 3 步完成</div>
-          <h2>从一个真实问题，得到一份经过反方审查的行动方案</h2>
+          <div class="eyebrow">适合一次性、高不确定性的调研与决策</div>
+          <h2>不要只拿到更多答案，要降低做错决定的风险</h2>
           <p id="capabilityText">正在检测可用运行通道…</p>
         </div>
         <ol class="steps">
-          <li><b>写任务</b><span>描述目标、约束和完成标准</span></li>
-          <li><b>并行评审</b><span>策略、反方、执行角色独立回答</span></li>
-          <li><b>生成最终方案</b><span>进入评审会，综合共识与冲突</span></li>
+          <li><b>写清决策</b><span>明确问题、约束、标准与未知项</span></li>
+          <li><b>独立判断</b><span>不同视角分别给出主张与反证</span></li>
+          <li><b>形成决策包</b><span>保留分歧，并给出最低成本验证</span></li>
         </ol>
-        <button class="btn ghost sm" id="loadExample">填入一个示例问题</button>
+        <button class="btn ghost sm" id="loadExample">填入产品决策示例</button>
       </div>
       <div style="height:16px"></div>
       <div class="card">
         <div class="runbar">
           <div class="field">
-            <label for="task">任务</label>
-            <textarea class="task" id="task" placeholder="描述一个要让多个 agent 并行解决的任务，例如：实现一个带缓存的并发安全计数器" maxlength="2000">实现一个带缓存的并发安全计数器</textarea>
+            <label for="decision">要做的决定 <span class="required">必填</span></label>
+            <textarea class="task brief-input" id="decision" placeholder="例如：我们是否应该在未来两周上线 AI 周报功能？" maxlength="1200">我们是否应该在未来两周上线面向现有客户的 AI 周报功能？</textarea>
+          </div>
+          <div class="brief-grid">
+            <div class="field">
+              <label for="context">已知背景</label>
+              <textarea class="brief-input compact" id="context" placeholder="已有事实、当前状态、为什么现在需要决定" maxlength="1600">已有客户持续反馈周报整理耗时，但尚未验证他们是否愿意使用 AI 自动生成内容。</textarea>
+            </div>
+            <div class="field">
+              <label for="constraints">约束与不可接受结果</label>
+              <textarea class="brief-input compact" id="constraints" placeholder="时间、预算、资源、风险边界" maxlength="1600">团队只有 2 名工程师，周期 2 周，不能新增付费基础设施；不能向客户展示未经确认的事实。</textarea>
+            </div>
+            <div class="field">
+              <label for="criteria">成功标准</label>
+              <textarea class="brief-input compact" id="criteria" placeholder="什么结果意味着这个决定是对的" maxlength="1600">至少 5 名现有客户真实试用；其中 3 名愿意连续使用；人工校对时间低于 10 分钟。</textarea>
+            </div>
+            <div class="field">
+              <label for="unknowns">关键未知项</label>
+              <textarea class="brief-input compact" id="unknowns" placeholder="哪些未知信息最可能改变最终结论" maxlength="1600">客户真实使用频率、可接受的错误率、是否愿意授权所需数据。</textarea>
+            </div>
           </div>
           <div class="field">
-            <label id="agentRowsLabel">参与的独立评审（角色 × 运行通道）</label>
+            <label id="agentRowsLabel">独立判断视角 <span class="label-hint">运行通道是实现细节；视角决定它重点挑战什么</span></label>
             <div class="agent-rows" id="agentRows" aria-labelledby="agentRowsLabel"></div>
+            <p class="field-note">默认视角互不查看彼此答案，但可能由同一模型与同一信息源运行。角色差异能减少遗漏，不等于真正的多模型独立性。</p>
           </div>
           <div class="row-actions">
-            <button class="btn ghost sm" id="addAgent">+ 加一个 agent</button>
+            <button class="btn ghost sm" id="addAgent">+ 加一个视角</button>
             <div class="seg" id="modeSeg" role="group" aria-label="运行模式">
               <button data-mode="sim" class="active">Sim 模式</button>
               <button data-mode="live">Live 模式</button>
             </div>
-            <button class="btn" id="runBtn" style="margin-left:auto">▶ 并行运行</button>
+            <button class="btn" id="runBtn" style="margin-left:auto">▶ 开始独立判断</button>
           </div>
         </div>
       </div>
@@ -310,15 +338,15 @@ a:focus-visible, button:focus-visible, select:focus-visible, textarea:focus-visi
 
     <!-- 评审会 -->
     <section class="panel" id="panel-committee" role="tabpanel" aria-labelledby="tab-committee" tabindex="0">
-      <div class="page-head"><h2 class="page-title">评审会</h2><p class="page-sub">对多个 agent 输出取交集/并集，做差异归因，给出更优解。</p></div>
+      <div class="page-head"><h2 class="page-title">决策包</h2><p class="page-sub">综合独立判断，但不机械投票；明确建议成立的条件、关键反对意见和下一步验证。</p></div>
       <div class="card">
         <div class="toolbar">
           <select id="reviewRun" aria-label="选择要评审的 run"></select>
           <div class="seg" id="reviewMode" role="group" aria-label="评审取值方式">
-            <button data-mode="intersection" class="active">交集 · 共识</button>
-            <button data-mode="union">并集 · 全集</button>
+            <button data-mode="intersection" class="active">共同主张</button>
+            <button data-mode="union">全部观点</button>
           </div>
-          <button class="btn sm" id="reviewBtn">评审</button>
+          <button class="btn sm" id="reviewBtn">生成决策包</button>
         </div>
       </div>
       <div style="height:16px"></div>
@@ -327,7 +355,7 @@ a:focus-visible, button:focus-visible, select:focus-visible, textarea:focus-visi
 
     <!-- Trace 对比 -->
     <section class="panel" id="panel-trace" role="tabpanel" aria-labelledby="tab-trace" tabindex="0">
-      <div class="page-head"><h2 class="page-title">Trace 对比 · 效果评审</h2><p class="page-sub">不看结果看过程：对比两个 agent 的执行步骤、工具、token、耗时。</p></div>
+      <div class="page-head"><h2 class="page-title">过程审计</h2><p class="page-sub">检查不同视角用了哪些步骤、工具、token 与时间，辅助判断结论是否有足够过程支撑。</p></div>
       <div class="card">
         <div class="toolbar">
           <select id="traceRun" aria-label="选择要对比的 run"></select>
@@ -343,7 +371,7 @@ a:focus-visible, button:focus-visible, select:focus-visible, textarea:focus-visi
 
     <!-- 框架图鉴 -->
     <section class="panel" id="panel-frameworks" role="tabpanel" aria-labelledby="tab-frameworks" tabindex="0">
-      <div class="page-head"><h2 class="page-title">Agent 框架图鉴</h2><p class="page-sub">不同 agent 框架的范式、多 agent 支持、工具调用与 <b>trace 可得性</b>对比 —— trace 可得性直接决定 Aker 能否对它做效果评审。</p></div>
+      <div class="page-head"><h2 class="page-title">方法透明度</h2><p class="page-sub">了解不同运行通道的编排方式、工具与过程数据可得性。它们会影响可信度，但不是 Aker 最终交付给用户的产品。</p></div>
       <div class="card">
         <div class="scroll-x"><table class="matrix" id="matrix"></table></div>
       </div>
@@ -662,9 +690,6 @@ const CONFIG = {
   MIN_CONSENSUS: 2,
   // “推理深度差异”归因触发门槛：最大步数 - 最小步数 >= 此值才报告。
   DEPTH_GAP: 2,
-  // 过程可信度（cred）启发式打分权重（仅 Sim 演示，非真实质量）：
-  //   cred = tools*toolW + min(steps, stepCap) - errors*errPenalty
-  CRED: { toolW: 2, stepCap: 6, errPenalty: 3 },
 };
 
 // —— 文本切片：把一段输出拆成“论点/要点”单元 ——
@@ -762,7 +787,7 @@ function review(run, mode = 'intersection') {
   // 差异归因：结合 trace 信号解释“为什么会不同”
   const attribution = attribute(agents, divergence);
 
-  // 更优解
+  // 决策包基础版本
   const betterSolution = synthesizeBetter(agents, consensus, union, attribution);
 
   return {
@@ -787,7 +812,7 @@ function attribute(agents, divergence) {
     reasons.push({
       kind: '模型差异',
       weight: 'high',
-      detail: `参与的 ${agents.length} 个 agent 用了 ${models.length} 种模型（${models.join('、')}）。不同模型的知识截止、对齐倾向与推理风格不同，会在措辞与取舍上分叉。`,
+      detail: `参与的 ${agents.length} 个视角用了 ${models.length} 种模型（${models.join('、')}）。不同模型的知识截止、对齐倾向与推理风格不同，会在措辞与取舍上分叉。`,
     });
   }
 
@@ -812,7 +837,7 @@ function attribute(agents, divergence) {
     reasons.push({
       kind: '推理深度差异',
       weight: 'medium',
-      detail: `步骤数从 ${minS} 到 ${maxS} 不等。${deep.a.framework}·${deep.a.model} 走了更多步（更多自我验证/迭代），更可能覆盖边角，但也更贵。`,
+      detail: `步骤数从 ${minS} 到 ${maxS} 不等。${deep.a.framework}·${deep.a.model} 走了更多步骤，但步骤更多不自动代表结论更可靠。`,
     });
   }
 
@@ -821,7 +846,7 @@ function attribute(agents, divergence) {
     reasons.push({
       kind: '侧重/表述差异',
       weight: 'low',
-      detail: `有 ${divergence.length} 条要点仅单一 agent 提及。需人工判断：是独到洞见（保留）还是无依据发挥（剔除）。aker 在“更优解”里默认对“有 trace 工具支撑的一方”加权。`,
+      detail: `有 ${divergence.length} 条要点仅单一视角提及。它们可能是关键少数意见，也可能缺乏依据；需要结合证据与可验证性判断，不能按人数直接剔除。`,
     });
   }
 
@@ -830,48 +855,49 @@ function attribute(agents, divergence) {
 
 // —— 更优解基础综合（Sim / standalone 使用；Live server 会做真实二次综合）——
 function synthesizeBetter(agents, consensus, union, attribution) {
-  const traces = agents.map((a) => summarizeTrace(a.trace?.steps || []));
-  // 给每个 agent 一个“过程可信度”分（启发式：有工具、步骤适中、无错误）
-  // ⚠️ Sim 下 trace 由框架工具表 + rng 生成、errors 恒 0，该分数无事实依据。
-  const { toolW, stepCap, errPenalty } = CONFIG.CRED;
-  const cred = {};
-  agents.forEach((a, i) => {
-    const t = traces[i];
-    cred[a.agentId] = (t.tools.length * toolW) + Math.min(t.steps, stepCap) - t.errors * errPenalty;
-  });
-
-  // 采纳的独有要点：来自可信度高于中位数的 agent
-  const credVals = Object.values(cred).sort((x, y) => x - y);
-  const med = credVals[Math.floor(credVals.length / 2)] ?? 0;
+  // 单一视角提出的观点必须保留给人审查，不能用步骤数或工具数自动判为更可信。
   const adoptedUnique = union
-    .filter((u) => u.unique && (cred[u.agents[0]] ?? 0) >= med)
+    .filter((u) => u.unique)
+    .slice(0, 8)
     .map((u) => ({ text: u.text, from: u.agents[0] }));
 
-  // 是否含 Sim agent：决定要不要在文案里醒目标注“可信度基于模拟 trace”。
+  // 是否含 Sim agent：决定是否醒目标注演示边界。
   const isSim = agents.some((a) => (a.mode || 'sim') === 'sim');
-  const credNote = isSim ? '（Sim：可信度基于模拟 trace，无事实依据）' : '';
 
   const lines = [];
-  lines.push('## 综合最优解（aker 评审会）');
+  lines.push('## 建议与置信度');
   lines.push('');
-  if (isSim) lines.push('> ⚠️ Sim 模式：以下“可信度/采纳依据”均基于**模拟 trace**（工具数/步数由框架表生成），不代表真实质量。');
+  if (isSim) lines.push('> Sim 模式只演示决策流程，不代表真实研究结论。请使用 Live 模式处理真实决策。');
+  lines.push('- 当前建议：在关键未知项得到验证前，优先采用可逆的小规模验证，不做不可逆承诺。');
+  lines.push(`- 置信度：${consensus.length ? '中' : '低'}。当前共同主张数量为 ${consensus.length}，但共同出现不等于事实正确。`);
   lines.push('');
-  lines.push('### 已确立的共识（多数 agent 覆盖）');
-  lines.push('> 注：“多数 agent 覆盖”≠ 绝对正确——同源模型可能共同偏见，相关性一起错。');
-  if (consensus.length) consensus.forEach((c) => lines.push(`- ${c.text}  _(${c.coverage} 个 agent 覆盖)_`));
-  else lines.push('- （本次无强共识——说明任务发散或 agent 配置差异大，建议增加一致性约束或换更同质的模型组）');
+  lines.push('## 为什么这样决定');
+  lines.push('> 以下是多个视角重复提出的主张，不等于已经核验的事实。');
+  if (consensus.length) consensus.forEach((c) => lines.push(`- ${c.text}  _(${c.coverage} 个视角覆盖)_`));
+  else lines.push('- 当前没有强共同主张，说明信息不足或视角判断明显分叉。');
   lines.push('');
-  lines.push(`### 选择性纳入的独有洞见（过程可信度更高的一方提出）${credNote}`);
-  if (adoptedUnique.length) adoptedUnique.forEach((u) => lines.push(`- ${u.text}  _(来自 ${u.from}，其 trace 有工具/验证支撑${isSim ? '；Sim 模拟' : ''})_`));
-  else lines.push('- （无满足采纳门槛的独有要点）');
+  lines.push('## 最强反对意见');
+  lines.push('- 条件推进仍可能造成机会成本：如果验证动作过慢、结果不可判定，团队可能同时承担试点成本并错过窗口期。');
   lines.push('');
-  lines.push('### 评审会判断');
+  lines.push('## 需保留的少数观点');
+  if (adoptedUnique.length) adoptedUnique.forEach((u) => lines.push(`- ${u.text}  _(来自单一视角 ${u.from}，需要进一步验证)_`));
+  else lines.push('- 当前没有可自动识别的少数意见；这不代表不存在共同盲区。');
+  lines.push('');
+  lines.push('## 未解决的不确定性');
   attribution.forEach((r) => lines.push(`- **${r.kind}**（权重 ${r.weight}）：${r.detail}`));
   lines.push('');
-  lines.push('> 当前显示规则式启发综合。通过本地 server 运行 Live 时，评审会会调用真实评审团主席替换本段内容。');
+  lines.push('## 最低成本验证');
+  lines.push('- 选择最可能改变结论的未知项，设计一个有明确观察指标和停止条件的小规模验证。');
+  lines.push('- 验证后重新运行 Aker，并在决策简报中补充新事实。');
+  lines.push('');
+  lines.push('## 立即行动');
+  lines.push('- 指定一名决策负责人，明确决策截止时间与不可接受结果。');
+  lines.push('- 把当前最关键假设转成未来 1-7 天内可验证的行动。');
+  lines.push('');
+  lines.push('> 当前显示规则式基础决策包。Live 模式会调用真实委员会主席进行二次综合。');
 
   return {
-    credibility: cred,
+    credibility: {},
     adoptedUnique,
     markdown: lines.join('\n'),
   };
@@ -886,10 +912,10 @@ function synthesizeBetter(agents, consensus, union, attribution) {
 
 
 const REVIEW_ROLES = [
-  { id: 'strategist', label: '策略评审', brief: '从目标、取舍和长期影响出发，给出方向性判断。' },
-  { id: 'critic', label: '反方评审', brief: '主动寻找失败模式、反例、风险和被忽略的约束。' },
-  { id: 'operator', label: '执行评审', brief: '把建议落到可操作步骤、验证方式和完成标准。' },
-  { id: 'researcher', label: '证据评审', brief: '区分事实、假设与未知项，指出需要补充的证据。' },
+  { id: 'strategist', label: '策略视角', brief: '比较可选路径、机会成本、可逆性和长期影响，给出有条件的方向判断。' },
+  { id: 'critic', label: '反方视角', brief: '构造最强反对意见和失败预演，主动寻找共同盲区与不可接受结果。' },
+  { id: 'operator', label: '行动视角', brief: '把建议变成低成本验证、明确负责人、停止条件和下一步行动。' },
+  { id: 'researcher', label: '证据视角', brief: '区分事实、假设与推断，检查证据质量；绝不虚构来源或把未知项写成事实。' },
 ];
 
 function reviewRole(id) {
@@ -929,32 +955,50 @@ const FRAMEWORK_TOOLKIT = {
 };
 
 // —— 生成差异化但有共识的输出 —— //
-function composeOutput(task, framework, model) {
-  const persona = MODEL_PERSONA[model] || MODEL_PERSONA.default;
-  const fw = getFramework(framework);
-  const tools = FRAMEWORK_TOOLKIT[framework] || [];
-
-  // 三条“共识要点”——所有 agent 都会给（关键词一致，便于聚类成共识）
-  const shared = [
-    `先明确「${task}」的输入输出与边界条件，再动手实现。`,
-    `把核心逻辑与 I/O 解耦，便于测试与替换。`,
-    `补充针对「${task}」的单元测试，覆盖正常与异常路径。`,
-  ];
-
-  // 模型相关的独有取向
-  const modelUnique = `${persona.bias}（${model} 的取向）。`;
-
-  // 框架相关的独有做法（与其工具/范式挂钩）
-  const fwUnique = tools.length
-    ? `用 ${fw?.name || framework} 时，可借助 [${tools.join('、')}] 在过程中验证假设，降低返工。`
-    : `${fw?.name || framework} 无内置工具，建议外包一层执行环境来验证中间结果。`;
+function composeOutput(task, framework, model, role) {
+  const roleSpecific = {
+    strategist: {
+      claim: '[推断] 当前机会的可逆性高于一次性全面投入，先试点能保留后续选择权。',
+      objection: '如果窗口期很短，过度验证可能让团队错过先发优势。',
+      validation: '比较“小规模试点”和“立即全面投入”的机会成本，并明确决策截止时间。',
+    },
+    critic: {
+      claim: '[假设] 最大风险不是实现失败，而是在缺乏真实需求时投入并形成维护负担。',
+      objection: '过度强调风险可能让团队持续延后，错失本可快速验证的机会。',
+      validation: '做一次失败预演，写出三个不可接受结果及其最早预警信号。',
+    },
+    operator: {
+      claim: '[推断] 只有把成功标准、负责人和停止条件写清，验证结果才会真正改变决策。',
+      objection: '如果验证周期和正式实施成本接近，小试点可能只是额外工作。',
+      validation: '把一个关键未知项转成 1-7 天可完成的实验，预先约定通过与停止阈值。',
+    },
+    researcher: {
+      claim: '[未知] 当前简报没有提供足够的外部证据，不能把需求强度和预期收益视为事实。',
+      objection: '等待完美证据既不现实，也可能比小规模行动更昂贵。',
+      validation: '列出会改变结论的三项证据，优先获取成本最低且影响最大的那一项。',
+    },
+  }[role] || {
+    claim: '[推断] 当前最稳妥的路径是先验证关键未知项。',
+    objection: '验证本身也有成本，不能无限延后决定。',
+    validation: '选择影响最大且最容易验证的未知项先行动。',
+  };
 
   const body = [
-    `针对「${task}」的方案（by ${fw?.name || framework} · ${model}，风格：${persona.style}）：`,
+    `## 独立判断`,
+    '建议有条件推进，置信度为低：当前信息适合设计验证，不足以支持不可逆承诺。',
     '',
-    ...shared.map((s, i) => `${i + 1}. ${s}`),
-    `4. ${modelUnique}`,
-    `5. ${fwUnique}`,
+    '## 关键主张',
+    '- [推断] 在关键未知项得到验证前，应优先采用可逆的小规模行动。',
+    `- ${roleSpecific.claim}`,
+    '',
+    '## 最强反对意见',
+    `- ${roleSpecific.objection}`,
+    '',
+    '## 会改变结论的信息',
+    '- 真实用户行为、执行成本或不可接受风险与当前假设明显不符。',
+    '',
+    '## 最低成本验证',
+    `- ${roleSpecific.validation}`,
   ].join('\n');
   return body;
 }
@@ -991,7 +1035,7 @@ async function runSim(framework, model, task, agentId, role) {
   return {
     status: 'done',
     mode: 'sim',
-    output: composeOutput(task, framework, model),
+    output: composeOutput(task, framework, model, role),
     // 诚实性（H2）：Sim 模式没有真实采集任何 trace——没有 jsonl/transcript/OTel span，
     // step 全是 composeTrace 用模板拼出来的。因此这里固定标 'sim'，**不**复用框架图鉴里
     // 该框架在真实环境下能达到的 traceability 等级（native/otel/cli-log），避免在 UI 上
@@ -1040,21 +1084,25 @@ function liveCapabilities() {
 function reviewerPrompt({ task, framework, model, role }) {
   const lens = reviewRole(role);
   return [
-    '你是 Aker 评审团中的一名独立评审。请直接分析用户任务，不要修改文件、调用工具或执行外部操作。',
+    '你是 Aker 决策委员会中的一名独立判断者。你的任务不是写一篇看起来完整的答案，而是降低用户在无标准答案场景中做错决定的风险。',
+    '你看不到其他判断者的答案。请形成自己的观点，不要猜测多数意见。',
+    '仅基于用户提供的信息分析，不要修改文件、调用工具或执行外部操作。没有证据支持的内容必须明确标成假设或推断，绝不虚构事实、数据或来源。',
     `你的角色：${lens.label}。${lens.brief}`,
     `运行通道标识：${framework} · ${model}`,
     '',
-    '请输出一份可被其他评审合并的独立意见，使用以下结构：',
-    '## 结论',
-    '用 2-4 句给出明确判断。',
-    '## 关键建议',
-    '- 3-6 条具体建议，每条只表达一个主张。',
-    '## 风险与未知项',
-    '- 列出重要风险、假设或需要验证的事项。',
-    '## 下一步',
-    '- 给出最值得立刻执行的 1-3 步。',
+    '请输出一份可被决策委员会审计和合并的独立意见，使用以下结构：',
+    '## 独立判断',
+    '明确建议做、不做、延后，或满足哪些条件后再做；同时说明置信度（高/中/低）及原因。',
+    '## 关键主张',
+    '- 给出 3-6 条主张，每条以 `[事实]`、`[假设]`、`[推断]` 或 `[未知]` 开头。',
+    '## 最强反对意见',
+    '- 写出对你当前判断最有力的反驳，不要写稻草人观点。',
+    '## 会改变结论的信息',
+    '- 列出一旦获得就可能推翻或显著改变当前判断的信息。',
+    '## 最低成本验证',
+    '- 给出 1-3 个可执行验证动作，并说明观察什么结果、何时停止。',
     '',
-    `用户任务：\n${task}`,
+    `用户决策简报：\n${task}`,
   ].join('\n');
 }
 
@@ -1086,6 +1134,7 @@ function parseCodexEvents(stdout, elapsedMs = 0) {
   const steps = [];
   let output = '';
   let usage = {};
+  const errors = [];
   let i = 0;
   for (const event of events) {
     if (event.type === 'item.completed') {
@@ -1106,7 +1155,13 @@ function parseCodexEvents(stdout, elapsedMs = 0) {
         steps.push(makeStep(i++, 'observe', `Codex 事件：${item.type}`));
       }
     } else if (event.type === 'error') {
-      steps.push(makeStep(i++, 'error', 'Codex 执行错误', { detail: String(event.message || '').slice(0, 240) }));
+      const message = String(event.message || '');
+      errors.push(message);
+      steps.push(makeStep(i++, 'error', 'Codex 执行错误', { detail: message.slice(0, 240) }));
+    } else if (event.type === 'turn.failed') {
+      const message = String(event.error?.message || 'Codex turn failed');
+      errors.push(message);
+      steps.push(makeStep(i++, 'error', 'Codex 回合失败', { detail: message.slice(0, 240) }));
     } else if (event.type === 'turn.completed') {
       usage = event.usage || {};
     }
@@ -1116,7 +1171,7 @@ function parseCodexEvents(stdout, elapsedMs = 0) {
   const last = steps.at(-1);
   last.tokens = tokens;
   last.ms = elapsedMs;
-  return { output, steps, usage };
+  return { output, steps, usage, errors };
 }
 
 async function callCodexCli(codexPath, model, prompt) {
@@ -1132,7 +1187,8 @@ async function callCodexCli(codexPath, model, prompt) {
     const { stdout, stderr, code } = await spawnCollect(codexPath, args, prompt, 180_000);
     const parsed = parseCodexEvents(stdout, Date.now() - t0);
     if (code !== 0 || !parsed.output) {
-      throw new Error(`Codex CLI ${code || '无输出'}: ${stderr.slice(-400) || '未产生最终回答'}`);
+      const eventError = parsed.errors.at(-1);
+      throw new Error(`Codex CLI ${code || '无输出'}: ${eventError || stderr.slice(-400) || '未产生最终回答'}`);
     }
     return {
       status: 'done',
@@ -1180,13 +1236,20 @@ async function synthesizeReview({ task, agents, evidence }) {
     `### 评审 ${i + 1}：${a.label || `${a.framework} · ${a.model}`}\n${a.output.slice(0, 6000)}`
   )).join('\n\n');
   const prompt = [
-    '你是 Aker 评审团主席。请综合多名独立评审的真实输出，给出一份可以直接执行的最终答复。',
-    '不要机械投票；明确处理冲突，区分共识、少数重要意见、风险和未知项。',
-    '输出 Markdown，结构必须包含：`## 最终判断`、`## 推荐方案`、`## 风险与验证`、`## 立即行动`。',
+    '你是 Aker 决策委员会主席。请把多名独立判断者的真实输出综合成一份可直接用于做决定的决策包。',
+    '不要机械投票，也不要把共识当成事实。应评估主张依据、保留可能关键的少数意见、明确共同盲区，并指出当前信息是否足以做决定。',
+    '不要虚构事实、证据、数据或来源。缺乏依据的主张必须明确标成假设、推断或未知。',
+    '输出 Markdown，结构必须包含：',
+    '`## 建议与置信度`：明确建议、置信度以及建议成立的条件；',
+    '`## 为什么这样决定`：列出最关键依据，并标明事实/假设/推断；',
+    '`## 最强反对意见`：呈现最可能推翻建议的观点，而不是弱化它；',
+    '`## 未解决的不确定性`：说明哪些未知项仍然重要；',
+    '`## 最低成本验证`：按优先级给出验证动作、观察指标和停止条件；',
+    '`## 立即行动`：给出未来 1-7 天内可以执行的具体步骤。',
     '',
-    `用户任务：\n${task.slice(0, 4000)}`,
+    `用户决策简报：\n${task.slice(0, 8000)}`,
     '',
-    `规则聚类得到的共识：\n${evidence.consensus.map((x) => `- ${x.text}`).join('\n') || '- 无强共识'}`,
+    `规则聚类识别出的共同主张（只表示文字相近，不代表正确）：\n${evidence.consensus.map((x) => `- ${x.text}`).join('\n') || '- 无强共同主张'}`,
     '',
     agentText,
   ].join('\n');
@@ -1230,7 +1293,9 @@ function capabilities() {
     codex: !!caps.codexPath,
     liveAgents,
     reviewRoles: REVIEW_ROLES,
-    note: channels.length ? `可用真实通道：${channels.join('、')}` : '未检测到 Codex CLI 或 API key，只能使用 Sim 演示模式',
+    note: channels.length
+      ? `检测到真实通道：${channels.join('、')}。实际调用仍取决于登录状态、额度与网络`
+      : '未检测到 Codex CLI 或 API key，只能使用 Sim 演示模式',
   };
 }
 
@@ -1360,6 +1425,7 @@ const DEFAULT_SIM_AGENTS = [
   { role: 'strategist', framework: 'claude-code', model: 'claude-opus-4-8' },
   { role: 'critic', framework: 'codex-cli', model: 'gpt-x' },
   { role: 'operator', framework: 'langgraph', model: 'o-series' },
+  { role: 'researcher', framework: 'crewai', model: 'gemini-x' },
 ];
 
 // ───────── tabs ─────────
@@ -1400,22 +1466,25 @@ $$('#tabs button').forEach((b) => {
   ];
   STATE.mode = health.live ? 'live' : 'sim';
   $('#modedot').classList.toggle('on', health.live);
-  $('#modetext').textContent = health.live ? 'Live 可用' : '仅 Sim 演示';
+  $('#modetext').textContent = health.live ? 'Live 通道已检测' : '仅 Sim 演示';
   $('#modepill').title = health.note || '';
   $('#capabilityText').innerHTML = health.live
-    ? `<b class="ok">已就绪：</b>${esc(health.note)}。默认使用真实评审，运行失败会明确报错，不会降级成模拟结果。`
+    ? `<b class="ok">已检测：</b>${esc(health.note)}。默认尝试真实判断；失败会明确报错，不会降级成模拟结果。`
     : `<b class="warn-text">尚无真实通道：</b>${esc(health.note)}。可先体验 Sim；要产生真实效果，请安装并登录 Codex CLI，或设置 OPENAI_API_KEY / ANTHROPIC_API_KEY 后重启。`;
   $$('#modeSeg button').forEach((b) => b.classList.toggle('active', b.dataset.mode === STATE.mode));
   renderAgentRows(defaultAgentsForMode());
   renderFrameworks();
   bindRunControls();
   $('#loadExample').addEventListener('click', () => {
-    $('#task').value = '我们计划在两周内上线一个面向现有客户的 AI 周报功能。团队只有 2 名工程师，不能新增付费基础设施。请评估是否值得做，并给出可验证的最小上线方案。';
-    $('#task').focus();
+    $('#decision').value = '我们是否应该在未来两周上线面向现有客户的 AI 周报功能？';
+    $('#context').value = '已有客户持续反馈周报整理耗时，但尚未验证他们是否愿意使用 AI 自动生成内容。';
+    $('#constraints').value = '团队只有 2 名工程师，周期 2 周，不能新增付费基础设施；不能向客户展示未经确认的事实。';
+    $('#criteria').value = '至少 5 名现有客户真实试用；其中 3 名愿意连续使用；人工校对时间低于 10 分钟。';
+    $('#unknowns').value = '客户真实使用频率、可接受的错误率、是否愿意授权所需数据。';
+    $('#decision').focus();
   });
-  // 评审会 / Trace 首屏空态引导（U2）
-  $('#committeeOut').innerHTML = '<div class="card empty">选择一个 run 并点击「评审」，查看交集/并集、差异归因与更优解。</div>';
-  $('#traceOut').innerHTML = '<div class="card empty">选择一个 run 与两个 agent，点击「对比」，查看过程差异与效果评审。</div>';
+  $('#committeeOut').innerHTML = '<div class="card empty">完成一次独立判断后，在这里生成建议、条件、反对意见与验证动作完整的决策包。</div>';
+  $('#traceOut').innerHTML = '<div class="card empty">选择一次决策与两个视角，检查它们的过程支撑是否存在明显差异。</div>';
   // 无 key 时锁定 Sim：禁用 Live 按钮（U1 / H6 —— Pages 在线版永远走这里）
   if (!health.live) {
     const lb = $('#modeSeg [data-mode="live"]');
@@ -1433,7 +1502,7 @@ $$('#tabs button').forEach((b) => {
 function defaultAgentsForMode() {
   if (STATE.mode !== 'live' || !STATE.liveAgents.length) return DEFAULT_SIM_AGENTS.map((a) => ({ ...a }));
   const runner = STATE.liveAgents[0];
-  return ['strategist', 'critic', 'operator'].map((role) => ({ role, framework: runner.framework, model: runner.model }));
+  return ['strategist', 'critic', 'operator', 'researcher'].map((role) => ({ role, framework: runner.framework, model: runner.model }));
 }
 function availableFrameworks() {
   if (STATE.mode !== 'live') return STATE.frameworks.map((f) => ({ id: f.id, label: f.name }));
@@ -1455,10 +1524,10 @@ function roleOptions(sel) {
 function renderAgentRows(agents) {
   $('#agentRows').innerHTML = agents.map((a, i) => `
     <div class="agent-row" data-i="${i}">
-      <select class="role" aria-label="第 ${i + 1} 个评审的角色">${roleOptions(a.role)}</select>
-      <select class="fw" aria-label="第 ${i + 1} 个 agent 的框架">${fwOptions(a.framework)}</select>
-      <select class="ml" aria-label="第 ${i + 1} 个 agent 的模型">${modelOptions(a.model, a.framework)}</select>
-      <button class="icon-btn rm" title="移除该 agent" aria-label="移除第 ${i + 1} 个 agent"><span aria-hidden="true">×</span></button>
+      <select class="role" aria-label="第 ${i + 1} 个判断视角">${roleOptions(a.role)}</select>
+      <select class="fw" aria-label="第 ${i + 1} 个视角的运行通道">${fwOptions(a.framework)}</select>
+      <select class="ml" aria-label="第 ${i + 1} 个视角的模型">${modelOptions(a.model, a.framework)}</select>
+      <button class="icon-btn rm" title="移除该视角" aria-label="移除第 ${i + 1} 个视角"><span aria-hidden="true">×</span></button>
     </div>`).join('');
   $$('#agentRows .fw').forEach((select) => select.addEventListener('change', (e) => {
     const row = e.target.closest('.agent-row');
@@ -1485,17 +1554,33 @@ function bindRunControls() {
     renderAgentRows(defaultAgentsForMode());
   }));
   $('#runBtn').addEventListener('click', submitRun);
-  // Cmd/Ctrl + Enter 提交（X8）
-  $('#task').addEventListener('keydown', (e) => {
+  $$('.brief-input').forEach((input) => input.addEventListener('keydown', (e) => {
     if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); submitRun(); }
-  });
+  }));
+}
+
+function composeDecisionBrief() {
+  const sections = [
+    ['决策问题', $('#decision').value.trim()],
+    ['已知背景', $('#context').value.trim()],
+    ['约束与不可接受结果', $('#constraints').value.trim()],
+    ['成功标准', $('#criteria').value.trim()],
+    ['关键未知项', $('#unknowns').value.trim()],
+  ];
+  return sections.filter(([, value]) => value).map(([title, value]) => `## ${title}\n${value}`).join('\n\n');
 }
 
 async function submitRun() {
-  const task = $('#task').value.trim();
+  const decision = $('#decision').value.trim();
+  const task = composeDecisionBrief();
   const agents = collectAgents();
-  if (!task || !agents.length) return;
-  const btn = $('#runBtn'); btn.disabled = true; btn.textContent = '运行中…'; btn.setAttribute('aria-busy', 'true');
+  if (!decision) {
+    $('#runStatus').innerHTML = '<div class="card warn" role="alert">请先写清楚要做的决定。一个好的问题通常可以用“是否应该……”或“应选择哪种方案……”表达。</div>';
+    $('#decision').focus();
+    return;
+  }
+  if (!agents.length) return;
+  const btn = $('#runBtn'); btn.disabled = true; btn.textContent = '判断中…'; btn.setAttribute('aria-busy', 'true');
   // 先渲染 running 占位卡
   $('#results').innerHTML = agents.map((a, i) => agentCardShell(a, i)).join('');
   // 等待期计时指示（U4：真正逐个流式落地需后端 SSE，记入 CRITICISMS.md）
@@ -1503,7 +1588,7 @@ async function submitRun() {
   const hint = STATE.mode === 'live' ? ' · Live 模式下单个 agent 可能需要数十秒' : '';
   const tick = () => {
     const s = ((Date.now() - t0) / 1000).toFixed(1);
-    $('#runStatus').innerHTML = `<div class="card"><div class="metrics"><span class="spin" aria-hidden="true"></span><span>并行运行中 <b>${s}s</b> · 派发 <b>${agents.length}</b> 个 agent · 模式 <b>${esc(STATE.mode)}</b>${hint}</span></div></div>`;
+    $('#runStatus').innerHTML = `<div class="card"><div class="metrics"><span class="spin" aria-hidden="true"></span><span>独立判断中 <b>${s}s</b> · <b>${agents.length}</b> 个视角互不查看彼此答案 · 模式 <b>${esc(STATE.mode)}</b>${hint}</span></div></div>`;
   };
   tick();
   const timer = setInterval(tick, 100);
@@ -1517,14 +1602,14 @@ async function submitRun() {
     const done = run.agents.filter((a) => a.status === 'done').length;
     const failed = run.agents.length - done;
     const simNote = run.mode === 'sim' ? ' · <b>Sim 模拟数据</b>（非真实模型）' : ' · <b>真实运行</b>';
-    const next = done >= 2 ? '<button class="btn sm" id="openCommittee">进入评审会，生成最终方案</button>' : '';
-    $('#runStatus').innerHTML = `<div class="card run-complete"><div class="metrics"><span class="status ${failed ? 'error' : 'done'}" role="img" aria-label="已完成"></span><span>完成 <b>${done}</b> 个${failed ? ` · 失败 <b>${failed}</b> 个` : ''} · 用时 <b>${dur}s</b>${simNote} · 已存档</span></div>${next}</div>`;
+    const next = done >= 2 ? '<button class="btn sm" id="openCommittee">生成最终决策包</button>' : '';
+    $('#runStatus').innerHTML = `<div class="card run-complete"><div class="metrics"><span class="status ${failed ? 'error' : 'done'}" role="img" aria-label="已完成"></span><span>完成 <b>${done}</b> 个独立视角${failed ? ` · 失败 <b>${failed}</b> 个` : ''} · 用时 <b>${dur}s</b>${simNote} · 已存档</span></div>${next}</div>`;
     $('#openCommittee')?.addEventListener('click', () => activateTab($('#tab-committee')));
     refreshRunPickers(run.id);
   } catch (e) {
     clearInterval(timer);
     $('#runStatus').innerHTML = `<div class="card warn" role="alert"><span style="color:var(--red)">运行失败：${esc(e.message)}</span></div>`;
-  } finally { clearInterval(timer); btn.disabled = false; btn.textContent = '▶ 并行运行'; btn.removeAttribute('aria-busy'); }
+  } finally { clearInterval(timer); btn.disabled = false; btn.textContent = '▶ 开始独立判断'; btn.removeAttribute('aria-busy'); }
 }
 
 const STATUS_LABEL = { running: '执行中', done: '已完成', error: '失败' };
@@ -1570,10 +1655,15 @@ async function refreshRunPickers(selectId) {
   const { runs } = await api('/api/runs');
   const opts = runs.map((r) => {
     const tag = r.mode === 'sim' ? ' · [Sim]' : ' · [Live]';
-    return `<option value="${esc(r.id)}">${esc(r.task.slice(0, 28))} · ${r.agentCount}agent${tag}</option>`;
+    return `<option value="${esc(r.id)}">${esc(decisionTitle(r.task).slice(0, 38))} · ${r.agentCount}视角${tag}</option>`;
   }).join('');
   for (const sel of ['#reviewRun', '#traceRun']) { const el = $(sel); if (el) { el.innerHTML = opts; if (selectId) el.value = selectId; } }
   await onTraceRunChange();
+}
+
+function decisionTitle(task = '') {
+  const match = task.match(/## 决策问题\s*\n([^\n]+)/);
+  return match?.[1]?.trim() || task.replace(/^#+\s*/gm, '').trim();
 }
 
 // ───────── 评审会 ─────────
@@ -1585,7 +1675,7 @@ async function doReview() {
   const runId = $('#reviewRun').value;
   const mode = $('#reviewMode button.active').dataset.mode;
   if (!runId) return;
-  $('#committeeOut').innerHTML = '<div class="card empty">评审中…</div>';
+  $('#committeeOut').innerHTML = '<div class="card empty">正在综合决策包…</div>';
   // 取回完整 run，判断是否含模拟 agent —— 用于「基于模拟 trace」告警。
   const [{ run }, { review, error }] = await Promise.all([
     api(`/api/runs/${encodeURIComponent(runId)}`),
@@ -1597,9 +1687,9 @@ async function doReview() {
 }
 function renderReview(r, mode, isSim) {
   const list = mode === 'intersection' ? r.consensus : r.union;
-  const listTitle = mode === 'intersection' ? `共识 / 交集 (${r.consensus.length})` : `全集 / 并集 (${r.union.length})`;
+  const listTitle = mode === 'intersection' ? `共同主张 (${r.consensus.length})` : `全部观点 (${r.union.length})`;
   const listHtml = list.length ? list.map((c) => `
-    <div class="consensus-item">${esc(c.text)} <span class="cov">· ${c.coverage} agent${c.unique ? ' · 仅此一家' : ''}</span></div>`).join('')
+    <div class="consensus-item">${esc(c.text)} <span class="cov">· ${c.coverage} 个视角${c.unique ? ' · 仅此视角提出' : ''}</span></div>`).join('')
     : '<div class="empty">无</div>';
 
   const divHtml = r.divergence.length ? r.divergence.map((d) => `<div class="div-item">${esc(d.text)} <span class="cov">· 来自 ${esc(d.by)}</span></div>`).join('') : '<div class="empty">无显著分歧</div>';
@@ -1613,8 +1703,8 @@ function renderReview(r, mode, isSim) {
     : '';
   // H5：sim 下分歧来自固定模板差异化句式，不存在「幻觉」，故切换中性文案
   const divHint = isSim
-    ? '仅单一 agent 提出 —— Sim 模式下这些来自模板的固定差异化句式（既非洞见也非幻觉）'
-    : '仅单一 agent 提出 —— 可能是独到洞见，也可能是无依据发挥';
+    ? '仅单一视角提出；Sim 模式下这些来自固定模板，只用于演示流程'
+    : '仅单一视角提出；它可能是关键少数意见，也可能缺乏依据，不能因人数少而直接丢弃';
   const attrHint = isSim
     ? '结合 trace 解释「为什么会不同」（注意：基于模拟 trace，仅示意算法形态）'
     : '结合 trace 解释「为什么会不同」';
@@ -1630,30 +1720,29 @@ function renderReview(r, mode, isSim) {
 
   $('#committeeOut').innerHTML = `
     ${simBanner}
+    <div class="card decision-package">
+      <div class="section-head"><h2 class="section">最终决策包</h2><button class="btn sm copy" id="copyBetter">复制 Markdown</button></div>
+      <p class="section-hint">${synthHint}</p>
+      <div class="markdown">${renderMarkdown(r.betterSolution.markdown)}</div>
+    </div>
+    <div style="height:16px"></div>
     <div class="two-col">
       <div class="card">
         <h2 class="section">${esc(listTitle)}</h2>
-        <p class="section-hint">${mode === 'intersection' ? '多数 agent 都提到的要点；仍需警惕共同偏见' : '去重后的全部要点，含仅单一 agent 提出的'}</p>
+        <p class="section-hint">${mode === 'intersection' ? '多个视角都提出的主张；共同出现不等于事实正确' : '去重后的全部观点，包含少数但可能关键的意见'}</p>
         ${listHtml}
       </div>
       <div class="card">
-        <h2 class="section">分歧点 (${r.divergence.length})</h2>
+        <h2 class="section">少数观点与盲区 (${r.divergence.length})</h2>
         <p class="section-hint">${divHint}</p>
         ${divHtml}
       </div>
     </div>
     <div style="height:16px"></div>
-    <div class="two-col">
-      <div class="card">
-        <h2 class="section">差异归因</h2>
-        <p class="section-hint">${attrHint}</p>
-        ${attrHtml}
-      </div>
-      <div class="card">
-        <div class="section-head"><h2 class="section">更优解</h2><button class="btn sm copy" id="copyBetter">复制 Markdown</button></div>
-        <p class="section-hint">${synthHint}</p>
-        <div class="markdown">${renderMarkdown(r.betterSolution.markdown)}</div>
-      </div>
+    <div class="card">
+      <h2 class="section">为什么视角会不同</h2>
+      <p class="section-hint">${attrHint}</p>
+      ${attrHtml}
     </div>`;
   const cb = $('#copyBetter');
   if (cb) cb.addEventListener('click', () => copyToClipboard(STATE.betterMd, cb));

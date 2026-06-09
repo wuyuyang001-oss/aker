@@ -17,20 +17,20 @@
         <div class="mark">A</div>
         <div class="brand-text">
           <h1>Aker</h1>
-          <div class="sub">多 agent 并行评审</div>
+          <div class="sub">多视角决策工作台</div>
         </div>
       </div>
 
       <nav class="side-nav" id="tabs" role="tablist" aria-label="主导航">
-        <button data-tab="run" class="active" role="tab" id="tab-run" aria-controls="panel-run" aria-selected="true"><span class="ni" aria-hidden="true">▶</span><span>运行台</span></button>
-        <button data-tab="committee" role="tab" id="tab-committee" aria-controls="panel-committee" aria-selected="false" tabindex="-1"><span class="ni" aria-hidden="true">⚖</span><span>评审会</span></button>
-        <button data-tab="trace" role="tab" id="tab-trace" aria-controls="panel-trace" aria-selected="false" tabindex="-1"><span class="ni" aria-hidden="true">◫</span><span>Trace 对比</span></button>
-        <button data-tab="frameworks" role="tab" id="tab-frameworks" aria-controls="panel-frameworks" aria-selected="false" tabindex="-1"><span class="ni" aria-hidden="true">▤</span><span>框架图鉴</span></button>
+        <button data-tab="run" class="active" role="tab" id="tab-run" aria-controls="panel-run" aria-selected="true"><span class="ni" aria-hidden="true">▶</span><span>决策台</span></button>
+        <button data-tab="committee" role="tab" id="tab-committee" aria-controls="panel-committee" aria-selected="false" tabindex="-1"><span class="ni" aria-hidden="true">⚖</span><span>决策包</span></button>
+        <button data-tab="trace" role="tab" id="tab-trace" aria-controls="panel-trace" aria-selected="false" tabindex="-1"><span class="ni" aria-hidden="true">◫</span><span>过程审计</span></button>
+        <button data-tab="frameworks" role="tab" id="tab-frameworks" aria-controls="panel-frameworks" aria-selected="false" tabindex="-1"><span class="ni" aria-hidden="true">▤</span><span>方法透明度</span></button>
       </nav>
 
       <div class="side-foot">
         <div class="modepill" id="modepill"><span class="dot" id="modedot" aria-hidden="true"></span><span id="modetext">检测中…</span></div>
-        <div class="side-tag">适配器架构 · Sim/Live 双模式</div>
+        <div class="side-tag">独立视角 · 分歧保留 · 可验证行动</div>
       </div>
     </aside>
 
@@ -38,38 +38,57 @@
     <main class="content" id="main" aria-label="主内容">
     <!-- 运行台 -->
     <section class="panel active" id="panel-run" role="tabpanel" aria-labelledby="tab-run" tabindex="0">
-      <div class="page-head"><h2 class="page-title">并行运行台</h2><p class="page-sub">让不同角色独立评审同一个问题，再合并成一份可执行方案。</p></div>
+      <div class="page-head"><h2 class="page-title">决策台</h2><p class="page-sub">把一个没有标准答案的重要问题，变成经过独立判断、反方审查和证据校准的决策。</p></div>
       <div class="onboarding" id="welcome">
         <div>
-          <div class="eyebrow">首次使用 · 3 步完成</div>
-          <h2>从一个真实问题，得到一份经过反方审查的行动方案</h2>
+          <div class="eyebrow">适合一次性、高不确定性的调研与决策</div>
+          <h2>不要只拿到更多答案，要降低做错决定的风险</h2>
           <p id="capabilityText">正在检测可用运行通道…</p>
         </div>
         <ol class="steps">
-          <li><b>写任务</b><span>描述目标、约束和完成标准</span></li>
-          <li><b>并行评审</b><span>策略、反方、执行角色独立回答</span></li>
-          <li><b>生成最终方案</b><span>进入评审会，综合共识与冲突</span></li>
+          <li><b>写清决策</b><span>明确问题、约束、标准与未知项</span></li>
+          <li><b>独立判断</b><span>不同视角分别给出主张与反证</span></li>
+          <li><b>形成决策包</b><span>保留分歧，并给出最低成本验证</span></li>
         </ol>
-        <button class="btn ghost sm" id="loadExample">填入一个示例问题</button>
+        <button class="btn ghost sm" id="loadExample">填入产品决策示例</button>
       </div>
       <div style="height:16px"></div>
       <div class="card">
         <div class="runbar">
           <div class="field">
-            <label for="task">任务</label>
-            <textarea class="task" id="task" placeholder="描述一个要让多个 agent 并行解决的任务，例如：实现一个带缓存的并发安全计数器" maxlength="2000">实现一个带缓存的并发安全计数器</textarea>
+            <label for="decision">要做的决定 <span class="required">必填</span></label>
+            <textarea class="task brief-input" id="decision" placeholder="例如：我们是否应该在未来两周上线 AI 周报功能？" maxlength="1200">我们是否应该在未来两周上线面向现有客户的 AI 周报功能？</textarea>
+          </div>
+          <div class="brief-grid">
+            <div class="field">
+              <label for="context">已知背景</label>
+              <textarea class="brief-input compact" id="context" placeholder="已有事实、当前状态、为什么现在需要决定" maxlength="1600">已有客户持续反馈周报整理耗时，但尚未验证他们是否愿意使用 AI 自动生成内容。</textarea>
+            </div>
+            <div class="field">
+              <label for="constraints">约束与不可接受结果</label>
+              <textarea class="brief-input compact" id="constraints" placeholder="时间、预算、资源、风险边界" maxlength="1600">团队只有 2 名工程师，周期 2 周，不能新增付费基础设施；不能向客户展示未经确认的事实。</textarea>
+            </div>
+            <div class="field">
+              <label for="criteria">成功标准</label>
+              <textarea class="brief-input compact" id="criteria" placeholder="什么结果意味着这个决定是对的" maxlength="1600">至少 5 名现有客户真实试用；其中 3 名愿意连续使用；人工校对时间低于 10 分钟。</textarea>
+            </div>
+            <div class="field">
+              <label for="unknowns">关键未知项</label>
+              <textarea class="brief-input compact" id="unknowns" placeholder="哪些未知信息最可能改变最终结论" maxlength="1600">客户真实使用频率、可接受的错误率、是否愿意授权所需数据。</textarea>
+            </div>
           </div>
           <div class="field">
-            <label id="agentRowsLabel">参与的独立评审（角色 × 运行通道）</label>
+            <label id="agentRowsLabel">独立判断视角 <span class="label-hint">运行通道是实现细节；视角决定它重点挑战什么</span></label>
             <div class="agent-rows" id="agentRows" aria-labelledby="agentRowsLabel"></div>
+            <p class="field-note">默认视角互不查看彼此答案，但可能由同一模型与同一信息源运行。角色差异能减少遗漏，不等于真正的多模型独立性。</p>
           </div>
           <div class="row-actions">
-            <button class="btn ghost sm" id="addAgent">+ 加一个 agent</button>
+            <button class="btn ghost sm" id="addAgent">+ 加一个视角</button>
             <div class="seg" id="modeSeg" role="group" aria-label="运行模式">
               <button data-mode="sim" class="active">Sim 模式</button>
               <button data-mode="live">Live 模式</button>
             </div>
-            <button class="btn" id="runBtn" style="margin-left:auto">▶ 并行运行</button>
+            <button class="btn" id="runBtn" style="margin-left:auto">▶ 开始独立判断</button>
           </div>
         </div>
       </div>
@@ -80,15 +99,15 @@
 
     <!-- 评审会 -->
     <section class="panel" id="panel-committee" role="tabpanel" aria-labelledby="tab-committee" tabindex="0">
-      <div class="page-head"><h2 class="page-title">评审会</h2><p class="page-sub">对多个 agent 输出取交集/并集，做差异归因，给出更优解。</p></div>
+      <div class="page-head"><h2 class="page-title">决策包</h2><p class="page-sub">综合独立判断，但不机械投票；明确建议成立的条件、关键反对意见和下一步验证。</p></div>
       <div class="card">
         <div class="toolbar">
           <select id="reviewRun" aria-label="选择要评审的 run"></select>
           <div class="seg" id="reviewMode" role="group" aria-label="评审取值方式">
-            <button data-mode="intersection" class="active">交集 · 共识</button>
-            <button data-mode="union">并集 · 全集</button>
+            <button data-mode="intersection" class="active">共同主张</button>
+            <button data-mode="union">全部观点</button>
           </div>
-          <button class="btn sm" id="reviewBtn">评审</button>
+          <button class="btn sm" id="reviewBtn">生成决策包</button>
         </div>
       </div>
       <div style="height:16px"></div>
@@ -97,7 +116,7 @@
 
     <!-- Trace 对比 -->
     <section class="panel" id="panel-trace" role="tabpanel" aria-labelledby="tab-trace" tabindex="0">
-      <div class="page-head"><h2 class="page-title">Trace 对比 · 效果评审</h2><p class="page-sub">不看结果看过程：对比两个 agent 的执行步骤、工具、token、耗时。</p></div>
+      <div class="page-head"><h2 class="page-title">过程审计</h2><p class="page-sub">检查不同视角用了哪些步骤、工具、token 与时间，辅助判断结论是否有足够过程支撑。</p></div>
       <div class="card">
         <div class="toolbar">
           <select id="traceRun" aria-label="选择要对比的 run"></select>
@@ -113,7 +132,7 @@
 
     <!-- 框架图鉴 -->
     <section class="panel" id="panel-frameworks" role="tabpanel" aria-labelledby="tab-frameworks" tabindex="0">
-      <div class="page-head"><h2 class="page-title">Agent 框架图鉴</h2><p class="page-sub">不同 agent 框架的范式、多 agent 支持、工具调用与 <b>trace 可得性</b>对比 —— trace 可得性直接决定 Aker 能否对它做效果评审。</p></div>
+      <div class="page-head"><h2 class="page-title">方法透明度</h2><p class="page-sub">了解不同运行通道的编排方式、工具与过程数据可得性。它们会影响可信度，但不是 Aker 最终交付给用户的产品。</p></div>
       <div class="card">
         <div class="scroll-x"><table class="matrix" id="matrix"></table></div>
       </div>

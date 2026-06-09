@@ -84,6 +84,7 @@ test('review() 返回 consensus/union/divergence/attribution/betterSolution', ()
   }
   assert.equal(r.mode, 'union', 'mode 应原样回写');
   assert.ok(typeof r.betterSolution.markdown === 'string', 'betterSolution.markdown 应为字符串');
+  assert.ok(r.betterSolution.markdown.includes('## 建议与置信度'), '基础综合应输出决策包结构');
 });
 
 console.log(`\n通过 ${passed} 项${process.exitCode ? '（有失败）' : ''}`);
