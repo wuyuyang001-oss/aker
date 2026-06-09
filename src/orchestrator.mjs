@@ -6,7 +6,7 @@ let counter = 1;
 function newId(prefix) { return `${prefix}_${Date.now().toString(36)}_${(counter++).toString(36)}`; }
 
 // 并行跑所有 agent；任一失败不拖累其他（Promise.allSettled）
-export async function runParallel({ task, agents, mode = 'sim' }) {
+export async function runParallel({ task, agents, mode = 'sim', onAgentStart, onAgentComplete }) {
   const runId = newId('run');
   const specs = agents.map((a, i) => ({
     agentId: a.agentId || `${a.framework}#${i + 1}`,
@@ -15,17 +15,19 @@ export async function runParallel({ task, agents, mode = 'sim' }) {
     role: a.role || 'strategist',
   }));
 
-  const settled = await Promise.allSettled(
-    specs.map((s) => runAgent({ ...s, task, mode }))
-  );
-
-  const resultAgents = specs.map((s, i) => {
-    const r = settled[i];
-    if (r.status === 'fulfilled') {
-      return { ...s, label: agentLabel(s), ...r.value };
+  const resultAgents = [];
+  await Promise.all(specs.map(async (s) => {
+    await onAgentStart?.(s);
+    let agent;
+    try {
+      agent = { ...s, label: agentLabel(s), ...await runAgent({ ...s, task, mode }) };
+    } catch (error) {
+      agent = { ...s, label: agentLabel(s), status: 'error', output: '', error: String(error?.message || error), trace: { steps: [] } };
     }
-    return { ...s, label: agentLabel(s), status: 'error', output: '', error: String(r.reason?.message || r.reason), trace: { steps: [] } };
-  });
+    resultAgents.push(agent);
+    await onAgentComplete?.(agent, resultAgents.slice());
+  }));
+  resultAgents.sort((a, b) => specs.findIndex((s) => s.agentId === a.agentId) - specs.findIndex((s) => s.agentId === b.agentId));
 
   return {
     id: runId,

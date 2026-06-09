@@ -18,11 +18,12 @@ Coding benchmarks remain useful for testing adapters and execution traces, but t
 
 ## Core Workflow
 
-1. **Decision brief**: define the decision, context, constraints, success criteria, and unknowns.
-2. **Independent judgments**: strategy, counterargument, action, and evidence perspectives answer without seeing one another.
-3. **Claim audit**: separate facts, assumptions, inferences, and unknowns; preserve minority views.
-4. **Decision package**: provide a recommendation, confidence, conditions, strongest objection, unresolved uncertainty, and low-cost validation steps.
-5. **Evidence update**: add newly learned facts and rerun the decision.
+1. **Conversation**: start from one natural-language question rather than a required form.
+2. **Working brief**: automatically maintain decision, context, constraints, success criteria, and unknowns behind the conversation.
+3. **Independent judgments**: strategy, counterargument, action, and evidence perspectives answer without seeing one another.
+4. **Continuous review**: expose evidence checks and disagreement while perspectives are still running.
+5. **Decision package**: provide a recommendation, confidence, conditions, strongest objection, unresolved uncertainty, and low-cost validation steps.
+6. **Branch and update**: add evidence, challenge a claim, or create a branch and rerun the decision.
 
 ## Product Principles
 
@@ -44,17 +45,17 @@ Coding benchmarks remain useful for testing adapters and execution traces, but t
 - Explicit facts, assumptions, inferences, and unknowns
 - Strongest objection and information-that-would-change-the-conclusion prompts
 
-Status: implemented in v0.3.0.
+Status: implemented in v0.4.0, including the conversation-first project model, live execution timeline, and branch exploration.
 
 ### P1: Source-Backed Research
 
-- Let research perspectives retrieve external sources
+- Ingest public sources supplied in conversation
 - Attach citations to individual claims
 - Record source date, publisher, and independence
 - Detect when several perspectives rely on the same underlying source
 - Show unsupported or conflicting claims before synthesis
 
-This is the most important next capability. Until it exists, Aker is a decision-review tool based on supplied information, not a complete research product.
+Status: public links are safely ingested, numbered, and passed to reviewers in v0.4.0. Autonomous source discovery, claim-level citation enforcement, and source-independence analysis remain future work.
 
 ### P2: Decision Criteria and Scenarios
 

@@ -21,6 +21,13 @@ const CONFIG = {
   DEPTH_GAP: 2,
 };
 
+const ROLE_LABELS = {
+  strategist: '策略视角',
+  critic: '反方视角',
+  operator: '行动视角',
+  researcher: '证据视角',
+};
+
 // —— 文本切片：把一段输出拆成“论点/要点”单元 ——
 // P2 修复：剔除“方案标题/元信息行”，避免三家相似标题被聚成头号伪共识。
 //   命中以下任一模式即视为标题/元信息，不进入可聚类正文：
@@ -188,7 +195,10 @@ function synthesizeBetter(agents, consensus, union, attribution) {
   const adoptedUnique = union
     .filter((u) => u.unique)
     .slice(0, 8)
-    .map((u) => ({ text: u.text, from: u.agents[0] }));
+    .map((u) => {
+      const agent = agents.find((item) => item.agentId === u.agents[0]);
+      return { text: u.text, from: ROLE_LABELS[agent?.role] || '独立视角' };
+    });
 
   // 是否含 Sim agent：决定是否醒目标注演示边界。
   const isSim = agents.some((a) => (a.mode || 'sim') === 'sim');
@@ -213,7 +223,9 @@ function synthesizeBetter(agents, consensus, union, attribution) {
   else lines.push('- 当前没有可自动识别的少数意见；这不代表不存在共同盲区。');
   lines.push('');
   lines.push('## 未解决的不确定性');
-  attribution.forEach((r) => lines.push(`- **${r.kind}**（权重 ${r.weight}）：${r.detail}`));
+  const unknowns = union.filter((item) => /\[未知\]|证据不足|没有提供足够/.test(item.text)).slice(0, 5);
+  if (unknowns.length) unknowns.forEach((item) => lines.push(`- ${item.text}`));
+  else lines.push('- 当前材料仍不足以证明真实需求、预期收益和执行成本；这些未知项可能改变建议。');
   lines.push('');
   lines.push('## 最低成本验证');
   lines.push('- 选择最可能改变结论的未知项，设计一个有明确观察指标和停止条件的小规模验证。');
@@ -223,7 +235,7 @@ function synthesizeBetter(agents, consensus, union, attribution) {
   lines.push('- 指定一名决策负责人，明确决策截止时间与不可接受结果。');
   lines.push('- 把当前最关键假设转成未来 1-7 天内可验证的行动。');
   lines.push('');
-  lines.push('> 当前显示规则式基础决策包。Live 模式会调用真实委员会主席进行二次综合。');
+  lines.push('> Sim 模式的内容用于演示工作流；处理真实决策时请使用 Live 通道并提供可核验来源。');
 
   return {
     credibility: {},
