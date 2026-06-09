@@ -1,14 +1,14 @@
 {
   "name": "aker",
   "productName": "Aker",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "private": true,
   "type": "module",
-  "description": "Aker — 多 agent 并行 + 评审会 + trace 效果评审",
+  "description": "Local-first parallel review workbench with real Codex CLI traces and actionable synthesis",
   "main": "main.cjs",
   "scripts": {
     "start": "node server.mjs",
-    "test": "node --test",
+    "test": "node --test test/*.test.mjs",
     "check": "npm test && npm run build:web",
     "build:web": "node build-standalone.mjs",
     "app": "electron .",
