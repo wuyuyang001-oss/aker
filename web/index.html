@@ -5,131 +5,85 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Aker</title>
   <link rel="stylesheet" href="styles.css" />
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='9' fill='%23c25d3f'/><text x='16' y='23' font-size='20' fill='white' text-anchor='middle' font-family='sans-serif' font-weight='700'>A</text></svg>" />
 </head>
 <body>
-  <a href="#main" class="skip-link">跳到主内容</a>
   <div class="app-shell">
     <aside class="sidebar">
       <div class="macpad"></div>
-      <div class="brand">
-        <div class="mark">A</div>
-        <div><h1>Aker</h1><p>决策探究工作台</p></div>
-      </div>
-      <button class="new-project" id="newProject">＋ 新建探究</button>
-      <div class="side-label">决策项目</div>
-      <nav class="project-list" id="projectList" aria-label="决策项目"></nav>
+      <div class="brand"><div class="mark">A</div><div><h1>Aker</h1><p>Agent 答案融合工作台</p></div></div>
+      <button class="new-task" id="newTask">＋ 新建对比任务</button>
+      <div class="side-label">任务</div>
+      <nav class="task-list" id="taskList"></nav>
       <div class="side-bottom">
-        <button class="side-action" id="openConnections"><span>◉</span><span>运行通道</span><b id="connectionCount">0</b></button>
-        <div class="mode-status" id="modeStatus"><span class="dot"></span><span>检测中…</span></div>
+        <div class="safety-note"><b>只读执行边界</b><span>允许搜索与读取，禁止真实外部写入</span></div>
+        <div class="mode-status" id="modeStatus"><span class="dot"></span><span>检测 Runner…</span></div>
       </div>
     </aside>
 
     <main id="main">
-      <section class="view active" id="projectView">
-        <div class="project-layout">
-          <div class="conversation-column">
-            <header class="project-header">
-              <div>
-                <div class="eyebrow">DECISION PROJECT</div>
-                <h2 id="projectTitle">提出真正重要的问题</h2>
-                <p id="projectSubtitle">Aker 会在探究过程中持续审查证据、分歧与下一步，而不是最后才做评审。</p>
-              </div>
-              <div class="header-actions">
-                <select id="projectMode" aria-label="运行模式">
-                  <option value="live">Live · 使用我的通道</option>
-                  <option value="sim">Sim · 演示流程</option>
-                </select>
-                <button class="ghost-btn" id="rerunProject" hidden>再次探究</button>
-              </div>
-            </header>
-
-            <div class="conversation" id="conversation">
-              <div class="welcome">
-                <div class="welcome-kicker">从一句话开始</div>
-                <h3>你现在需要研究什么问题，或者做出什么决定？</h3>
-                <p>不需要先填写表单。Aker 会自动整理目标、约束、成功标准和关键未知项，只在真正影响结论时追问。</p>
-                <div class="examples">
-                  <button data-example="我们是否应该在未来两周上线面向现有客户的 AI 周报功能？团队只有 2 名工程师，不能新增付费基础设施。">是否应该上线一个尚未验证需求的新功能？</button>
-                  <button data-example="我们应该选择自建 AI 客服还是采购 SaaS？希望三个月内上线，最不能接受的是客户数据泄露。">自建还是采购 AI 客服？</button>
-                  <button data-example="请调研我们进入东南亚市场的可行性，并给出先进入哪个国家的建议。">应该先进入哪个新市场？</button>
-                </div>
-              </div>
+      <section class="workspace" id="workspace">
+        <div class="conversation-column">
+          <header class="task-header">
+            <div>
+              <div class="eyebrow">AGENT COMPARISON TASK</div>
+              <h2 id="taskTitle">比较多个 Agent，得到证据支持度更高的答案</h2>
+              <p id="taskSubtitle">同一任务、同一证据要求、同一只读权限；执行过程与评审依据都可见。</p>
             </div>
+            <div class="header-actions">
+              <select id="taskMode"><option value="live">Live · 真实 Runner</option><option value="sim">Sim · 流程演示</option></select>
+              <button class="ghost-btn" id="toggleInspector">隐藏配置</button>
+            </div>
+          </header>
 
-            <div class="composer">
-              <textarea id="messageInput" placeholder="提出一个重要问题，或继续补充信息…" maxlength="5000"></textarea>
-              <div class="composer-foot">
-                <span id="composerHint">Aker 会使用合理假设继续，并明确标注未知项</span>
-                <button id="sendMessage">开始探究</button>
+          <div class="conversation" id="conversation">
+            <div class="welcome">
+              <div class="welcome-kicker">从一个开放任务开始</div>
+              <h3>让不同 Agent 独立研究，再由 Judge 评审和融合</h3>
+              <p>适合调研、分析、方案设计等没有明确 GT、但可以用证据提高可靠性的任务。</p>
+              <div class="examples">
+                <button data-example="调研 DeerFlow 2.0 与 Codex CLI 在深度研究任务上的关键差异，给出带来源的完整比较。">对比两个 Agent 框架</button>
+                <button data-example="调研 2026 年主流开源深度研究 Agent 的产品能力、技术架构与局限，附完整来源。">做一份时效性行业调研</button>
+                <button data-example="分析一个本地优先、多 Agent 答案融合产品应如何设计评审机制。">比较开放方案</button>
               </div>
             </div>
           </div>
 
-          <aside class="inspector" id="inspector">
-            <div class="inspector-tabs" role="tablist">
-              <button class="active" data-inspector="brief">工作简报</button>
-              <button data-inspector="sources">证据</button>
-              <button data-inspector="package">决策包</button>
+          <div class="composer">
+            <textarea id="messageInput" placeholder="输入调研、分析或方案设计任务…" maxlength="8000"></textarea>
+            <div class="composer-foot">
+              <span id="composerHint">Aker 会自动生成任务简报与证据策略，不要求先填表</span>
+              <button id="sendMessage">创建任务</button>
             </div>
-            <section class="inspector-panel active" id="inspector-brief">
-              <div class="inspector-intro">
-                <h3>自动整理的上下文</h3>
-                <p>这是对话背后的结构化状态，不是首次使用门槛。</p>
-              </div>
-              <div id="briefSummary" class="brief-summary empty-small">提出问题后自动生成</div>
-              <details class="brief-editor" id="briefEditor">
-                <summary>编辑工作简报</summary>
-                <label>决策问题<textarea id="briefDecision"></textarea></label>
-                <label>已知背景<textarea id="briefContext"></textarea></label>
-                <label>约束与不可接受结果<textarea id="briefConstraints"></textarea></label>
-                <label>成功标准<textarea id="briefCriteria"></textarea></label>
-                <label>关键未知项<textarea id="briefUnknowns"></textarea></label>
-                <label>默认假设<textarea id="briefAssumptions"></textarea></label>
-                <button class="primary-btn" id="saveBrief">保存简报</button>
-              </details>
-            </section>
-            <section class="inspector-panel" id="inspector-sources">
-              <div class="inspector-intro">
-                <h3>用户提供的证据</h3>
-                <p>直接在对话中粘贴公开网页链接。Aker 会读取摘要、编号并交给各视角审查。</p>
-              </div>
-              <div id="sourceList" class="source-list empty-small">还没有来源</div>
-            </section>
-            <section class="inspector-panel" id="inspector-package">
-              <div class="inspector-intro">
-                <h3>当前决策包</h3>
-                <p>点击任何要点可从该主张创建新的探究分支。</p>
-              </div>
-              <div id="decisionPackage" class="decision-content empty-small">完成探究后生成</div>
-              <button class="primary-btn wide" id="copyPackage" hidden>复制决策包</button>
-            </section>
-          </aside>
-        </div>
-      </section>
-
-      <section class="view" id="connectionsView">
-        <header class="connections-header">
-          <div>
-            <div class="eyebrow">CONNECTIONS</div>
-            <h2>使用你自己的 Agent CLI 与模型 API</h2>
-            <p>本地 CLI 自动检测；API key 存入 macOS Keychain。Aker 只负责匹配、编排和审计。</p>
-          </div>
-          <button class="ghost-btn" id="closeConnections">返回项目</button>
-        </header>
-        <div class="connections-content">
-          <section>
-            <div class="section-title"><h3>本地 Agent CLI</h3><span>自动扫描当前电脑</span></div>
-            <div class="connection-grid" id="cliConnections"></div>
-          </section>
-          <section>
-            <div class="section-title"><h3>模型 API</h3><span>调用产生的费用由你的账户承担</span></div>
-            <div class="connection-grid" id="apiConnections"></div>
-          </section>
-          <div class="connection-note">
-            Aker 会优先让不同视角使用不同可运行通道。只有一个通道时仍可运行，但会明确提示相关性风险。
           </div>
         </div>
+
+        <aside class="inspector" id="inspector">
+          <div class="inspector-tabs">
+            <button class="active" data-tab="brief">任务简报</button>
+            <button data-tab="runners">Runner</button>
+            <button data-tab="rubric">评审</button>
+          </div>
+          <section class="panel active" id="panel-brief">
+            <div class="panel-intro"><h3>自动整理，可随时编辑</h3><p>调研和时效性任务会自动要求真实搜索与来源。</p></div>
+            <div id="briefEditor" class="empty">创建任务后显示</div>
+          </section>
+          <section class="panel" id="panel-runners">
+            <div class="panel-intro"><h3>选择 2–4 个独立 Agent</h3><p>能力不足的 Runner 会明确标记，不会伪装完成调研。</p></div>
+            <div id="runnerList" class="runner-list"></div>
+            <label class="field">独立 Judge<select id="judgeSelect"></select></label>
+            <div class="import-box">
+              <h4>从 GitHub 导入 Agent</h4>
+              <input id="githubUrl" placeholder="https://github.com/bytedance/deer-flow">
+              <input id="gatewayUrl" placeholder="已运行的 Gateway，例如 http://localhost:8001">
+              <button class="ghost-btn wide" id="importGithub">导入清单</button>
+              <p id="importStatus">导入只保存适配器清单；任何安装或启动命令都不会自动执行。</p>
+            </div>
+          </section>
+          <section class="panel" id="panel-rubric">
+            <div class="panel-intro"><h3>评分维度</h3><p>Judge 根据统一评分表评审；权重可编辑。</p></div>
+            <div id="rubricEditor" class="rubric-list empty">创建任务后显示</div>
+          </section>
+        </aside>
       </section>
     </main>
   </div>

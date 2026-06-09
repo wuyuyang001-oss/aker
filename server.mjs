@@ -12,7 +12,10 @@ import { capabilities, synthesizeReview } from './src/adapters.mjs';
 import { appendProjectMessage, createProject, exploreProject } from './src/projects.mjs';
 import { enrichProjectSources } from './src/sources.mjs';
 import { configureApi, listConnections, removeApi, testConnection } from './src/connections.mjs';
-import { saveRun, getRun, listRuns, saveProject, getProject, listProjects, seedIfEmpty } from './src/store.mjs';
+import { createTask, patchTask, runTask } from './src/tasks.mjs';
+import { evaluateTask } from './src/evaluator.mjs';
+import { importGithubRunner, listRunners, testRunner } from './src/runners.mjs';
+import { saveRun, getRun, listRuns, saveProject, getProject, listProjects, saveTask, getTask, listTasks, legacyProjectAsTask, seedIfEmpty } from './src/store.mjs';
 import { buildFixtures } from './fixtures/seed.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -62,6 +65,61 @@ const server = createServer(async (req, res) => {
   const p = url.pathname;
   try {
     if (p === '/api/health') return json(res, 200, { ok: true, ...capabilities() });
+    if (p === '/api/runners' && req.method === 'GET') return json(res, 200, { runners: listRunners() });
+    if (p === '/api/runners/import-github' && req.method === 'POST') return json(res, 201, await importGithubRunner(await body(req)));
+    const runnerTestMatch = p.match(/^\/api\/runners\/([^/]+)\/test$/);
+    if (runnerTestMatch && req.method === 'POST') return json(res, 200, await testRunner(decodeURIComponent(runnerTestMatch[1])));
+
+    if (p === '/api/tasks' && req.method === 'GET') return json(res, 200, { tasks: listTasks() });
+    if (p === '/api/tasks' && req.method === 'POST') {
+      const input = await body(req);
+      if (!String(input.message || '').trim()) return json(res, 400, { error: 'message 必填' });
+      const task = createTask(input);
+      saveTask(task);
+      return json(res, 201, { task });
+    }
+    const taskMatch = p.match(/^\/api\/tasks\/([^/]+)$/);
+    if (taskMatch && req.method === 'GET') {
+      const taskId = decodeURIComponent(taskMatch[1]);
+      const task = getTask(taskId) || legacyProjectAsTask(getProject(taskId));
+      return task ? json(res, 200, { task }) : json(res, 404, { error: 'task 不存在' });
+    }
+    if (taskMatch && req.method === 'PATCH') {
+      const task = getTask(decodeURIComponent(taskMatch[1]));
+      if (!task) return json(res, 404, { error: 'task 不存在或为只读历史项目' });
+      patchTask(task, await body(req));
+      saveTask(task);
+      return json(res, 200, { task });
+    }
+    const taskRunMatch = p.match(/^\/api\/tasks\/([^/]+)\/run$/);
+    if (taskRunMatch && req.method === 'POST') {
+      const task = getTask(decodeURIComponent(taskRunMatch[1]));
+      if (!task) return json(res, 404, { error: 'task 不存在' });
+      res.writeHead(200, { 'content-type': 'application/x-ndjson; charset=utf-8', 'cache-control': 'no-cache, no-transform', connection: 'keep-alive' });
+      try {
+        await runTask(task, {
+          onEvent: async (event, updated) => {
+            saveTask(updated);
+            ndjson(res, event);
+          },
+        });
+        saveTask(task);
+        ndjson(res, { type: 'complete', task });
+      } catch (error) {
+        task.status = 'failed';
+        saveTask(task);
+        ndjson(res, { type: 'error', error: String(error?.message || error), task });
+      }
+      return res.end();
+    }
+    const taskEvalMatch = p.match(/^\/api\/tasks\/([^/]+)\/evaluate$/);
+    if (taskEvalMatch && req.method === 'POST') {
+      const task = getTask(decodeURIComponent(taskEvalMatch[1]));
+      if (!task) return json(res, 404, { error: 'task 不存在' });
+      const result = await evaluateTask(task);
+      saveTask(result);
+      return json(res, 200, { task: result });
+    }
     if (p === '/api/connections' && req.method === 'GET') return json(res, 200, listConnections());
     if (p === '/api/connections/api' && req.method === 'POST') {
       const config = await body(req);

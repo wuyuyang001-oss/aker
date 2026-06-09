@@ -33,6 +33,31 @@ test('server supports the first-use Sim run and review flow', async (t) => {
   assert.ok(Array.isArray(health.liveAgents), 'health should expose actual live runners');
   assert.ok(health.connections?.cli?.some((item) => item.id === 'codex-cli'), 'health should expose detected CLI connections');
 
+  const runnerResponse = await fetch(`${base}/api/runners`);
+  const runnerPayload = await runnerResponse.json();
+  assert.ok(runnerPayload.runners.some((runner) => runner.id === 'sim-research-a'));
+
+  const taskResponse = await fetch(`${base}/api/tasks`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ message: '调研最新的开源研究 Agent', mode: 'sim' }),
+  });
+  const { task } = await taskResponse.json();
+  assert.equal(task.brief.evidencePolicy, 'required');
+  assert.equal(task.selectedRunnerIds.length, 2);
+
+  const taskRunResponse = await fetch(`${base}/api/tasks/${task.id}/run`, { method: 'POST' });
+  const taskEvents = (await taskRunResponse.text()).trim().split('\n').map((line) => JSON.parse(line));
+  assert.ok(taskEvents.some((event) => event.type === 'agent_trace'));
+  const completedTask = taskEvents.find((event) => event.type === 'complete')?.task;
+  assert.equal(completedTask.status, 'awaiting-evaluation');
+
+  const taskEvalResponse = await fetch(`${base}/api/tasks/${task.id}/evaluate`, { method: 'POST' });
+  const { task: evaluatedTask } = await taskEvalResponse.json();
+  assert.equal(evaluatedTask.status, 'complete');
+  assert.match(evaluatedTask.finalAnswer, /证据加权融合答案/);
+  assert.equal(evaluatedTask.evaluation.eligibleRunnerIds.length, 0, 'Sim answers must not enter factual fusion');
+
   const projectResponse = await fetch(`${base}/api/projects`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },

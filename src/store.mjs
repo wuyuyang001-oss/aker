@@ -19,11 +19,12 @@ function load() {
       // 先把坏文件备份成 .bak 并打错误日志，再退回空库，给人留追查 / 手工恢复的机会。
       try { copyFileSync(DB, DB + '.bak'); } catch { /* 备份失败也别阻塞启动 */ }
       console.error(`[store] 解析 ${DB} 失败：${e.message}；已备份为 ${DB}.bak，本次以空库启动。`);
-      cache = { runs: [], projects: [] };
+      cache = { runs: [], projects: [], tasks: [] };
     }
-  } else cache = { runs: [], projects: [] };
+  } else cache = { runs: [], projects: [], tasks: [] };
   cache.runs ||= [];
   cache.projects ||= [];
+  cache.tasks ||= [];
   return cache;
 }
 function persist() {
@@ -53,6 +54,48 @@ export function saveProject(project) {
 export function getProject(id) { return load().projects.find((p) => p.id === id) || null; }
 export function listProjects() {
   return load().projects.map(({ id, title, status, mode, createdAt, updatedAt, parentId }) => ({ id, title, status, mode, createdAt, updatedAt, parentId }));
+}
+export function saveTask(task) {
+  const db = load();
+  const idx = db.tasks.findIndex((item) => item.id === task.id);
+  if (idx >= 0) db.tasks[idx] = task; else db.tasks.unshift(task);
+  persist();
+  return task;
+}
+export function getTask(id) { return load().tasks.find((task) => task.id === id) || null; }
+export function listTasks() {
+  const tasks = load().tasks.map(({ id, title, status, mode, createdAt, updatedAt }) => ({ id, title, status, mode, createdAt, updatedAt, legacy: false }));
+  const legacy = load().projects.map(({ id, title, status, mode, createdAt, updatedAt }) => ({ id, title, status, mode, createdAt, updatedAt, legacy: true }));
+  return [...tasks, ...legacy].sort((a, b) => String(b.updatedAt || b.createdAt).localeCompare(String(a.updatedAt || a.createdAt)));
+}
+
+export function legacyProjectAsTask(project) {
+  if (!project) return null;
+  return {
+    id: project.id,
+    title: project.title,
+    status: 'legacy-readonly',
+    mode: project.mode,
+    legacy: true,
+    createdAt: project.createdAt,
+    updatedAt: project.updatedAt,
+    brief: {
+      objective: project.brief?.decision || project.title,
+      deliverable: 'v0.4 历史决策项目（只读）',
+      scope: project.brief?.context || '',
+      constraints: project.brief?.constraints || '',
+      freshness: '',
+      evidencePolicy: 'legacy',
+    },
+    selectedRunnerIds: [],
+    judgeRunnerId: null,
+    rubric: [],
+    runs: [],
+    scorecards: [],
+    finalAnswer: project.decisionPackage || '',
+    evaluation: { warnings: ['这是 v0.4 历史决策项目，只读展示；原始数据未被修改。'] },
+    messages: project.messages || [],
+  };
 }
 
 export function seedIfEmpty(runs) {
